@@ -308,6 +308,69 @@
   .steps h3 { font-size: 1.1rem; margin-bottom: 6px; color: #fff; }
   .steps p { font-size: 0.98rem; color: var(--text-dim); margin: 0; }
 
+  /* Comparison: normal camera vs Flock */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .compare-col {
+    background: var(--navy-darker);
+    border: 1px solid #2c3545;
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .compare-col.bad { border-top: 4px solid var(--orange); }
+  .compare-col.ok { border-top: 4px solid #4a5568; }
+  .compare-col h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  .compare-col.ok h3 { color: var(--text-dim); }
+  .compare-col.bad h3 { color: var(--orange); }
+  .compare-col ul { list-style: none; }
+  .compare-col li {
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    border-bottom: 1px dashed #2c3545;
+  }
+  .compare-col li:last-child { border-bottom: none; }
+  .compare-col li strong { color: var(--text); }
+  @media (max-width: 600px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  /* Abuse cases */
+  .cases { list-style: none; margin: 24px 0; }
+  .cases li {
+    background: var(--navy-darker);
+    border: 1px solid #2c3545;
+    border-left: 4px solid var(--orange);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    font-size: 0.98rem;
+  }
+  .cases a {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--orange);
+    text-underline-offset: 3px;
+  }
+  .cases a:hover { color: var(--orange); }
+  .cases .src {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
   /* Quote / precedent */
   .precedent {
     background: var(--navy-darker);
@@ -430,6 +493,111 @@
         <strong>searchable database of everywhere we drive</strong> — without a warrant and
         without asking us.
       </p>
+      <p style="margin-top:24px;">
+        Want to dig deeper? <a href="https://deflock.org/" target="_blank" rel="noopener" style="color:var(--orange);font-weight:700;">deflock.org</a>
+        is the national resource on Flock cameras — including a map of where they're installed.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ HOW IS THIS DIFFERENT ============ -->
+  <section id="different">
+    <div class="container">
+      <h2>"Aren't There Cameras <span class="accent">Everywhere Already?"</span></h2>
+      <p>
+        Fair question. But a Flock camera is not like a store security camera or a
+        traffic camera. The difference isn't the camera — <strong>it's the database
+        behind it.</strong>
+      </p>
+
+      <div class="compare">
+        <div class="compare-col ok">
+          <h3>A Normal Camera</h3>
+          <ul>
+            <li><strong>Watches one spot</strong> — a parking lot, an intersection</li>
+            <li><strong>Footage gets erased</strong> — usually within days or weeks</li>
+            <li><strong>Nobody's searching it</strong> — someone only looks after a specific incident</li>
+            <li><strong>Doesn't know who you are</strong> — you're just a face in a crowd</li>
+          </ul>
+        </div>
+        <div class="compare-col bad">
+          <h3>A Flock Camera</h3>
+          <ul>
+            <li><strong>Reads and identifies your car</strong> — plate, make, model, color, even bumper stickers</li>
+            <li><strong>Builds a permanent record</strong> — every pass is logged into a searchable database</li>
+            <li><strong>Searchable anytime</strong> — any officer can look up your car's history, no warrant, no judge</li>
+            <li><strong>Networked nationwide</strong> — Lewis County data can be searched by thousands of agencies across the country</li>
+          </ul>
+        </div>
+      </div>
+
+      <p>
+        Put simply: a normal camera takes a picture. A Flock camera takes
+        <strong>attendance</strong>. It doesn't just see your car — it recognizes it, logs
+        it, and remembers it. String enough of those logs together and you have a map of
+        your life: where you sleep, where you work, where you pray, who you visit.
+      </p>
+      <p>
+        And because there's no warrant requirement, no judge ever asks <em>why</em>
+        someone is pulling up your driving history. That's the part no other camera does —
+        and the part New York law says nothing about.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ DOCUMENTED ABUSE ============ -->
+  <section id="abuse">
+    <div class="container">
+      <h2>This Isn't Hypothetical. <span class="accent">It's Already Happened.</span></h2>
+      <p>
+        There are many documented cases where police have knowingly used license plate
+        readers to commit crimes and put people in danger. These examples show how hard it
+        is to put meaningful restrictions in place — <strong>it's often only after harm is
+        done that an officer is caught and punished, if at all.</strong>
+      </p>
+
+      <ul class="cases">
+        <li>
+          <a href="https://www.404media.co/a-texas-cop-searched-license-plate-cameras-nationwide-for-a-woman-who-got-an-abortion/" target="_blank" rel="noopener">
+            Texas police used Flock ALPRs to track a woman who had an abortion across state lines</a>
+          <span class="src">404 Media</span>
+        </li>
+        <li>
+          <a href="https://www.kwch.com/2022/10/31/kechi-police-lieutenant-arrested-using-police-technology-stalk-wife/" target="_blank" rel="noopener">
+            A police officer used Flock Safety ALPRs to stalk his estranged wife in Kechi, KS</a>
+          <span class="src">KWCH</span>
+        </li>
+        <li>
+          <a href="https://apnews.com/general-news-699236946e3140659fff8a2362e16f43" target="_blank" rel="noopener">
+            A police officer accepted a bribe to run a woman's license plate in Georgia</a>
+          <span class="src">Associated Press</span>
+        </li>
+        <li>
+          <a href="https://apnews.com/general-news-699236946e3140659fff8a2362e16f43" target="_blank" rel="noopener">
+            A police officer used ALPRs to stalk his ex-girlfriend in Ohio</a>
+          <span class="src">Associated Press</span>
+        </li>
+        <li>
+          <a href="https://information.auditor.ca.gov/pdfs/reports/2019-118.pdf" target="_blank" rel="noopener">
+            California agencies kept plate data longer than necessary and shared it with unauthorized agencies</a>
+          <span class="src">California State Auditor</span>
+        </li>
+        <li>
+          <a href="https://inewsource.org/2022/01/06/police-share-license-plate-data/" target="_blank" rel="noopener">
+            Police in San Diego County broke the law by sharing drivers' data</a>
+          <span class="src">inewsource</span>
+        </li>
+      </ul>
+
+      <p>
+        These weren't stopped by policies or safeguards. The data existed, so it was
+        abused. <strong>The only database that can't be misused is one that's never
+        collected.</strong>
+      </p>
     </div>
   </section>
 
@@ -452,6 +620,9 @@
           <li><span class="emoji">🪧</span><span>Bring a sign — or just bring yourself. Numbers matter.</span></li>
           <li><span class="emoji">💧</span><span>Free water &amp; snacks provided</span></li>
         </ul>
+        <p style="margin-top:24px;text-align:center;">
+          <a class="btn btn-primary" href="https://www.facebook.com/events/2150119415850193/" target="_blank" rel="noopener">RSVP on Facebook</a>
+        </p>
         <p class="note">
           Comfortable speaking? Stay for the meeting and use public comment — legislators
           need to hear from actual constituents, even for 60 seconds. Can't speak?
@@ -509,7 +680,12 @@
   <footer>
     <p class="footer-plate">Deflock Lewis County</p>
     <p>A grassroots effort by Lewis County residents. Not affiliated with any political party.</p>
-    <p>They track every driver. Not just criminals.</p>
+    <p style="margin-top:8px;">
+      <a href="https://www.facebook.com/events/2150119415850193/" target="_blank" rel="noopener" style="color:var(--orange);">Facebook event</a>
+      &nbsp;·&nbsp;
+      <a href="https://deflock.org/" target="_blank" rel="noopener" style="color:var(--orange);">deflock.org</a>
+    </p>
+    <p style="margin-top:8px;">They track every driver. Not just criminals.</p>
   </footer>
 
 </main>

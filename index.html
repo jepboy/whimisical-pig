@@ -8,6 +8,7 @@
 <meta property="og:title" content="DeFlock Lewis County — No Flock Cameras">
 <meta property="og:description" content="They track every driver. Not just criminals. Rally outside the Board of Legislators meeting — Tuesday, August 4, 4:30 PM, Lewis County Court House, Lowville.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#f28c28">
 <style>
   :root {
     --navy-dark: #1b222e;
@@ -53,16 +54,38 @@
 
   main { position: relative; z-index: 1; }
 
+  /* Sticky rally reminder */
+  .announce {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: block;
+    background: var(--orange);
+    color: var(--navy-darker);
+    text-align: center;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    padding: 10px 16px;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.35);
+  }
+  .announce:hover { background: var(--orange-bright); }
+  .announce .arrow { margin-left: 6px; }
+
   .container {
     max-width: 720px;
     margin: 0 auto;
     padding: 0 32px;
   }
 
+  section, .hero { scroll-margin-top: 56px; }
+
   /* ---------- Hero ---------- */
   .hero {
     text-align: center;
     padding: 64px 0 48px;
+    background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(242,140,40,0.07), transparent 70%);
   }
 
   .kicker {
@@ -237,15 +260,15 @@
   }
 
   .event-card .event-band {
-    background: var(--orange);
+    background: var(--navy-plate);
     color: var(--cream);
     display: inline-block;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.2em;
     font-size: 0.8rem;
-    padding: 8px 18px;
-    border-radius: 6px;
+    padding: 9px 20px 8px;
+    border-radius: 999px;
     margin-bottom: 24px;
   }
 
@@ -413,12 +436,40 @@
   @media (max-width: 600px) {
     body::before, body::after { display: none; }
     .container { padding: 0 20px; }
-    .event-card { padding: 28px 22px; }
+    section { padding: 40px 0; }
+    section, .hero { scroll-margin-top: 48px; }
+
+    .announce { font-size: 0.78rem; padding: 9px 12px; }
+
+    .hero { padding: 40px 0 36px; }
+    .kicker { margin-bottom: 28px; letter-spacing: 0.25em; }
+    .plate { margin-bottom: 32px; border-radius: 14px; }
+    .hero .tagline { font-size: 0.98rem; }
+
+    .cta-row { flex-direction: column; gap: 12px; }
+    .btn { display: block; text-align: center; padding: 15px 20px; }
+
+    .facts { grid-template-columns: 1fr; gap: 12px; }
+
+    .event-card { padding: 26px 20px; }
+    .event-card .event-band { font-size: 0.72rem; letter-spacing: 0.15em; }
+    .event-details li { font-size: 1rem; gap: 12px; }
+
+    .steps li { padding-left: 56px; padding-bottom: 20px; }
+    .steps li::before { width: 38px; height: 38px; font-size: 1.05rem; }
+    .steps li:not(:last-child)::after { left: 18px; top: 42px; }
+
+    .cases li { padding: 14px 16px; font-size: 0.93rem; }
+    .precedent { padding: 26px 20px; }
+
+    footer { padding: 36px 20px 48px; }
   }
 </style>
 </head>
 <body>
 <main>
+
+  <a class="announce" href="#protest">📅 Rally: Tue, Aug 4 · 4:30 PM · Lewis County Court House<span class="arrow">→</span></a>
 
   <!-- ============ HERO ============ -->
   <header class="hero">

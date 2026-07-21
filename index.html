@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeFlock Lewis County — No Flock Cameras</title>
+<meta name="description" content="A Flock license plate reader is already up in Lewis County, NY — tracking every driver, not just criminals. Join us outside the Board of Legislators meeting on Tuesday, August 4 at 4:30 PM.">
+<meta property="og:title" content="DeFlock Lewis County — No Flock Cameras">
+<meta property="og:description" content="They track every driver. Not just criminals. Rally outside the Board of Legislators meeting — Tuesday, August 4, 4:30 PM, Lewis County Court House, Lowville.">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --navy-dark: #1b222e;
+    --navy-darker: #151b25;
+    --navy-plate: #2b4a8b;
+    --orange: #f28c28;
+    --orange-bright: #ff9d3a;
+    --cream: #f2eee3;
+    --cream-dim: #d8d4c8;
+    --text: #e8e8e8;
+    --text-dim: #a8adb5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy-dark);
+    color: var(--text);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Road-line side decorations, like the flyer */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: repeating-linear-gradient(
+      to bottom,
+      #3a4456 0 28px,
+      transparent 28px 56px
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before { left: 14px; }
+  body::after { right: 14px; }
+
+  main { position: relative; z-index: 1; }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    text-align: center;
+    padding: 64px 0 48px;
+  }
+
+  .kicker {
+    color: var(--orange);
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  /* License plate */
+  .plate {
+    background: var(--cream);
+    border-radius: 18px;
+    max-width: 440px;
+    margin: 0 auto 40px;
+    padding: 0 0 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .plate-band {
+    background: var(--orange);
+    color: var(--cream);
+    font-weight: 800;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-size: 1rem;
+    padding: 12px 0 10px;
+    margin-bottom: 6px;
+  }
+
+  .plate-word {
+    color: var(--navy-plate);
+    font-weight: 900;
+    font-size: clamp(3rem, 12vw, 5rem);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+
+  .plate-sub {
+    color: var(--navy-plate);
+    font-weight: 800;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-top: 4px;
+  }
+
+  .plate .bolt {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    background: #b9b5a9;
+    border-radius: 50%;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.35);
+  }
+  .bolt.tl { top: 14px; left: 16px; }
+  .bolt.tr { top: 14px; right: 16px; }
+  .bolt.bl { bottom: 14px; left: 16px; }
+  .bolt.br { bottom: 14px; right: 16px; }
+
+  .hero h1 {
+    font-size: clamp(1.6rem, 5.5vw, 2.4rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+  }
+  .hero h1 .accent { color: var(--orange); display: block; }
+
+  .hero .tagline {
+    color: var(--text-dim);
+    margin-top: 18px;
+    font-size: 1.05rem;
+  }
+
+  .hero .alert {
+    margin-top: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 0.03em;
+  }
+  .hero .alert .accent { color: var(--orange); display: block; }
+
+  .cta-row {
+    margin-top: 36px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--orange);
+    color: var(--navy-darker);
+    box-shadow: 0 4px 20px rgba(242,140,40,0.35);
+  }
+  .btn-secondary {
+    border: 2px solid var(--orange);
+    color: var(--orange);
+  }
+
+  /* ---------- Sections ---------- */
+  section { padding: 56px 0; }
+
+  section h2 {
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 24px;
+  }
+  section h2 .accent { color: var(--orange); }
+
+  section p { margin-bottom: 18px; font-size: 1.05rem; }
+  section p strong { color: #fff; }
+
+  .divider {
+    border: none;
+    border-top: 3px dashed #3a4456;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  /* Fact cards */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+  }
+
+  .fact {
+    background: var(--navy-darker);
+    border: 1px solid #2c3545;
+    border-left: 4px solid var(--orange);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .fact h3 {
+    color: var(--orange);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .fact p { font-size: 0.95rem; margin: 0; color: var(--text-dim); }
+
+  /* ---------- Event card ---------- */
+  .event-card {
+    background: var(--cream);
+    color: var(--navy-darker);
+    border-radius: 18px;
+    padding: 36px 32px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+
+  .event-card .event-band {
+    background: var(--orange);
+    color: var(--cream);
+    display: inline-block;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    padding: 8px 18px;
+    border-radius: 6px;
+    margin-bottom: 24px;
+  }
+
+  .event-card h2 {
+    color: var(--navy-plate);
+    margin-bottom: 20px;
+  }
+
+  .event-details { list-style: none; margin-bottom: 8px; }
+  .event-details li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 10px 0;
+    border-bottom: 2px dashed rgba(43,74,139,0.2);
+  }
+  .event-details li:last-child { border-bottom: none; }
+  .event-details .emoji { font-size: 1.3rem; line-height: 1.4; }
+  .event-details a { color: var(--navy-plate); }
+
+  .event-card .note {
+    margin-top: 18px;
+    font-size: 0.98rem;
+    color: #4a5568;
+  }
+
+  /* Steps */
+  .steps { list-style: none; counter-reset: step; margin: 24px 0; }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding: 0 0 24px 64px;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 42px;
+    height: 42px;
+    background: var(--orange);
+    color: var(--navy-darker);
+    font-weight: 900;
+    font-size: 1.2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .steps li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 20px;
+    top: 46px;
+    bottom: 4px;
+    border-left: 3px dashed #3a4456;
+  }
+  .steps h3 { font-size: 1.1rem; margin-bottom: 6px; color: #fff; }
+  .steps p { font-size: 0.98rem; color: var(--text-dim); margin: 0; }
+
+  /* Quote / precedent */
+  .precedent {
+    background: var(--navy-darker);
+    border: 1px solid #2c3545;
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+  }
+  .precedent .big {
+    color: var(--orange);
+    font-size: clamp(2.2rem, 8vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .precedent .big-label {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 6px;
+    margin-bottom: 18px;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 48px 32px 64px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+  footer .footer-plate {
+    color: var(--orange);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 0.8rem;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 600px) {
+    body::before, body::after { display: none; }
+    .container { padding: 0 20px; }
+    .event-card { padding: 28px 22px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="container">
+      <p class="kicker">Lewis County, New York</p>
+
+      <div class="plate" role="img" aria-label="License plate reading DEFLOCK — Lewis County — No Flock Cameras">
+        <span class="bolt tl"></span><span class="bolt tr"></span>
+        <div class="plate-band">Lewis County</div>
+        <div class="plate-word">DEFLOCK</div>
+        <div class="plate-sub">No Flock Cameras</div>
+        <span class="bolt bl"></span><span class="bolt br"></span>
+      </div>
+
+      <h1>
+        They track every driver.
+        <span class="accent">Not just criminals.</span>
+      </h1>
+
+      <p class="tagline">License plate readers log where you go, when, and how often.</p>
+
+      <p class="alert">
+        The first camera is already up.
+        <span class="accent">Don't let more follow.</span>
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#protest">Join the Protest — Aug 4</a>
+        <a class="btn btn-secondary" href="#what-is-flock">What Is Flock?</a>
+      </div>
+    </div>
+  </header>
+
+  <hr class="divider">
+
+  <!-- ============ WHAT IS FLOCK ============ -->
+  <section id="what-is-flock">
+    <div class="container">
+      <h2>What Is a <span class="accent">Flock Camera?</span></h2>
+      <p>
+        A Flock license plate reader is <strong>already up in Lewis County</strong> — logging the
+        plate, make, model, and color of every car that passes. Not suspects.
+        <strong>Everyone.</strong>
+      </p>
+      <p>
+        Every pass is timestamped and stored in a searchable database. Over time, that
+        database becomes a record of where you go, when you go, and how often — your
+        commute, your doctor's visits, your place of worship, your friends' driveways.
+      </p>
+
+      <div class="facts">
+        <div class="fact">
+          <h3>No Warrant</h3>
+          <p>Officers can search the data without a warrant and without going before a judge.</p>
+        </div>
+        <div class="fact">
+          <h3>No Notice</h3>
+          <p>You'll never be told your vehicle's movements were looked up — or why.</p>
+        </div>
+        <div class="fact">
+          <h3>No Law</h3>
+          <p>New York has zero laws regulating this technology. No rules on access, retention, or sharing.</p>
+        </div>
+        <div class="fact">
+          <h3>No Suspicion Needed</h3>
+          <p>Your data is collected whether or not you've ever been suspected of anything.</p>
+        </div>
+      </div>
+
+      <p>
+        This isn't left vs. right. It's about whether our county government should run a
+        <strong>searchable database of everywhere we drive</strong> — without a warrant and
+        without asking us.
+      </p>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ PROTEST ============ -->
+  <section id="protest">
+    <div class="container">
+      <div class="event-card">
+        <span class="event-band">Show Up · Be Counted</span>
+        <h2>Rally Outside the Board of Legislators Meeting</h2>
+        <p style="margin-bottom:20px;">
+          We're gathering outside the Board of Legislators meeting to show them
+          <strong>Lewis County residents are paying attention.</strong>
+        </p>
+        <ul class="event-details">
+          <li><span class="emoji">📅</span><span>Tuesday, August 4 · 4:30 PM</span></li>
+          <li><span class="emoji">📍</span><span>Lewis County Court House<br>
+            <a href="https://www.openstreetmap.org/search?query=7660%20N%20State%20St%2C%20Lowville%2C%20NY" target="_blank" rel="noopener">7660 N State St, Lowville</a></span></li>
+          <li><span class="emoji">🪧</span><span>Bring a sign — or just bring yourself. Numbers matter.</span></li>
+          <li><span class="emoji">💧</span><span>Free water &amp; snacks provided</span></li>
+        </ul>
+        <p class="note">
+          Comfortable speaking? Stay for the meeting and use public comment — legislators
+          need to hear from actual constituents, even for 60 seconds. Can't speak?
+          Standing outside with a sign counts. So does just showing up.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ HOW TO HELP ============ -->
+  <section id="how-to-help">
+    <div class="container">
+      <h2>Three Ways to <span class="accent">Make a Difference</span></h2>
+      <ol class="steps">
+        <li>
+          <h3>Show up on August 4</h3>
+          <p>Just being there matters. Legislators count heads. A crowd outside the
+          courthouse says more than any email.</p>
+        </li>
+        <li>
+          <h3>Bring a sign</h3>
+          <p>Keep it simple: "No Warrantless Tracking," "Deflock Lewis County,"
+          "They Track Every Driver." Don't have one? Come anyway.</p>
+        </li>
+        <li>
+          <h3>Speak at public comment</h3>
+          <p>Stay for the meeting and speak — even 60 seconds counts. Say you're a
+          resident, say you're concerned, and ask the Board not to expand the program.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ============ IT WORKS ============ -->
+  <section id="it-works">
+    <div class="container">
+      <h2>Speaking Up <span class="accent">Works</span></h2>
+      <div class="precedent">
+        <div class="big">12–1</div>
+        <div class="big-label">Tompkins County vote to end their Flock contract</div>
+        <p style="margin:0;">
+          Nearby Tompkins County just voted <strong>12&ndash;1</strong> to end their Flock
+          contract after residents spoke up. Ordinary people showed up, spoke at meetings,
+          and their legislature listened. <strong>It works — and it can work here.</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <p class="footer-plate">Deflock Lewis County</p>
+    <p>A grassroots effort by Lewis County residents. Not affiliated with any political party.</p>
+    <p>They track every driver. Not just criminals.</p>
+  </footer>
+
+</main>
+</body>
+</html>

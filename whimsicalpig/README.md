@@ -16,7 +16,7 @@ Name each file exactly like this:
 
 | File | Where it shows |
 | --- | --- |
-| `logo.png` | **The logo.** Header, the framed piece at the top, and the browser tab icon. The logo artwork on a black background works as is, because the page blends the black into its dark colors. |
+| `logo.png` | **The logo.** Currently a redrawn copy made from `logo.svg`; replace it with the original logo file for an exact match. Shows in the header, the framed piece at the top, and the browser tab icon. The logo artwork on a black background works as is, because the page blends the black into its dark colors. |
 | `military-band.jpg` | Faint background behind the "Military framing, done right" band |
 | `military-framing.jpg`, `custom-framing.jpg`, `guidons.jpg`, `custom-apparel.jpg`, `awards-plaques.jpg`, `graphic-design.jpg` | The six "What We Do" cards |
 | `framed-military-artwork.jpg` | Framed Military Artwork |

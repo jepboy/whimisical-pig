@@ -5,39 +5,24 @@ Lewis County site at the repo root.
 
 ## Layout
 
-- `index.html` — the new site: one self-contained page, no build step. Open it in a browser to preview.
-- `images/` — photos for the new site (see below)
+- `index.html` — the rebuilt home page. It keeps the current site's layout (logo header,
+  three-banner slideshow, product collage, address/hours footer) with a cleaner, darker look,
+  and turns into a simple two-column grid on phones. One self-contained page, no build step.
+- `images/` — logo and any photos you want to host here
 - `original/` — the saved home page of the current site, kept for reference
 
-## Adding the logo and photos
+## Photos
 
-Every photo spot shows a "Photo coming soon" placeholder until a matching file exists in `images/`.
-Name each file exactly like this:
+Until photos are copied into this folder, the page loads each picture straight from
+thewhimsicalpig.com, so it already shows their real photos (when online).
 
-| File | Where it shows |
-| --- | --- |
-| `logo.png` | **The logo.** Currently a redrawn copy made from `logo.svg`; replace it with the original logo file for an exact match. Shows in the header, the framed piece at the top, and the browser tab icon. The logo artwork on a black background works as is, because the page blends the black into its dark colors. |
-| `military-framing.jpg`, `custom-apparel.jpg`, `graphic-design.jpg` | The three big picture tiles under the logo |
-| `framed-military-artwork.jpg` | Framed Military Artwork |
-| `flag-shadow-boxes.jpg` | Flag & Shadow Boxes |
-| `battalion-spreads.jpg` | Battalion Spreads |
-| `regulation-guidons.jpg` | Regulation Guidons |
-| `non-regulation-guidons.jpg` | Non Regulation Guidons |
-| `10th-mountain-snowshoes.jpg` | 10th Mountain Snowshoes |
-| `purple-hearts-reunited.jpg` | Purple Hearts Reunited Inc. |
-| `non-military-framing.jpg` | Non Military Framing |
-| `custom-designed-prints.jpg` | Custom Designed Prints |
-| `path-tracing.jpg` | Path Tracing |
-| `vinyl-applied-custom-apparel.jpg` | Vinyl Applied Custom Apparel |
-| `embroidery.jpg` | Embroidery |
-| `custom-printing.jpg` | Custom Printing |
-| `racing-plaques-awards.jpg` | Racing Plaques, Awards, Etc. |
-| `firemen-emt-leo-items.jpg` | Firemen, EMT, & LEO Items |
-| `masonic-items.jpg` | Masonic Items |
-| `customized-gifts.jpg` | Customized Gifts |
-| `sublimated-images-on-slate.jpg` | Sublimated Images on Slate |
-| `sublimated-plates-on-wooden-plaques.jpg` | Sublimated Plates on Wooden Plaques |
-| `evident-truths-products.jpg` | Evident Truths Products |
+To host a photo here instead, save it in `images/` with the name below and it takes priority:
+
+- Slideshow: `slide-military-framing.jpg`, `slide-custom-apparel.jpg`, `slide-graphic-design.jpg`
+- Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
+  `flag-and-shadow-boxes.jpg`, `10th-mountain-snowshoes.jpg`, `firemen-emt-and-leo-items.jpg`
+
+`logo.png` is a redrawn copy of the logo (made from `logo.svg`); replace it with the original file for an exact match.
 
 ## Downloading the current site into `original/`
 

@@ -3,25 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Whimsical Pig — Military &amp; Custom Framing, Watertown NY</title>
-<meta name="description" content="Family owned since 2003. Military framing, shadow boxes, guidons, custom framing, embroidery, screen printing, awards, and gifts on Public Square in Watertown, New York.">
+<title>The Whimsical Pig</title>
+<meta name="description" content="Custom military framing based out of Watertown, New York.">
 <meta property="og:title" content="The Whimsical Pig">
 <meta property="og:description" content="We make military framing &quot;too easy.&quot; Watertown, NY.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="images/logo.png">
-<meta name="theme-color" content="#1d0210">
+<meta name="theme-color" content="#16040c">
 <link rel="icon" href="images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600,100,1;1,9..144,500,100,1&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   "name": "The Whimsical Pig",
-  "description": "Family owned since 2003. Military framing, shadow boxes, custom framing, embroidery, screen printing, awards, and gifts.",
+  "description": "Custom military framing based out of Watertown, New York.",
   "telephone": "+1-315-773-3758",
-  "email": "WhimsicalPig@hotmail.com",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "50 Public Square, Suite E1",
@@ -41,343 +40,293 @@
 </script>
 <style>
   :root {
-    --night: #1d0210;
-    --wine: #2a0715;
-    --plum: #342134;
-    --oxblood: #360309;
+    --bg: #16040c;
+    --bg-2: #22070f;
+    --band: #0d0206;
     --gold: #e6c13d;
     --gold-soft: #f0d77a;
-    --cream: #f5ecd9;
-    --cream-dim: #d9c9b6;
     --pink: #eba7b9;
-    --mat: #efe6d2;
-    --line: rgba(230, 193, 61, 0.28);
+    --text: #efe6da;
+    --text-dim: #bfae9f;
+    --line: rgba(230, 193, 61, 0.25);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
   body {
-    background: var(--night);
-    color: var(--cream);
-    font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
-    font-size: 17px;
-    line-height: 1.6;
+    background:
+      radial-gradient(1200px 700px at 50% 30%, #2b0a16 0%, transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
     overflow-x: hidden;
   }
-  img { max-width: 100%; display: block; }
-  a { color: inherit; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+  .sc { font-family: "Alegreya Sans SC", "Open Sans", sans-serif; }
 
-  h1, h2, h3, .wordmark {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    line-height: 1.12;
-  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
 
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
-
-  /* Logo art sits on black; "lighten" lets the black melt into the dark page */
-  .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--cream); }
-  .logo img { mix-blend-mode: lighten; }
-  .wordmark em { font-style: italic; color: var(--gold); }
-
-  /* Header */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: rgba(29, 2, 16, 0.94);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .nav {
+  /* ---------- Header ---------- */
+  header { position: relative; z-index: 20; background: var(--bg); }
+  .top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    min-height: 70px;
+    gap: 20px;
+    padding: 18px 0 14px;
   }
-  /* The logo file is square with black space around the W; crop to the mark */
-  header .logo img { width: 96px; height: 50px; object-fit: cover; margin: 0 -8px 0 -12px; }
-  header .wordmark { font-size: 1.35rem; white-space: nowrap; }
-  .nav ul { display: flex; gap: 24px; list-style: none; }
-  .nav ul a {
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--cream-dim);
+  .brand { display: flex; align-items: center; gap: 12px; }
+  /* Logo art sits on black; "lighten" lets the black melt into the page */
+  .brand img {
+    width: 120px;
+    height: 62px;
+    object-fit: cover;
+    mix-blend-mode: lighten;
+    margin: 0 -14px 0 -18px;
   }
-  .nav ul a:hover { color: var(--gold); }
-  .call-btn {
-    display: inline-block;
-    background: var(--gold);
-    color: var(--night);
-    text-decoration: none;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 999px;
-    white-space: nowrap;
+  .brand-name {
+    font-family: "Alegreya Sans SC", sans-serif;
+    font-weight: 700;
+    font-size: 1.9rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
   }
-  .call-btn:hover { background: var(--gold-soft); }
-
-  /* Hero: the logo, hung like a framed piece */
-  .hero {
-    position: relative;
-    background:
-      radial-gradient(900px 480px at 50% 30%, rgba(233, 163, 173, 0.10), transparent 60%),
-      linear-gradient(180deg, var(--oxblood) 0%, var(--wine) 100%);
-    padding: 64px 0 72px;
-    text-align: center;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      radial-gradient(circle, rgba(240, 215, 122, 0.5) 1.1px, transparent 1.5px),
-      radial-gradient(circle, rgba(233, 163, 173, 0.3) 1px, transparent 1.4px);
-    background-size: 90px 90px, 140px 140px;
-    background-position: 0 0, 40px 60px;
-    opacity: 0.45;
-    pointer-events: none;
-  }
-  .hero .wrap { position: relative; }
-  .hero-frame {
-    max-width: 380px;
-    margin: 0 auto 40px;
-    transform: rotate(-1deg);
-  }
-  .hero-frame .mat {
-    aspect-ratio: 1 / 1;
-    display: grid;
-    place-items: center;
-    padding: 18px;
-    background: radial-gradient(circle at 50% 40%, #1a0d12, #050203 75%);
-    box-shadow: inset 0 0 0 6px #0b0507, inset 0 0 0 7px rgba(230, 193, 61, 0.55), inset 0 2px 10px rgba(0, 0, 0, 0.8);
-  }
-  .hero-frame .logo { flex-direction: column; justify-content: center; gap: 6px; }
-  .hero-frame .logo img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; }
-  .hero-frame .wordmark { font-size: clamp(1.7rem, 3.4vw, 2.3rem); }
-  .hero-frame .wordmark em { color: var(--pink); }
-  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
-  .easy {
-    position: relative;
-    display: inline-block;
-    font-style: italic;
-    font-weight: 500;
-    color: var(--gold);
-    white-space: nowrap;
-  }
-  .easy svg {
-    position: absolute;
-    left: -2%;
-    bottom: -0.26em;
-    width: 104%;
-    height: 0.4em;
-  }
-
-  /* Frame parts */
-  .moulding {
-    padding: 10px;
-    border-radius: 3px;
-    background: linear-gradient(135deg, #6b4a1f, #3b2410 45%, #7a5626 70%, #3b2410);
-    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 220, 150, 0.25);
-  }
-  .mat {
-    padding: 10px;
-    background: var(--mat);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
-  }
-
-  section { padding: 72px 0; scroll-margin-top: 70px; }
-  .section-head { text-align: center; margin-bottom: 40px; }
-  .section-head h2 { font-size: clamp(2rem, 4.4vw, 2.6rem); }
-  .tail {
+  .brand-tag {
     display: block;
-    width: 96px;
-    height: 24px;
-    margin: 12px auto 0;
+    margin-top: 4px;
+    font-family: "Alegreya Sans SC", sans-serif;
+    font-size: 1rem;
     color: var(--gold);
+    letter-spacing: 0.04em;
   }
-  .tail path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
 
-  /* Photo slots */
-  .pic {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background: radial-gradient(circle at 50% 45%, #4a2a3c, #2c1322 75%);
-    overflow: hidden;
+  nav ul { display: flex; align-items: center; gap: 6px; list-style: none; }
+  nav a, nav button {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font: 500 1.05rem "Alegreya Sans SC", sans-serif;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    background: none;
+    border: 0;
+    cursor: pointer;
   }
-  .pic img {
+  nav a:hover, nav button:hover, nav a[aria-current] { color: var(--gold); }
+  .products { position: relative; }
+  .products button::after { content: " ▾"; font-size: 0.8em; }
+  .menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 300px;
+    max-height: 70vh;
+    overflow: auto;
+    padding: 8px;
+    list-style: none;
+    background: #1c0610;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  }
+  .products:hover .menu, .products:focus-within .menu, .products.open .menu { display: block; }
+  .menu a { font-size: 1rem; padding: 6px 10px; }
+  .menu a:hover { background: rgba(230, 193, 61, 0.1); }
+  .call {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 7px 14px !important;
+    border-radius: 999px !important;
+    background: var(--gold);
+    color: #1a0509 !important;
+    font-weight: 700 !important;
+  }
+  .call:hover { background: var(--gold-soft); }
+
+  /* ---------- Slideshow band ---------- */
+  .band {
+    background: var(--band);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 -10px 30px rgba(0, 0, 0, 0.6);
+    padding: 9px 0;
+  }
+  .show {
+    position: relative;
+    max-width: 807px;
+    margin: 0 auto;
+    aspect-ratio: 807 / 256;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #1f0710;
+  }
+  .slide {
     position: absolute;
     inset: 0;
+    opacity: 0;
+    transition: opacity .9s ease;
+  }
+  .slide.on { opacity: 1; z-index: 1; }
+  .slide img { width: 100%; height: 100%; object-fit: cover; }
+  .slide .cap {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    padding: 4px 18px 6px;
+    border-radius: 999px;
+    background: rgba(13, 2, 6, 0.72);
+    font-size: 1.35rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .slide:hover .cap { color: var(--gold); }
+  .arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(13, 2, 6, 0.6);
+    color: var(--text);
+    font-size: 1.4rem;
+    line-height: 40px;
+    cursor: pointer;
+  }
+  .arrow:hover { background: var(--gold); color: #1a0509; }
+  .prev { left: 10px; }
+  .next { right: 10px; }
+
+  /* ---------- Product collage (same layout as the current site) ---------- */
+  .collage-sec { padding: 40px 0 60px; }
+  .collage {
+    position: relative;
+    width: 100%;
+    max-width: 850px;
+    margin: 0 auto;
+    aspect-ratio: 850 / 1066;
+  }
+  .piece {
+    position: absolute;
+    display: block;
+  }
+  .piece .img {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #2a0c18;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .piece img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform .4s ease;
+    transition: filter .35s ease;
   }
-  .pic .ph {
+  .piece .ph {
     position: absolute;
     inset: 0;
     display: grid;
     place-items: center;
-    color: rgba(245, 236, 217, 0.3);
-    font-size: 0.75rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: rgba(239, 230, 218, 0.3);
   }
+  .piece .label {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 12px);
+    padding: 2px 10px 4px;
+    border-radius: 999px;
+    background: rgba(13, 2, 6, 0.8);
+    font-size: 0.98rem;
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: 0.03em;
+    text-align: center;
+    transition: color .2s ease, background .2s ease;
+  }
+  @media (hover: hover) {
+    .piece img { filter: grayscale(1) brightness(0.85); }
+    .piece:hover img, .piece:focus-visible img { filter: none; }
+  }
+  .piece.small .label { font-size: 0.8rem; padding: 2px 6px 3px; bottom: 5px; }
+  .piece:hover, .piece:focus-visible { z-index: 5; }
+  .piece:hover .img, .piece:focus-visible .img {
+    transform: scale(1.06);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 0 2px var(--gold);
+  }
+  .piece:hover .label, .piece:focus-visible .label { background: var(--gold); color: #1a0509; }
 
-  /* Featured: three big picture tiles, name only */
-  .featured { background: var(--plum); }
-  .tiles {
+  /* ---------- Footer ---------- */
+  footer {
+    background: var(--band);
+    border-top: 1px solid var(--line);
+    padding: 34px 0 24px;
+    color: var(--text-dim);
+  }
+  .foot {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
-  }
-  .tile {
-    position: relative;
-    display: block;
-    border-radius: 14px;
-    overflow: hidden;
-    text-decoration: none;
-    border: 1px solid var(--line);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-  }
-  .tile .pic { aspect-ratio: 4 / 5; }
-  .tile:hover .pic img { transform: scale(1.05); }
-  .tile h3 {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 40px 20px 18px;
-    background: linear-gradient(180deg, transparent, rgba(20, 0, 9, 0.92));
-    font-size: 1.5rem;
-    color: var(--cream);
-  }
-  .tile:hover h3 { color: var(--gold); }
-
-  /* Gallery wall */
-  .gallery {
-    background:
-      radial-gradient(900px 400px at 50% 0%, rgba(77, 10, 18, 0.55), transparent 70%),
-      var(--night);
-  }
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 34px 26px;
-  }
-  .frame {
-    --tilt: 0deg;
-    transform: rotate(var(--tilt));
-    transition: transform .25s ease;
-  }
-  .frame:nth-child(4n+1) { --tilt: -0.7deg; }
-  .frame:nth-child(4n+2) { --tilt: 0.5deg; }
-  .frame:nth-child(4n+3) { --tilt: -0.3deg; }
-  .frame:nth-child(4n)   { --tilt: 0.7deg; }
-  .frame:hover { transform: rotate(0deg) translateY(-4px) scale(1.02); }
-  .frame .moulding { padding: 9px; }
-  .plate {
-    display: block;
-    width: fit-content;
-    max-width: 94%;
-    margin: 14px auto 0;
-    padding: 6px 14px;
-    border-radius: 4px;
-    background: linear-gradient(180deg, #f3dc86, #d6ab35 55%, #b98f25);
-    color: #2a1405;
-    font-size: 0.86rem;
-    font-weight: 600;
-    line-height: 1.3;
+    gap: 24px;
     text-align: center;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
-
-  /* Visit */
-  .visit { background: linear-gradient(180deg, var(--oxblood) 0%, var(--wine) 100%); }
-  .visit-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: 28px;
-    align-items: stretch;
-  }
-  .info {
-    background: rgba(29, 2, 16, 0.55);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 30px;
-    display: grid;
-    gap: 20px;
-    align-content: center;
-  }
-  .info a { color: var(--cream); }
-  .info a:hover { color: var(--gold); }
-  .info .phone {
-    font-family: "Fraunces", Georgia, serif;
-    font-size: 1.7rem;
+  .foot h3 {
+    margin-bottom: 4px;
+    font: 700 1.1rem "Alegreya Sans SC", sans-serif;
+    letter-spacing: 0.06em;
     color: var(--gold);
-    text-decoration: none;
   }
-  .hours { list-style: none; }
-  .hours li {
+  .foot a:hover { color: var(--gold); }
+  .foot .phone { font-size: 1.35rem; color: var(--text); font-weight: 600; }
+  .fine {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(239, 230, 218, 0.08);
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    border-bottom: 1px dashed rgba(245, 236, 217, 0.18);
-    padding: 5px 0;
-  }
-  .map {
-    border-radius: 16px;
-    overflow: hidden;
-    min-height: 320px;
-    border: 1px solid var(--line);
-    background: var(--wine);
-  }
-  .map iframe { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; }
-
-  footer {
-    background: #140009;
-    color: var(--cream-dim);
-    padding: 26px 0;
-    font-size: 0.92rem;
-    border-top: 1px solid var(--line);
-  }
-  footer .wrap {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
     flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.85rem;
   }
-  footer a { color: var(--gold); }
+  .fine a { color: var(--gold); }
 
-  @media (max-width: 900px) {
-    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
-    .visit-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 720px) {
-    .nav ul { display: none; }
-    .tiles { grid-template-columns: 1fr; }
-    .tile .pic { aspect-ratio: 16 / 10; }
-    .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 26px 16px; }
-    .frame .moulding { padding: 6px; }
-    .frame .mat { padding: 6px; }
-    .plate { font-size: 0.78rem; padding: 5px 9px; }
-    section { padding: 56px 0; }
-    .hero { padding: 44px 0 56px; }
-    .hero-frame { max-width: 280px; }
-  }
-  @media (max-width: 380px) {
-    header .wordmark { font-size: 1rem; }
-    header .logo img { width: 80px; height: 42px; }
-    .call-btn { padding: 7px 12px; font-size: 0.9rem; }
+  /* ---------- Small screens: collage becomes a tidy grid ---------- */
+  @media (max-width: 760px) {
+    .top { flex-wrap: wrap; justify-content: center; text-align: center; }
+    .brand { flex-direction: column; gap: 4px; }
+    .brand img { margin: 0; }
+    .brand-name { font-size: 1.7rem; }
+    nav ul { flex-wrap: wrap; justify-content: center; }
+    .menu { right: auto; left: 50%; transform: translateX(-50%); width: min(300px, 90vw); }
+    .slide .cap { font-size: 1rem; bottom: 8px; }
+    .arrow { width: 32px; height: 32px; margin-top: -16px; line-height: 32px; font-size: 1.1rem; }
+    .collage {
+      aspect-ratio: auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .piece { position: static; width: auto !important; height: auto !important; }
+    .piece .img { aspect-ratio: 1 / 1; height: auto; }
+    .piece .label, .piece.small .label { font-size: 0.9rem; padding: 2px 10px 4px; bottom: 8px; }
+    .foot { grid-template-columns: 1fr; gap: 18px; }
+    .fine { justify-content: center; text-align: center; }
   }
   @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
     * { transition: none !important; }
   }
 </style>
@@ -385,140 +334,175 @@
 <body>
 
 <header>
-  <div class="wrap nav">
-    <a class="logo" href="#top" aria-label="The Whimsical Pig home">
+  <div class="wrap top">
+    <a class="brand" href="index.html">
       <img src="images/logo.png" alt="" onerror="this.remove()">
-      <span class="wordmark">The Whimsical <em>Pig</em></span>
+      <span>
+        <span class="brand-name">The Whimsical Pig</span>
+        <span class="brand-tag">we make military framing “too easy”</span>
+      </span>
     </a>
-    <ul>
-      <li><a href="#work">Our Work</a></li>
-      <li><a href="#visit">Visit</a></li>
-    </ul>
-    <a class="call-btn" href="tel:315-773-3758">315-773-3758</a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="index.html" aria-current="page">home</a></li>
+        <li><a href="https://www.thewhimsicalpig.com/location.html">location</a></li>
+        <li><a href="https://www.thewhimsicalpig.com/contact-us.html">contact us</a></li>
+        <li class="products">
+          <button type="button" aria-haspopup="true" aria-expanded="false">products</button>
+          <ul class="menu" id="menu"></ul>
+        </li>
+        <li><a class="call" href="tel:315-773-3758">315-773-3758</a></li>
+      </ul>
+    </nav>
   </div>
 </header>
 
-<main id="top">
+<main>
+  <div class="band">
+    <div class="show sc" id="show">
+      <button class="arrow prev" type="button" aria-label="Previous slide">‹</button>
+      <button class="arrow next" type="button" aria-label="Next slide">›</button>
+    </div>
+  </div>
 
-  <section class="hero">
+  <section class="collage-sec">
     <div class="wrap">
-      <div class="hero-frame" aria-hidden="true">
-        <div class="moulding"><div class="mat">
-          <span class="logo">
-            <img src="images/logo.png" alt="" onerror="this.remove()">
-            <span class="wordmark">The Whimsical <em>Pig</em></span>
-          </span>
-        </div></div>
-      </div>
-      <h1>We make military framing
-        <span class="easy">“too easy”<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14 C 50 4, 110 4, 196 12" fill="none" stroke="#eba7b9" stroke-width="4" stroke-linecap="round"/></svg></span>
-      </h1>
+      <div class="collage sc" id="collage"></div>
     </div>
   </section>
-
-  <section class="featured">
-    <div class="wrap tiles" id="tiles"></div>
-  </section>
-
-  <section class="gallery" id="work">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Our Work</h2>
-        <svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>
-      </div>
-      <div class="gallery-grid" id="gallery-grid"></div>
-    </div>
-  </section>
-
-  <section class="visit" id="visit">
-    <div class="wrap visit-grid">
-      <div class="info">
-        <a class="phone" href="tel:315-773-3758">315-773-3758</a>
-        <p>50 Public Square, Suite E1<br>Watertown, New York 13601</p>
-        <ul class="hours">
-          <li><span>Monday – Friday</span><span>9:30am – 5:30pm</span></li>
-          <li><span>Saturday &amp; Sunday</span><span>Closed</span></li>
-        </ul>
-        <p><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a><br>
-          <a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></p>
-      </div>
-      <div class="map">
-        <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
-      </div>
-    </div>
-  </section>
-
 </main>
 
 <footer>
   <div class="wrap">
-    <span>&copy; <span id="year"></span> The Whimsical Pig · Watertown, NY</span>
-    <span><a href="tel:315-773-3758">315-773-3758</a></span>
+    <div class="foot">
+      <div>
+        <h3>visit</h3>
+        <p><a href="https://www.thewhimsicalpig.com/location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></p>
+      </div>
+      <div>
+        <h3>call</h3>
+        <p><a class="phone" href="tel:315-773-3758">315-773-3758</a></p>
+      </div>
+      <div>
+        <h3>hours</h3>
+        <p>Monday – Friday: 9:30am – 5:30pm<br>Saturday &amp; Sunday: Closed</p>
+      </div>
+    </div>
+    <div class="fine">
+      <span>&copy; <span id="year"></span> The Whimsical Pig</span>
+      <a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Find us on Facebook</a>
+    </div>
   </div>
 </footer>
 
 <script>
-  // Photos: put a file at images/<slug>.jpg to replace each placeholder.
-  function photo(slug, alt) {
-    const pic = document.createElement("div");
-    pic.className = "pic";
-    pic.innerHTML = '<div class="ph">Photo coming soon</div><img loading="lazy">';
-    const img = pic.querySelector("img");
-    img.alt = alt;
-    img.onerror = () => img.remove();
-    img.src = "images/" + slug + ".jpg";
-    return pic;
+  const SITE = "https://www.thewhimsicalpig.com/";
+
+  // Load images/<local> if it exists in this folder, otherwise the photo
+  // from the current live site; if neither loads, keep the placeholder.
+  function loadImg(img, local, remote) {
+    img.onerror = () => {
+      if (remote && img.src !== remote) img.src = remote;
+      else img.remove();
+    };
+    img.src = "images/" + local;
   }
 
-  const featured = [
-    ["Military Framing", "military-framing"],
-    ["Custom Apparel", "custom-apparel"],
-    ["Graphic Design", "graphic-design"],
+  // ---- Slideshow (same three banners as the current site) ----
+  const slides = [
+    ["military framing", "slide-military-framing.jpg", "images/1.png", "military-framing.html"],
+    ["custom apparel", "slide-custom-apparel.jpg", "images/3.jpg", "custom-apparel.html"],
+    ["graphic design", "slide-graphic-design.jpg", "images/4.png", "graphic-design.html"],
   ];
-  const tiles = document.getElementById("tiles");
-  for (const [name, slug] of featured) {
+  const show = document.getElementById("show");
+  const slideEls = slides.map(([cap, local, remote, page], i) => {
     const a = document.createElement("a");
-    a.className = "tile";
-    a.href = "#work";
-    a.appendChild(photo(slug, name));
-    const h = document.createElement("h3");
-    h.textContent = name;
-    a.appendChild(h);
-    tiles.appendChild(a);
+    a.className = "slide" + (i === 0 ? " on" : "");
+    a.href = SITE + page;
+    a.innerHTML = '<img alt=""><span class="cap"></span>';
+    a.querySelector(".cap").textContent = cap;
+    a.querySelector("img").alt = cap;
+    loadImg(a.querySelector("img"), local, SITE + remote);
+    show.insertBefore(a, show.firstChild);
+    return a;
+  });
+  let cur = 0, timer;
+  function go(n) {
+    slideEls[cur].classList.remove("on");
+    cur = (n + slideEls.length) % slideEls.length;
+    slideEls[cur].classList.add("on");
+  }
+  function auto() {
+    clearInterval(timer);
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => go(cur + 1), 5000);
+  }
+  show.querySelector(".prev").onclick = () => { go(cur - 1); auto(); };
+  show.querySelector(".next").onclick = () => { go(cur + 1); auto(); };
+  show.onmouseenter = () => clearInterval(timer);
+  show.onmouseleave = auto;
+  auto();
+
+  // ---- Product collage ----
+  // [label, page, live image, x, y, w, h] — positions match the current site's layout.
+  const pieces = [
+    ["flag & shadow boxes", "flag---shadow-boxes.html", "button%202.jpg", 12, 6, 147, 143],
+    ["battalion spreads", "battalion-spreads.html", "button%201.jpg", 174, 0, 165, 136],
+    ["regulation guidons", "regulation-guidons.html", "button%205.jpg", 352, 11, 174, 126],
+    ["non regulation guidons", "non-regulation-guidons.html", "button%2020.jpg", 540, 0, 139, 164],
+    ["framed military artwork", "framed-military-artwork.html", "button%203.jpg", 692, 21, 157, 129],
+    ["embroidery", "embroidery.html", "52565901_10161418329605076_7165628496394321920_o.jpg", 33, 163, 198, 246],
+    ["vinyl applied custom apparel", "vinyl-applied-custom-apparel.html", "button%2006.png", 250, 151, 228, 241],
+    ["non military framing", "non-military-framing.html", "button%204.jpg", 489, 178, 174, 246],
+    ["10th mountain snowshoes", "10th-mountain-snowshoes.html", "button%2011.jpg", 677, 180, 151, 211],
+    ["evident truths products", "evident-truths-products.html", "button%20013.png", 51, 420, 176, 180],
+    ["customized gifts", "customized-gifts.html", "button%207.jpg", 249, 406, 174, 213],
+    ["sublimated images on slate", "sublimated-images-on-slate.html", "button%2010.jpg", 439, 445, 206, 208],
+    ["custom designed prints", "custom-designed-prints.html", "button%2012.jpg", 660, 446, 153, 226],
+    ["custom printing", "custom-printing.html", "fb_img_1576654875481.jpg", 0, 610, 235, 272],
+    ["sublimated plates on wooden plaques", "sublimated-plates-on-wooden-plaques.html", "button%2019.jpg", 249, 629, 184, 271],
+    ["racing plaques, awards, etc.", "racing-plaques%2c-awards%2c-etc.html", "button%2018.jpg", 442, 663, 140, 208],
+    ["path tracing", "path-tracing.html", "button%2016.jpg", 593, 679, 87, 163],
+    ["masonic items", "masonic-items.html", "button%2015.png", 700, 684, 75, 139],
+    ["firemen, emt, & leo items", "firemen%2c-emt%2c---leo-items.html", "button%20014.png", 460, 879, 119, 120],
+    ["purple hearts reunited inc.", "purple-hearts-reunited-inc.html", "button%2017.jpg", 265, 906, 176, 159],
+  ];
+  const W = 850, H = 1066;
+  const pct = (v, t) => (v / t * 100).toFixed(3) + "%";
+  const collage = document.getElementById("collage");
+  const menu = document.getElementById("menu");
+  const slug = s => s.replace(/&/g, "and").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+
+  for (const [label, page, remote, x, y, w, h] of pieces) {
+    const a = document.createElement("a");
+    a.className = "piece" + (w < 130 ? " small" : "");
+    a.href = SITE + page;
+    a.style.left = pct(x, W);
+    a.style.top = pct(y, H);
+    a.style.width = pct(w, W);
+    a.style.height = pct(h, H);
+    a.innerHTML = '<div class="img"><span class="ph"></span><img alt="" loading="lazy"><span class="label"></span></div>';
+    a.querySelector(".label").textContent = label;
+    a.querySelector("img").alt = label;
+    loadImg(a.querySelector("img"), slug(label) + ".jpg", SITE + "images/" + remote);
+    collage.appendChild(a);
+
+    const li = document.createElement("li");
+    li.innerHTML = '<a></a>';
+    li.firstChild.href = SITE + page;
+    li.firstChild.textContent = label;
+    menu.appendChild(li);
   }
 
-  const items = [
-    ["Framed Military Artwork", "framed-military-artwork"],
-    ["Flag & Shadow Boxes", "flag-shadow-boxes"],
-    ["Battalion Spreads", "battalion-spreads"],
-    ["Regulation Guidons", "regulation-guidons"],
-    ["Non Regulation Guidons", "non-regulation-guidons"],
-    ["10th Mountain Snowshoes", "10th-mountain-snowshoes"],
-    ["Purple Hearts Reunited Inc.", "purple-hearts-reunited"],
-    ["Non Military Framing", "non-military-framing"],
-    ["Custom Designed Prints", "custom-designed-prints"],
-    ["Path Tracing", "path-tracing"],
-    ["Vinyl Applied Custom Apparel", "vinyl-applied-custom-apparel"],
-    ["Embroidery", "embroidery"],
-    ["Custom Printing", "custom-printing"],
-    ["Racing Plaques, Awards, Etc.", "racing-plaques-awards"],
-    ["Firemen, EMT, & LEO Items", "firemen-emt-leo-items"],
-    ["Masonic Items", "masonic-items"],
-    ["Customized Gifts", "customized-gifts"],
-    ["Sublimated Images on Slate", "sublimated-images-on-slate"],
-    ["Sublimated Plates on Wooden Plaques", "sublimated-plates-on-wooden-plaques"],
-    ["Evident Truths Products", "evident-truths-products"],
-  ];
-  const ggrid = document.getElementById("gallery-grid");
-  for (const [name, slug] of items) {
-    const frame = document.createElement("figure");
-    frame.className = "frame";
-    frame.innerHTML = '<div class="moulding"><div class="mat"></div></div><figcaption class="plate"></figcaption>';
-    frame.querySelector(".mat").appendChild(photo(slug, name));
-    frame.querySelector(".plate").textContent = name;
-    ggrid.appendChild(frame);
-  }
+  // Products menu: tap to open on touch screens
+  const prod = document.querySelector(".products");
+  const prodBtn = prod.querySelector("button");
+  prodBtn.onclick = () => {
+    const open = prod.classList.toggle("open");
+    prodBtn.setAttribute("aria-expanded", open);
+  };
+  document.addEventListener("click", e => {
+    if (!prod.contains(e.target)) { prod.classList.remove("open"); prodBtn.setAttribute("aria-expanded", false); }
+  });
 
   document.getElementById("year").textContent = new Date().getFullYear();
 </script>

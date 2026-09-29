@@ -6,7 +6,7 @@
 <title>The Whimsical Pig — Military &amp; Custom Framing, Watertown NY</title>
 <meta name="description" content="Family owned since 2003. Military framing, shadow boxes, guidons, custom framing, embroidery, screen printing, awards, and gifts on Public Square in Watertown, New York.">
 <meta property="og:title" content="The Whimsical Pig">
-<meta property="og:description" content="We make military framing &quot;too easy.&quot; Family owned in Watertown, NY since 2003.">
+<meta property="og:description" content="We make military framing &quot;too easy.&quot; Watertown, NY.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="images/logo.png">
 <meta name="theme-color" content="#1d0210">
@@ -45,7 +45,6 @@
     --wine: #2a0715;
     --plum: #342134;
     --oxblood: #360309;
-    --oxblood-2: #4d0a12;
     --gold: #e6c13d;
     --gold-soft: #f0d77a;
     --cream: #f5ecd9;
@@ -77,8 +76,9 @@
 
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
 
-  /* Logo: shows images/logo.png; falls back to a text wordmark until it's added */
+  /* Logo art sits on black; "lighten" lets the black melt into the dark page */
   .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--cream); }
+  .logo img { mix-blend-mode: lighten; }
   .wordmark em { font-style: italic; color: var(--gold); }
 
   /* Header */
@@ -98,8 +98,6 @@
     gap: 16px;
     min-height: 70px;
   }
-  /* Logo art sits on black; "lighten" lets the black melt into the dark page */
-  .logo img { mix-blend-mode: lighten; }
   /* The logo file is square with black space around the W; crop to the mark */
   header .logo img { width: 96px; height: 50px; object-fit: cover; margin: 0 -8px 0 -12px; }
   header .wordmark { font-size: 1.35rem; white-space: nowrap; }
@@ -123,13 +121,14 @@
   }
   .call-btn:hover { background: var(--gold-soft); }
 
-  /* Hero */
+  /* Hero: the logo, hung like a framed piece */
   .hero {
     position: relative;
     background:
-      radial-gradient(1100px 500px at 75% 10%, rgba(233, 163, 173, 0.10), transparent 60%),
+      radial-gradient(900px 480px at 50% 30%, rgba(233, 163, 173, 0.10), transparent 60%),
       linear-gradient(180deg, var(--oxblood) 0%, var(--wine) 100%);
-    padding: 72px 0 84px;
+    padding: 64px 0 72px;
+    text-align: center;
     overflow: hidden;
   }
   .hero::before {
@@ -144,25 +143,25 @@
     opacity: 0.45;
     pointer-events: none;
   }
-  .hero-grid {
-    position: relative;
+  .hero .wrap { position: relative; }
+  .hero-frame {
+    max-width: 380px;
+    margin: 0 auto 40px;
+    transform: rotate(-1deg);
+  }
+  .hero-frame .mat {
+    aspect-ratio: 1 / 1;
     display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 56px;
-    align-items: center;
+    place-items: center;
+    padding: 18px;
+    background: radial-gradient(circle at 50% 40%, #1a0d12, #050203 75%);
+    box-shadow: inset 0 0 0 6px #0b0507, inset 0 0 0 7px rgba(230, 193, 61, 0.55), inset 0 2px 10px rgba(0, 0, 0, 0.8);
   }
-  .eyebrow {
-    color: var(--gold);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-size: 0.82rem;
-    margin-bottom: 14px;
-  }
-  .hero h1 {
-    font-size: clamp(2.3rem, 5.4vw, 3.9rem);
-    margin-bottom: 22px;
-  }
+  .hero-frame .logo { flex-direction: column; justify-content: center; gap: 6px; }
+  .hero-frame .logo img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; }
+  .hero-frame .wordmark { font-size: clamp(1.7rem, 3.4vw, 2.3rem); }
+  .hero-frame .wordmark em { color: var(--pink); }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); }
   .easy {
     position: relative;
     display: inline-block;
@@ -178,49 +177,8 @@
     width: 104%;
     height: 0.4em;
   }
-  .hero p.lead {
-    font-size: 1.15rem;
-    max-width: 540px;
-    margin-bottom: 30px;
-    color: var(--cream-dim);
-  }
-  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-  .btn {
-    display: inline-block;
-    padding: 12px 26px;
-    border-radius: 999px;
-    font-weight: 600;
-    text-decoration: none;
-    border: 2px solid var(--gold);
-    transition: transform .15s ease, background .15s ease;
-  }
-  .btn:hover { transform: translateY(-2px); }
-  .btn-primary { background: var(--gold); color: var(--night); }
-  .btn-primary:hover { background: var(--gold-soft); border-color: var(--gold-soft); }
-  .btn-ghost { color: var(--gold); }
-  .btn-ghost:hover { background: rgba(230,193,61,0.12); }
 
-  /* The logo, hung like a framed piece */
-  .hero-frame {
-    transform: rotate(1.5deg);
-    max-width: 400px;
-    width: 100%;
-    justify-self: center;
-  }
-  .hero-frame .mat {
-    aspect-ratio: 1 / 1;
-    display: grid;
-    place-items: center;
-    padding: 18px;
-    background: radial-gradient(circle at 50% 40%, #1a0d12, #050203 75%);
-    box-shadow: inset 0 0 0 6px #0b0507, inset 0 0 0 7px rgba(230, 193, 61, 0.55), inset 0 2px 10px rgba(0, 0, 0, 0.8);
-  }
-  .hero-frame .logo { flex-direction: column; justify-content: center; gap: 6px; color: var(--cream); }
-  .hero-frame .logo img { width: 100%; aspect-ratio: 2 / 1; object-fit: cover; }
-  .hero-frame .wordmark { font-size: clamp(1.7rem, 3.4vw, 2.3rem); text-align: center; }
-  .hero-frame .wordmark em { color: var(--pink); }
-
-  /* Frame parts (shared by hero and gallery) */
+  /* Frame parts */
   .moulding {
     padding: 10px;
     border-radius: 3px;
@@ -233,39 +191,14 @@
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
   }
 
-  /* Trust strip */
-  .trust {
-    background: var(--night);
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-  .trust ul {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    padding: 22px 0;
-    text-align: center;
-  }
-  .trust strong {
-    display: block;
-    font-family: "Fraunces", Georgia, serif;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
-    font-size: 1.3rem;
-    color: var(--gold);
-    line-height: 1.2;
-  }
-  .trust span { font-size: 0.92rem; color: var(--cream-dim); }
-
-  section { padding: 76px 0; scroll-margin-top: 70px; }
-  .section-head { text-align: center; margin-bottom: 44px; }
-  .section-head h2 { font-size: clamp(2rem, 4.4vw, 2.8rem); }
-  .section-head p { color: var(--cream-dim); margin-top: 8px; max-width: 620px; margin-left: auto; margin-right: auto; }
+  section { padding: 72px 0; scroll-margin-top: 70px; }
+  .section-head { text-align: center; margin-bottom: 40px; }
+  .section-head h2 { font-size: clamp(2rem, 4.4vw, 2.6rem); }
   .tail {
     display: block;
     width: 96px;
     height: 24px;
-    margin: 14px auto 0;
+    margin: 12px auto 0;
     color: var(--gold);
   }
   .tail path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
@@ -283,115 +216,48 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform .4s ease;
   }
   .pic .ph {
     position: absolute;
     inset: 0;
     display: grid;
     place-items: center;
-    color: rgba(245, 236, 217, 0.35);
-    font-size: 0.8rem;
+    color: rgba(245, 236, 217, 0.3);
+    font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
-  /* Services */
-  .services { background: var(--plum); }
-  .service-grid {
+  /* Featured: three big picture tiles, name only */
+  .featured { background: var(--plum); }
+  .tiles {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+    gap: 22px;
   }
-  .service {
-    background: var(--wine);
-    border: 1px solid var(--line);
-    border-radius: 16px;
+  .tile {
+    position: relative;
+    display: block;
+    border-radius: 14px;
     overflow: hidden;
-    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
-  }
-  .service:hover {
-    transform: translateY(-4px);
-    border-color: var(--gold);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
-  }
-  .service .pic { border-bottom: 1px solid var(--line); }
-  .service .body { padding: 18px 22px 22px; }
-  .service h3 { font-size: 1.4rem; color: var(--gold); }
-  .service p { color: var(--cream-dim); font-size: 0.97rem; margin-top: 6px; }
-
-  /* Military band */
-  .military {
-    background:
-      linear-gradient(90deg, rgba(29, 2, 16, 0.96), rgba(29, 2, 16, 0.82)),
-      url("images/military-band.jpg") center/cover no-repeat,
-      var(--night);
-    border-top: 3px solid var(--gold);
-    border-bottom: 3px solid var(--gold);
-  }
-  .military-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: center;
-  }
-  .military h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin-bottom: 14px; }
-  .military p { color: var(--cream-dim); }
-  .checks { list-style: none; display: grid; gap: 12px; }
-  .checks li {
-    position: relative;
-    padding: 12px 16px 12px 48px;
-    background: rgba(245, 236, 217, 0.05);
+    text-decoration: none;
     border: 1px solid var(--line);
-    border-radius: 10px;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
   }
-  .checks li::before {
-    content: "";
+  .tile .pic { aspect-ratio: 4 / 5; }
+  .tile:hover .pic img { transform: scale(1.05); }
+  .tile h3 {
     position: absolute;
-    left: 16px;
-    top: 50%;
-    width: 18px;
-    height: 18px;
-    margin-top: -9px;
-    border-radius: 50%;
-    background: var(--gold);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat exclude, linear-gradient(#000 0 0);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 40px 20px 18px;
+    background: linear-gradient(180deg, transparent, rgba(20, 0, 9, 0.92));
+    font-size: 1.5rem;
+    color: var(--cream);
   }
-
-  /* How it works */
-  .steps-sec { background: var(--wine); }
-  .steps {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    counter-reset: step;
-  }
-  .steps li {
-    counter-increment: step;
-    position: relative;
-    padding: 30px 24px 26px;
-    background: rgba(29, 2, 16, 0.55);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-  }
-  .steps li::before {
-    content: counter(step);
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    margin-bottom: 14px;
-    border-radius: 50%;
-    background: var(--gold);
-    color: var(--night);
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.3rem;
-  }
-  .steps h3 { font-size: 1.3rem; margin-bottom: 6px; }
-  .steps p { color: var(--cream-dim); font-size: 0.97rem; }
+  .tile:hover h3 { color: var(--gold); }
 
   /* Gallery wall */
   .gallery {
@@ -399,26 +265,6 @@
       radial-gradient(900px 400px at 50% 0%, rgba(77, 10, 18, 0.55), transparent 70%),
       var(--night);
   }
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    margin: -16px 0 40px;
-  }
-  .filters button {
-    font: inherit;
-    font-weight: 600;
-    font-size: 0.92rem;
-    padding: 7px 16px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: transparent;
-    color: var(--cream-dim);
-    cursor: pointer;
-  }
-  .filters button:hover { color: var(--gold); border-color: var(--gold); }
-  .filters button[aria-pressed="true"] { background: var(--gold); color: var(--night); border-color: var(--gold); }
   .gallery-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -429,7 +275,6 @@
     transform: rotate(var(--tilt));
     transition: transform .25s ease;
   }
-  .frame[hidden] { display: none; }
   .frame:nth-child(4n+1) { --tilt: -0.7deg; }
   .frame:nth-child(4n+2) { --tilt: 0.5deg; }
   .frame:nth-child(4n+3) { --tilt: -0.3deg; }
@@ -465,11 +310,18 @@
     border: 1px solid var(--line);
     border-radius: 16px;
     padding: 30px;
+    display: grid;
+    gap: 20px;
+    align-content: center;
   }
-  .info h3 { color: var(--gold); font-size: 1.2rem; margin-bottom: 6px; }
-  .info .block + .block { margin-top: 22px; }
   .info a { color: var(--cream); }
   .info a:hover { color: var(--gold); }
+  .info .phone {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.7rem;
+    color: var(--gold);
+    text-decoration: none;
+  }
   .hours { list-style: none; }
   .hours li {
     display: flex;
@@ -481,16 +333,16 @@
   .map {
     border-radius: 16px;
     overflow: hidden;
-    min-height: 340px;
+    min-height: 320px;
     border: 1px solid var(--line);
     background: var(--wine);
   }
-  .map iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; }
+  .map iframe { width: 100%; height: 100%; min-height: 320px; border: 0; display: block; }
 
   footer {
     background: #140009;
     color: var(--cream-dim);
-    padding: 30px 0;
+    padding: 26px 0;
     font-size: 0.92rem;
     border-top: 1px solid var(--line);
   }
@@ -504,25 +356,20 @@
   footer a { color: var(--gold); }
 
   @media (max-width: 900px) {
-    .hero-grid { grid-template-columns: 1fr; gap: 40px; text-align: center; }
-    .hero p.lead { margin-left: auto; margin-right: auto; }
-    .hero-actions { justify-content: center; }
-    .hero-frame { max-width: 300px; }
-    .service-grid { grid-template-columns: repeat(2, 1fr); }
-    .military-grid { grid-template-columns: 1fr; gap: 28px; }
     .gallery-grid { grid-template-columns: repeat(3, 1fr); }
     .visit-grid { grid-template-columns: 1fr; }
-    .trust ul { grid-template-columns: repeat(2, 1fr); row-gap: 18px; }
   }
   @media (max-width: 720px) {
     .nav ul { display: none; }
-    .service-grid, .steps { grid-template-columns: 1fr; }
+    .tiles { grid-template-columns: 1fr; }
+    .tile .pic { aspect-ratio: 16 / 10; }
     .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 26px 16px; }
     .frame .moulding { padding: 6px; }
     .frame .mat { padding: 6px; }
     .plate { font-size: 0.78rem; padding: 5px 9px; }
-    section { padding: 60px 0; }
-    .hero { padding: 52px 0 64px; }
+    section { padding: 56px 0; }
+    .hero { padding: 44px 0 56px; }
+    .hero-frame { max-width: 280px; }
   }
   @media (max-width: 380px) {
     header .wordmark { font-size: 1rem; }
@@ -540,13 +387,11 @@
 <header>
   <div class="wrap nav">
     <a class="logo" href="#top" aria-label="The Whimsical Pig home">
-      <img src="images/logo.png" alt="The Whimsical Pig" onerror="this.remove()">
+      <img src="images/logo.png" alt="" onerror="this.remove()">
       <span class="wordmark">The Whimsical <em>Pig</em></span>
     </a>
     <ul>
-      <li><a href="#services">Services</a></li>
-      <li><a href="#military">Military</a></li>
-      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#work">Our Work</a></li>
       <li><a href="#visit">Visit</a></li>
     </ul>
     <a class="call-btn" href="tel:315-773-3758">315-773-3758</a>
@@ -556,18 +401,7 @@
 <main id="top">
 
   <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <p class="eyebrow">Family owned in Watertown since 2003</p>
-        <h1>We make military framing
-          <span class="easy">“too easy”<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14 C 50 4, 110 4, 196 12" fill="none" stroke="#eba7b9" stroke-width="4" stroke-linecap="round"/></svg></span>
-        </h1>
-        <p class="lead">Shadow boxes, flag cases, guidons, and custom framing, plus embroidery, screen printing, awards, and personalized gifts, all from our shop on Public Square.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="tel:315-773-3758">Call for a quote</a>
-          <a class="btn btn-ghost" href="#gallery">See our work</a>
-        </div>
-      </div>
+    <div class="wrap">
       <div class="hero-frame" aria-hidden="true">
         <div class="moulding"><div class="mat">
           <span class="logo">
@@ -576,114 +410,41 @@
           </span>
         </div></div>
       </div>
+      <h1>We make military framing
+        <span class="easy">“too easy”<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 14 C 50 4, 110 4, 196 12" fill="none" stroke="#eba7b9" stroke-width="4" stroke-linecap="round"/></svg></span>
+      </h1>
     </div>
   </section>
 
-  <div class="trust">
-    <ul class="wrap">
-      <li><strong>Since 2003</strong><span>Serving the North Country</span></li>
-      <li><strong>4 Generations</strong><span>Family owned &amp; operated</span></li>
-      <li><strong>Military Framing</strong><span>Shadow boxes, flags &amp; guidons</span></li>
-      <li><strong>Downtown</strong><span>50 Public Square, Watertown</span></li>
-    </ul>
-  </div>
-
-  <section class="services" id="services">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>What We Do</h2>
-        <p>One shop for framing, apparel, awards, and gifts, so your whole project stays under one roof.</p>
-        <svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>
-      </div>
-      <div class="service-grid" id="service-grid"></div>
-    </div>
+  <section class="featured">
+    <div class="wrap tiles" id="tiles"></div>
   </section>
 
-  <section class="military" id="military">
-    <div class="wrap military-grid">
-      <div>
-        <p class="eyebrow">Honoring service</p>
-        <h2>Military framing, done right</h2>
-        <p>For military members, retirees, and former service members: framing, shadow boxes, plaques, and awards designed to be presented. Bring in your medals, flag, photos, and patches and we'll build a piece worth hanging.</p>
-      </div>
-      <ul class="checks">
-        <li>Retirement &amp; farewell shadow boxes</li>
-        <li>Flag cases &amp; flag shadow boxes</li>
-        <li>Regulation &amp; non-regulation guidons</li>
-        <li>Battalion spreads &amp; framed military artwork</li>
-        <li>10th Mountain snowshoes, plaques &amp; awards</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="steps-sec" id="how">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>How It Works</h2>
-        <svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>
-      </div>
-      <ol class="steps">
-        <li>
-          <h3>Bring it in</h3>
-          <p>Stop by the shop or call with your idea. Bring the medals, flag, photos, or artwork you want to feature.</p>
-        </li>
-        <li>
-          <h3>Design it together</h3>
-          <p>We help you pick the layout, frame, and finishing touches, and you approve the design before we build.</p>
-        </li>
-        <li>
-          <h3>Pick it up</h3>
-          <p>Your finished piece is ready to hang, gift, or present at the ceremony.</p>
-        </li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="gallery" id="gallery">
+  <section class="gallery" id="work">
     <div class="wrap">
       <div class="section-head">
         <h2>Our Work</h2>
-        <p>A look at what comes out of the shop. Stop in or call to talk about your project.</p>
         <svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>
       </div>
-      <div class="filters" id="filters" role="group" aria-label="Filter gallery"></div>
       <div class="gallery-grid" id="gallery-grid"></div>
     </div>
   </section>
 
   <section class="visit" id="visit">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Visit the Shop</h2>
-        <p>On Public Square in downtown Watertown.</p>
-        <svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>
+    <div class="wrap visit-grid">
+      <div class="info">
+        <a class="phone" href="tel:315-773-3758">315-773-3758</a>
+        <p>50 Public Square, Suite E1<br>Watertown, New York 13601</p>
+        <ul class="hours">
+          <li><span>Monday – Friday</span><span>9:30am – 5:30pm</span></li>
+          <li><span>Saturday &amp; Sunday</span><span>Closed</span></li>
+        </ul>
+        <p><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a><br>
+          <a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></p>
       </div>
-      <div class="visit-grid">
-        <div class="info">
-          <div class="block">
-            <h3>Address</h3>
-            <p>50 Public Square, Suite E1<br>Watertown, New York 13601</p>
-          </div>
-          <div class="block">
-            <h3>Call or Email</h3>
-            <p><a href="tel:315-773-3758">315-773-3758</a><br><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a></p>
-          </div>
-          <div class="block">
-            <h3>Hours</h3>
-            <ul class="hours">
-              <li><span>Monday – Friday</span><span>9:30am – 5:30pm</span></li>
-              <li><span>Saturday &amp; Sunday</span><span>Closed</span></li>
-            </ul>
-          </div>
-          <div class="block">
-            <h3>Follow Along</h3>
-            <p><a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></p>
-          </div>
-        </div>
-        <div class="map">
-          <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
-        </div>
+      <div class="map">
+        <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
       </div>
     </div>
   </section>
@@ -692,7 +453,7 @@
 
 <footer>
   <div class="wrap">
-    <span>&copy; <span id="year"></span> The Whimsical Pig · Family owned since 2003 · Watertown, NY</span>
+    <span>&copy; <span id="year"></span> The Whimsical Pig · Watertown, NY</span>
     <span><a href="tel:315-773-3758">315-773-3758</a></span>
   </div>
 </footer>
@@ -710,73 +471,53 @@
     return pic;
   }
 
-  const services = [
-    ["Military Framing", "military-framing", "Shadow boxes, flag cases, battalion spreads, and framed military artwork."],
-    ["Custom Framing", "custom-framing", "Art, photos, diplomas, jerseys, and keepsakes, framed to last."],
-    ["Guidons", "guidons", "Regulation and non-regulation guidons for units and organizations."],
-    ["Embroidery & Printing", "custom-apparel", "Embroidery, screen printing, and vinyl-applied shirts and gear."],
-    ["Awards & Plaques", "awards-plaques", "Trophies, plaques, and awards for racing, sports, lodges, and first responders."],
-    ["Gifts & Design", "graphic-design", "Personalized gifts, sublimated slate and plaques, custom prints, and graphic design."],
+  const featured = [
+    ["Military Framing", "military-framing"],
+    ["Custom Apparel", "custom-apparel"],
+    ["Graphic Design", "graphic-design"],
   ];
-  const sgrid = document.getElementById("service-grid");
-  for (const [name, slug, text] of services) {
-    const card = document.createElement("article");
-    card.className = "service";
-    card.appendChild(photo(slug, name));
-    const body = document.createElement("div");
-    body.className = "body";
-    body.innerHTML = "<h3></h3><p></p>";
-    body.querySelector("h3").textContent = name;
-    body.querySelector("p").textContent = text;
-    card.appendChild(body);
-    sgrid.appendChild(card);
+  const tiles = document.getElementById("tiles");
+  for (const [name, slug] of featured) {
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = "#work";
+    a.appendChild(photo(slug, name));
+    const h = document.createElement("h3");
+    h.textContent = name;
+    a.appendChild(h);
+    tiles.appendChild(a);
   }
 
   const items = [
-    ["Framed Military Artwork", "framed-military-artwork", "Military"],
-    ["Flag & Shadow Boxes", "flag-shadow-boxes", "Military"],
-    ["Battalion Spreads", "battalion-spreads", "Military"],
-    ["Regulation Guidons", "regulation-guidons", "Military"],
-    ["Non Regulation Guidons", "non-regulation-guidons", "Military"],
-    ["10th Mountain Snowshoes", "10th-mountain-snowshoes", "Military"],
-    ["Purple Hearts Reunited Inc.", "purple-hearts-reunited", "Military"],
-    ["Non Military Framing", "non-military-framing", "Framing"],
-    ["Custom Designed Prints", "custom-designed-prints", "Framing"],
-    ["Path Tracing", "path-tracing", "Framing"],
-    ["Vinyl Applied Custom Apparel", "vinyl-applied-custom-apparel", "Apparel"],
-    ["Embroidery", "embroidery", "Apparel"],
-    ["Custom Printing", "custom-printing", "Apparel"],
-    ["Racing Plaques, Awards, Etc.", "racing-plaques-awards", "Awards & Gifts"],
-    ["Firemen, EMT, & LEO Items", "firemen-emt-leo-items", "Awards & Gifts"],
-    ["Masonic Items", "masonic-items", "Awards & Gifts"],
-    ["Customized Gifts", "customized-gifts", "Awards & Gifts"],
-    ["Sublimated Images on Slate", "sublimated-images-on-slate", "Awards & Gifts"],
-    ["Sublimated Plates on Wooden Plaques", "sublimated-plates-on-wooden-plaques", "Awards & Gifts"],
-    ["Evident Truths Products", "evident-truths-products", "Awards & Gifts"],
+    ["Framed Military Artwork", "framed-military-artwork"],
+    ["Flag & Shadow Boxes", "flag-shadow-boxes"],
+    ["Battalion Spreads", "battalion-spreads"],
+    ["Regulation Guidons", "regulation-guidons"],
+    ["Non Regulation Guidons", "non-regulation-guidons"],
+    ["10th Mountain Snowshoes", "10th-mountain-snowshoes"],
+    ["Purple Hearts Reunited Inc.", "purple-hearts-reunited"],
+    ["Non Military Framing", "non-military-framing"],
+    ["Custom Designed Prints", "custom-designed-prints"],
+    ["Path Tracing", "path-tracing"],
+    ["Vinyl Applied Custom Apparel", "vinyl-applied-custom-apparel"],
+    ["Embroidery", "embroidery"],
+    ["Custom Printing", "custom-printing"],
+    ["Racing Plaques, Awards, Etc.", "racing-plaques-awards"],
+    ["Firemen, EMT, & LEO Items", "firemen-emt-leo-items"],
+    ["Masonic Items", "masonic-items"],
+    ["Customized Gifts", "customized-gifts"],
+    ["Sublimated Images on Slate", "sublimated-images-on-slate"],
+    ["Sublimated Plates on Wooden Plaques", "sublimated-plates-on-wooden-plaques"],
+    ["Evident Truths Products", "evident-truths-products"],
   ];
-
   const ggrid = document.getElementById("gallery-grid");
-  for (const [name, slug, group] of items) {
+  for (const [name, slug] of items) {
     const frame = document.createElement("figure");
     frame.className = "frame";
-    frame.dataset.group = group;
     frame.innerHTML = '<div class="moulding"><div class="mat"></div></div><figcaption class="plate"></figcaption>';
     frame.querySelector(".mat").appendChild(photo(slug, name));
     frame.querySelector(".plate").textContent = name;
     ggrid.appendChild(frame);
-  }
-
-  const filters = document.getElementById("filters");
-  for (const group of ["All", "Military", "Framing", "Apparel", "Awards & Gifts"]) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = group;
-    b.setAttribute("aria-pressed", group === "All");
-    b.onclick = () => {
-      for (const other of filters.children) other.setAttribute("aria-pressed", other === b);
-      for (const f of ggrid.children) f.hidden = group !== "All" && f.dataset.group !== group;
-    };
-    filters.appendChild(b);
   }
 
   document.getElementById("year").textContent = new Date().getFullYear();

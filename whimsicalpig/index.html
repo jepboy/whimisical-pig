@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Whimsical Pig — Custom Military Framing, Watertown NY</title>
+<meta name="description" content="Custom military framing, shadow boxes, guidons, embroidery, apparel, and gifts, based out of Watertown, New York.">
+<meta property="og:title" content="The Whimsical Pig">
+<meta property="og:description" content="We make military framing &quot;too easy.&quot; Custom framing, shadow boxes, guidons, apparel, and gifts in Watertown, NY.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#360309">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --oxblood: #360309;
+    --oxblood-2: #4d0a12;
+    --gold: #e6c13d;
+    --gold-dim: #c9a52a;
+    --cream: #f7f3ea;
+    --paper: #ffffff;
+    --ink: #1f1a17;
+    --ink-dim: #5c534c;
+    --line: #e4dccb;
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+
+  h1, h2, h3 {
+    font-family: "Oswald", "Arial Narrow", sans-serif;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--oxblood);
+    color: var(--cream);
+    border-bottom: 3px solid var(--gold);
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+  }
+  .brand {
+    font-family: "Oswald", sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .brand span { color: var(--gold); }
+  .nav ul { display: flex; gap: 24px; list-style: none; }
+  .nav ul a {
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .nav ul a:hover { color: var(--gold); }
+  .call-btn {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--oxblood);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .call-btn:hover { background: #f2d055; }
+
+  /* Hero */
+  .hero {
+    background:
+      linear-gradient(135deg, rgba(54,3,9,0.94), rgba(77,10,18,0.88)),
+      url("images/hero.jpg") center/cover no-repeat,
+      var(--oxblood);
+    color: var(--cream);
+    padding: 88px 0 96px;
+    text-align: center;
+  }
+  .hero .eyebrow {
+    color: var(--gold);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    text-transform: uppercase;
+    max-width: 820px;
+    margin: 0 auto 18px;
+  }
+  .hero h1 em { font-style: normal; color: var(--gold); }
+  .hero p.lead {
+    font-size: 1.15rem;
+    max-width: 620px;
+    margin: 0 auto 32px;
+    color: #eadfd6;
+  }
+  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 2px solid var(--gold);
+  }
+  .btn-primary { background: var(--gold); color: var(--oxblood); }
+  .btn-primary:hover { background: #f2d055; border-color: #f2d055; }
+  .btn-ghost { color: var(--gold); }
+  .btn-ghost:hover { background: rgba(230,193,61,0.12); }
+
+  section { padding: 72px 0; }
+  .section-head { text-align: center; margin-bottom: 40px; }
+  .section-head h2 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    text-transform: uppercase;
+    color: var(--oxblood);
+  }
+  .section-head p { color: var(--ink-dim); margin-top: 8px; }
+  .rule {
+    width: 64px;
+    height: 4px;
+    background: var(--gold);
+    margin: 14px auto 0;
+    border-radius: 2px;
+  }
+
+  /* Image with placeholder fallback */
+  .pic {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background:
+      repeating-linear-gradient(45deg, #efe7d6 0 12px, #e9dfca 12px 24px);
+    overflow: hidden;
+  }
+  .pic img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .pic .ph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: "Oswald", sans-serif;
+    font-size: 2.4rem;
+    color: rgba(54,3,9,0.25);
+    text-transform: uppercase;
+  }
+
+  /* Featured services */
+  .featured { background: var(--paper); border-bottom: 1px solid var(--line); }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .feature {
+    display: block;
+    text-decoration: none;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .feature:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(54,3,9,0.12); }
+  .feature .body { padding: 18px 20px 22px; }
+  .feature h3 {
+    font-size: 1.4rem;
+    text-transform: uppercase;
+    color: var(--oxblood);
+  }
+  .feature p { color: var(--ink-dim); font-size: 0.98rem; margin-top: 4px; }
+
+  /* Catalog */
+  .catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .item {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .item .pic .ph { font-size: 1.6rem; }
+  .item h3 {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 12px 14px 14px;
+    color: var(--oxblood);
+    border-top: 3px solid var(--gold);
+  }
+
+  /* Visit */
+  .visit { background: var(--oxblood); color: var(--cream); }
+  .visit .section-head h2 { color: var(--cream); }
+  .visit .section-head p { color: #d9c9c0; }
+  .visit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 28px;
+    align-items: stretch;
+  }
+  .info {
+    background: var(--oxblood-2);
+    border: 1px solid rgba(230,193,61,0.35);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .info h3 {
+    color: var(--gold);
+    text-transform: uppercase;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .info .block + .block { margin-top: 22px; }
+  .info a { color: var(--cream); }
+  .info a:hover { color: var(--gold); }
+  .hours { list-style: none; }
+  .hours li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px dashed rgba(255,255,255,0.15); padding: 4px 0; }
+  .map {
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 340px;
+    border: 1px solid rgba(230,193,61,0.35);
+  }
+  .map iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; }
+
+  footer {
+    background: #1d0210;
+    color: #c9b8b0;
+    padding: 28px 0;
+    font-size: 0.92rem;
+  }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  footer a { color: var(--gold); }
+
+  @media (max-width: 900px) {
+    .catalog-grid { grid-template-columns: repeat(3, 1fr); }
+    .visit-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .nav ul { display: none; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .catalog-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .item h3 { font-size: 0.9rem; padding: 10px 10px 12px; }
+    section { padding: 56px 0; }
+    .hero { padding: 64px 0 72px; }
+  }
+  @media (max-width: 380px) {
+    .brand { font-size: 1.15rem; }
+    .call-btn { padding: 7px 12px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">The Whimsical <span>Pig</span></a>
+    <ul>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#catalog">What We Make</a></li>
+      <li><a href="#visit">Visit</a></li>
+    </ul>
+    <a class="call-btn" href="tel:315-773-3758">315-773-3758</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Watertown, New York</p>
+      <h1>We make military framing <em>“too easy”</em></h1>
+      <p class="lead">Custom military framing, shadow boxes, guidons, apparel, and personalized gifts, made in our shop on Public Square.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#catalog">See what we make</a>
+        <a class="btn btn-ghost" href="#visit">Visit the shop</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="featured" id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Our Services</h2>
+        <div class="rule"></div>
+      </div>
+      <div class="feature-grid">
+        <a class="feature" href="#catalog">
+          <div class="pic"><div class="ph">Framing</div><img src="images/military-framing.jpg" alt="Military framing" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Military Framing</h3>
+            <p>Shadow boxes, flag cases, battalion spreads, and framed military artwork.</p>
+          </div>
+        </a>
+        <a class="feature" href="#catalog">
+          <div class="pic"><div class="ph">Apparel</div><img src="images/custom-apparel.jpg" alt="Custom apparel" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Custom Apparel</h3>
+            <p>Vinyl-applied shirts and gear, plus embroidery.</p>
+          </div>
+        </a>
+        <a class="feature" href="#catalog">
+          <div class="pic"><div class="ph">Design</div><img src="images/graphic-design.jpg" alt="Graphic design" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Graphic Design</h3>
+            <p>Custom-designed prints, custom printing, and path tracing.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="catalog">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What We Make</h2>
+        <p>Stop in or call to talk about your project.</p>
+        <div class="rule"></div>
+      </div>
+      <div class="catalog-grid" id="catalog-grid"></div>
+    </div>
+  </section>
+
+  <section class="visit" id="visit">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Visit the Shop</h2>
+        <p>On Public Square in downtown Watertown.</p>
+        <div class="rule"></div>
+      </div>
+      <div class="visit-grid">
+        <div class="info">
+          <div class="block">
+            <h3>Address</h3>
+            <p>50 Public Square, Suite E1<br>Watertown, New York 13601</p>
+          </div>
+          <div class="block">
+            <h3>Phone</h3>
+            <p><a href="tel:315-773-3758">315-773-3758</a></p>
+          </div>
+          <div class="block">
+            <h3>Hours</h3>
+            <ul class="hours">
+              <li><span>Monday – Friday</span><span>9:30am – 5:30pm</span></li>
+              <li><span>Saturday &amp; Sunday</span><span>Closed</span></li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Follow Us</h3>
+            <p><a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></p>
+          </div>
+        </div>
+        <div class="map">
+          <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="year"></span> The Whimsical Pig · Watertown, NY</span>
+    <span><a href="tel:315-773-3758">315-773-3758</a></span>
+  </div>
+</footer>
+
+<script>
+  // Catalog items. Put a photo for each at images/<slug>.jpg to replace the placeholder.
+  const items = [
+    ["Framed Military Artwork", "framed-military-artwork"],
+    ["Flag & Shadow Boxes", "flag-shadow-boxes"],
+    ["Battalion Spreads", "battalion-spreads"],
+    ["Regulation Guidons", "regulation-guidons"],
+    ["Non Regulation Guidons", "non-regulation-guidons"],
+    ["10th Mountain Snowshoes", "10th-mountain-snowshoes"],
+    ["Purple Hearts Reunited Inc.", "purple-hearts-reunited"],
+    ["Non Military Framing", "non-military-framing"],
+    ["Vinyl Applied Custom Apparel", "vinyl-applied-custom-apparel"],
+    ["Embroidery", "embroidery"],
+    ["Customized Gifts", "customized-gifts"],
+    ["Custom Designed Prints", "custom-designed-prints"],
+    ["Custom Printing", "custom-printing"],
+    ["Path Tracing", "path-tracing"],
+    ["Sublimated Images on Slate", "sublimated-images-on-slate"],
+    ["Sublimated Plates on Wooden Plaques", "sublimated-plates-on-wooden-plaques"],
+    ["Racing Plaques, Awards, Etc.", "racing-plaques-awards"],
+    ["Firemen, EMT, & LEO Items", "firemen-emt-leo-items"],
+    ["Masonic Items", "masonic-items"],
+    ["Evident Truths Products", "evident-truths-products"],
+  ];
+
+  const grid = document.getElementById("catalog-grid");
+  for (const [name, slug] of items) {
+    const card = document.createElement("div");
+    card.className = "item";
+    const initials = name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.test(w)).slice(0, 2).map(w => w[0]).join("");
+    card.innerHTML =
+      '<div class="pic"><div class="ph"></div><img loading="lazy" alt=""></div><h3></h3>';
+    card.querySelector(".ph").textContent = initials;
+    const img = card.querySelector("img");
+    img.alt = name;
+    img.onerror = () => img.remove();
+    img.src = "images/" + slug + ".jpg";
+    card.querySelector("h3").textContent = name;
+    grid.appendChild(card);
+  }
+
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

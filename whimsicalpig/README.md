@@ -9,15 +9,16 @@ Lewis County site at the repo root.
 - `images/` — photos for the new site (see below)
 - `original/` — the saved home page of the current site, kept for reference
 
-## Adding photos
+## Adding the logo and photos
 
-Every photo spot shows a striped placeholder until a matching file exists in `images/`.
-Name each photo exactly like this (`.jpg`):
+Every photo spot shows a "Photo coming soon" placeholder until a matching file exists in `images/`.
+Name each file exactly like this:
 
 | File | Where it shows |
 | --- | --- |
-| `hero.jpg` | Faint background behind the top banner |
-| `military-framing.jpg`, `custom-apparel.jpg`, `graphic-design.jpg` | The three service cards |
+| `logo.png` | **The logo.** Header, the framed piece at the top, and the browser tab icon. The logo artwork on a black background works as is, because the page blends the black into its dark colors. |
+| `military-band.jpg` | Faint background behind the "Military framing, done right" band |
+| `military-framing.jpg`, `custom-framing.jpg`, `guidons.jpg`, `custom-apparel.jpg`, `awards-plaques.jpg`, `graphic-design.jpg` | The six "What We Do" cards |
 | `framed-military-artwork.jpg` | Framed Military Artwork |
 | `flag-shadow-boxes.jpg` | Flag & Shadow Boxes |
 | `battalion-spreads.jpg` | Battalion Spreads |
@@ -26,17 +27,17 @@ Name each photo exactly like this (`.jpg`):
 | `10th-mountain-snowshoes.jpg` | 10th Mountain Snowshoes |
 | `purple-hearts-reunited.jpg` | Purple Hearts Reunited Inc. |
 | `non-military-framing.jpg` | Non Military Framing |
+| `custom-designed-prints.jpg` | Custom Designed Prints |
+| `path-tracing.jpg` | Path Tracing |
 | `vinyl-applied-custom-apparel.jpg` | Vinyl Applied Custom Apparel |
 | `embroidery.jpg` | Embroidery |
-| `customized-gifts.jpg` | Customized Gifts |
-| `custom-designed-prints.jpg` | Custom Designed Prints |
 | `custom-printing.jpg` | Custom Printing |
-| `path-tracing.jpg` | Path Tracing |
-| `sublimated-images-on-slate.jpg` | Sublimated Images on Slate |
-| `sublimated-plates-on-wooden-plaques.jpg` | Sublimated Plates on Wooden Plaques |
 | `racing-plaques-awards.jpg` | Racing Plaques, Awards, Etc. |
 | `firemen-emt-leo-items.jpg` | Firemen, EMT, & LEO Items |
 | `masonic-items.jpg` | Masonic Items |
+| `customized-gifts.jpg` | Customized Gifts |
+| `sublimated-images-on-slate.jpg` | Sublimated Images on Slate |
+| `sublimated-plates-on-wooden-plaques.jpg` | Sublimated Plates on Wooden Plaques |
 | `evident-truths-products.jpg` | Evident Truths Products |
 
 ## Downloading the current site into `original/`

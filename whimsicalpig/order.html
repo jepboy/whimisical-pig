@@ -728,7 +728,7 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
       showDone(ref, false);
     } catch (err) {
-      statusEl.innerHTML = `Hmm, that didn't send. Please try again, or call us at <a href="tel:315-773-3758">315-773-3758</a>.`;
+      statusEl.innerHTML = `Hmm, that didn't send. Please try again, or email us at <a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a>.`;
       nextBtn.textContent = "Try again";
     } finally {
       nextBtn.disabled = backBtn.disabled = false;

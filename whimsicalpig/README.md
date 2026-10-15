@@ -13,7 +13,7 @@ open `index.html` in a browser to preview.
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
-| `settings.js` | **Edit this** for the announcement bar, booking / review / gift card links, and the FAQ answers |
+| `settings.js` | **Edit this** for the announcement bar, review and gift card links, and the FAQ answers |
 | `shop-items.js` | **Edit this** to change shop items, prices and checkout links |
 | `order-config.js` | **Edit this** to change order types, examples and questions, and where orders are sent |
 
@@ -22,7 +22,6 @@ open `index.html` in a browser to preview.
 | Setting | What it does |
 | --- | --- |
 | `announcement` | A notice bar at the top of every page, e.g. holiday order deadlines or closures |
-| `bookingUrl` | Adds "Book a Consultation" buttons (Square Appointments, Calendly, etc.) |
 | `reviewsUrl` | Adds a "Leave us a review" link in the footer. Send it to customers at pickup too |
 | `giftCardUrl` | Adds a Gift Cards panel to the Shop |
 | `faq` | The questions and answers on the Help page |

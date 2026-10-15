@@ -110,7 +110,6 @@ function buildFooter() {
   if (!el) return;
   const S = window.SETTINGS || {};
   const extra = [
-    S.bookingUrl && `<li><a href="${S.bookingUrl}">Book a consultation</a></li>`,
     S.giftCardUrl && `<li><a href="${S.giftCardUrl}">Gift cards</a></li>`,
     S.reviewsUrl && `<li><a href="${S.reviewsUrl}" target="_blank" rel="noopener">Leave us a review</a></li>`,
   ].filter(Boolean).join("");

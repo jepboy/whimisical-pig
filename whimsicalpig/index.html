@@ -302,15 +302,6 @@
 <script src="settings.js"></script>
 <script src="site.js"></script>
 <script>
-  // ---- Optional "Book a Consultation" button (link set in settings.js) ----
-  if (window.SETTINGS && SETTINGS.bookingUrl) {
-    const b = document.createElement("a");
-    b.className = "btn ghost";
-    b.href = SETTINGS.bookingUrl;
-    b.textContent = "Book a Consultation";
-    document.getElementById("how-actions").insertBefore(b, document.querySelector("#how-actions .light"));
-  }
-
   // ---- Featured banners (the three from the current site), crossfading in a frame ----
   const banners = [
     ["Military Framing", "slide-military-framing.jpg", "1.png"],

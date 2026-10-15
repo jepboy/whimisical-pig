@@ -9,10 +9,6 @@ window.SETTINGS = {
   // e.g. "Christmas orders: please order by December 1." or "Closed Monday for Memorial Day."
   announcement: "",
 
-  // Online booking for consultations (Square Appointments, Calendly, etc.).
-  // When set, "Book a Consultation" buttons appear.
-  bookingUrl: "",
-
   // Link where customers can leave a review (e.g. your Google review link).
   reviewsUrl: "",
 
@@ -23,8 +19,8 @@ window.SETTINGS = {
   // the shop works. {phone} and {email} are filled in automatically.
   faq: [
     {
-      q: "Do I need an appointment?",
-      a: "No. Stop by any time during shop hours. If you'd like one-on-one time to plan a bigger piece, call ahead at {phone} and we'll set aside time for you.",
+      q: "How do I start an order?",
+      a: "Fill out our Start an Order form. It walks you through everything we need, including photos of your items. Have a question first? Email us at {email}.",
     },
     {
       q: "How long will my order take?",
@@ -40,7 +36,7 @@ window.SETTINGS = {
     },
     {
       q: "I'm not local. Can I still order?",
-      a: "Yes. Start an order online, then mail your items to us. See “Mailing your items” below for packing tips, and call us first so we know they're coming.",
+      a: "Yes. Start an order online, then mail your items to us. See “Mailing your items” below for packing tips, and email us at {email} so we know they're coming.",
     },
     {
       q: "I'm missing some medals or insignia. Can you help?",

@@ -11,9 +11,26 @@ open `index.html` in a browser to preview.
 | `index.html` | Home: featured banners in a frame, specialties, the full gallery of work, how ordering works, and visit info |
 | `shop.html` | Online shop for ready-made items, plus **Quick Pay** for invoices, deposits and balances |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
+| `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
+| `settings.js` | **Edit this** for the announcement bar, booking / review / gift card links, and the FAQ answers |
 | `shop-items.js` | **Edit this** to change shop items, prices and checkout links |
 | `order-config.js` | **Edit this** to change order types, examples and questions, and where orders are sent |
+
+## Shop-wide settings (`settings.js`)
+
+| Setting | What it does |
+| --- | --- |
+| `announcement` | A notice bar at the top of every page, e.g. holiday order deadlines or closures |
+| `bookingUrl` | Adds "Book a Consultation" buttons (Square Appointments, Calendly, etc.) |
+| `reviewsUrl` | Adds a "Leave us a review" link in the footer. Send it to customers at pickup too |
+| `giftCardUrl` | Adds a Gift Cards panel to the Shop |
+| `faq` | The questions and answers on the Help page |
+
+**Please read through the FAQ answers.** They're written to be safe and general
+(no promised turnaround times or deposit amounts). Once the shop decides on a
+deposit policy or typical turnaround, put it in those answers so customers see it
+before ordering.
 
 ## Setting up the shop (payments)
 
@@ -54,6 +71,10 @@ with everything, plus an order reference like `WP-261015-K3QZ`.
 - **Until then** (`endpoint: ""`): pressing "Send my order" opens the customer's
   email app addressed to `WhimsicalPig@hotmail.com` with every answer filled in,
   and asks them to attach their photos.
+
+**"Have these ready" lists:** each order type has a `bring` list shown above its
+questions and on the Help page. Links like `order.html?type=shadow-box` open the
+form with that order type already picked, handy for emails and Facebook posts.
 
 **Changing questions:** each order type in `order-config.js` has a `questions` list.
 Question types are `text`, `textarea`, `number`, `date`, `select`, `radio` (pick one)

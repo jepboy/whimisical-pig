@@ -268,9 +268,10 @@
         <li><span class="num">ii.</span><h3>Tell Us</h3><p>Answer a few questions and send photos of your items.</p></li>
         <li><span class="num">iii.</span><h3>We Build It</h3><p>We follow up with a quote, then craft it in our shop.</p></li>
       </ol>
-      <div class="how-actions">
+      <div class="how-actions" id="how-actions">
         <a class="btn" href="order.html">Start an Order</a>
         <a class="btn ghost" href="shop.html">Shop &amp; Quick Pay</a>
+        <a class="btn light" href="help.html">Help &amp; FAQ</a>
       </div>
     </div>
   </section>
@@ -298,8 +299,18 @@
 
 <footer id="site-footer"></footer>
 
+<script src="settings.js"></script>
 <script src="site.js"></script>
 <script>
+  // ---- Optional "Book a Consultation" button (link set in settings.js) ----
+  if (window.SETTINGS && SETTINGS.bookingUrl) {
+    const b = document.createElement("a");
+    b.className = "btn ghost";
+    b.href = SETTINGS.bookingUrl;
+    b.textContent = "Book a Consultation";
+    document.getElementById("how-actions").insertBefore(b, document.querySelector("#how-actions .light"));
+  }
+
   // ---- Featured banners (the three from the current site), crossfading in a frame ----
   const banners = [
     ["Military Framing", "slide-military-framing.jpg", "1.png"],

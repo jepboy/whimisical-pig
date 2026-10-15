@@ -12,6 +12,8 @@
 //    examples   pictures of the most common versions. Put photos in
 //               images/examples/ named after the example id
 //               (e.g. images/examples/classic-retirement.jpg).
+//    bring      a short "have these ready" checklist shown with the questions
+//               and on the Help page
 //    questions  the details we need. type can be:
 //               text, textarea, number, date, select, radio, checks
 //               add  required: true  to make one mandatory
@@ -24,6 +26,7 @@ window.ORDER = {
   types: [
     {
       id: "shadow-box",
+      bring: ["The medals, flag, patches, photos or other items to include", "Name, rank and dates exactly as they should appear", "A DD-214 or awards list, if you have one, so medals go in the right order", "Original photos or high-resolution scans"],
       title: "Military Shadow Box",
       blurb: "Retirement, promotion, farewell & memorial",
       live: "button%202.jpg",
@@ -50,6 +53,7 @@ window.ORDER = {
     },
     {
       id: "flag-case",
+      bring: ["The flag (folded or unfolded)", "Any certificate or document going in the case", "The exact wording for the nameplate"],
       title: "Flag Case",
       blurb: "Burial & presentation flags",
       live: "button%202.jpg",
@@ -70,6 +74,7 @@ window.ORDER = {
     },
     {
       id: "guidon",
+      bring: ["Unit designation spelled exactly as it should appear", "Artwork or a photo of your current guidon, if you have one", "Quantity and the date you need it"],
       title: "Guidon",
       blurb: "Regulation & non-regulation",
       live: "button%205.jpg",
@@ -87,6 +92,7 @@ window.ORDER = {
     },
     {
       id: "apparel",
+      bring: ["Your logo or artwork (PDF, AI, EPS or SVG files print best)", "Sizes and how many of each", "Colors for the garments and the design"],
       title: "Embroidery & Apparel",
       blurb: "Unit shirts, hats, polos & more",
       live: "52565901_10161418329605076_7165628496394321920_o.jpg",
@@ -109,6 +115,7 @@ window.ORDER = {
     },
     {
       id: "framing",
+      bring: ["The piece you want framed", "Its measurements, if you are mailing it", "Photos of frames or rooms you like, for ideas"],
       title: "Custom Framing",
       blurb: "Art, photos, jerseys & documents",
       live: "button%204.jpg",
@@ -129,6 +136,7 @@ window.ORDER = {
     },
     {
       id: "award",
+      bring: ["The exact wording for each plaque or award", "Your logo file, if it goes on the piece", "How many you need and the event date"],
       title: "Plaque or Award",
       blurb: "Racing, retirement, lodges & first responders",
       live: "button%2018.jpg",
@@ -147,6 +155,7 @@ window.ORDER = {
     },
     {
       id: "other",
+      bring: ["Photos or examples of what you have in mind"],
       title: "Something Else",
       blurb: "Gifts, slate, prints & ideas",
       live: "button%207.jpg",

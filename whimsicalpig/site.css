@@ -42,6 +42,16 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.1; lett
   color: var(--brass);
 }
 
+/* ---------- Announcement (set in settings.js) ---------- */
+.announce {
+  padding: 9px 20px;
+  background: var(--brass);
+  color: var(--ink);
+  text-align: center;
+  font: 700 0.8rem var(--sans);
+  letter-spacing: 0.06em;
+}
+
 /* ---------- Utility bar ---------- */
 .utility {
   background: var(--ink);
@@ -80,12 +90,14 @@ header.site {
 }
 .brand-name {
   display: block;
+  white-space: nowrap;
   font: 600 1.55rem/1 var(--serif);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .brand-tag {
   display: block;
+  white-space: nowrap;
   margin-top: 5px;
   font-size: 0.72rem;
   letter-spacing: 0.2em;
@@ -96,11 +108,11 @@ header.site {
 nav.main ul { display: flex; align-items: center; gap: 4px; list-style: none; }
 nav.main a, nav.main button {
   display: block;
-  padding: 10px 12px;
+  padding: 10px 10px;
   background: none;
   border: 0;
   font: 700 0.76rem var(--sans);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--cream);
@@ -255,11 +267,15 @@ footer.site {
 }
 .fine a { color: var(--brass); }
 
+@media (max-width: 1180px) {
+  .brand-name { font-size: 1.35rem; }
+  nav.main a, nav.main button { padding: 10px 7px; letter-spacing: 0.1em; }
+  nav.main a.call { margin-left: 4px; padding: 10px 12px; }
+}
 @media (max-width: 1000px) {
-  nav.main a, nav.main button { padding: 10px 8px; letter-spacing: 0.12em; }
   .foot { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 860px) {
+@media (max-width: 1040px) {
   .top { flex-direction: column; justify-content: center; gap: 4px; padding: 12px 0 6px; }
   nav.main ul { flex-wrap: wrap; justify-content: center; }
   nav.main .menu { right: auto; left: 50%; transform: translateX(-50%); width: min(290px, 90vw); }

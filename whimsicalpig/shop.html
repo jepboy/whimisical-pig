@@ -38,6 +38,8 @@
   .quickpay h2 { font-size: 1.8rem; }
   .quickpay p { color: var(--muted); }
   .quickpay .btn { margin-left: auto; white-space: nowrap; }
+  .quickpay[hidden] { display: none; }
+  #giftcard { margin-top: -40px; }
 
   /* Filters */
   .filters {
@@ -140,6 +142,15 @@
       <a class="btn" id="quickpay-btn" href="tel:315-773-3758">Pay now</a>
     </div>
 
+    <div class="quickpay" id="giftcard" hidden>
+      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="1"/><path d="M12 8v12M3 12h18"/><path d="M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></svg></span>
+      <div>
+        <h2>Gift Cards</h2>
+        <p>Let them choose their own piece.</p>
+      </div>
+      <a class="btn ghost" id="giftcard-btn" href="#">Buy a Gift Card</a>
+    </div>
+
     <div class="filters" id="filters" role="group" aria-label="Filter items"></div>
     <div class="grid" id="grid"></div>
 
@@ -152,6 +163,7 @@
 
 <footer id="site-footer"></footer>
 
+<script src="settings.js"></script>
 <script src="site.js"></script>
 <script src="shop-items.js"></script>
 <script>
@@ -163,6 +175,12 @@
     qp.href = shop.quickPay.buyUrl;
   } else {
     qp.textContent = "Call to pay";
+  }
+
+  // Gift cards (link set in settings.js)
+  if (window.SETTINGS && SETTINGS.giftCardUrl) {
+    document.getElementById("giftcard").hidden = false;
+    document.getElementById("giftcard-btn").href = SETTINGS.giftCardUrl;
   }
 
   const grid = document.getElementById("grid");

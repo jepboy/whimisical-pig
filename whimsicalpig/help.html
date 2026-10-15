@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help &amp; FAQ — The Whimsical Pig</title>
+<meta name="description" content="Answers to common questions, what to bring for your order, how to mail your items, and caring for your framed piece.">
+<meta name="theme-color" content="#1a1816">
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<style>
+  main { padding: 72px 0 96px; }
+
+  /* jump links */
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 26px;
+    margin: -12px 0 64px;
+  }
+  .jump a {
+    padding: 6px 2px;
+    font: 700 0.74rem var(--sans);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid transparent;
+  }
+  .jump a:hover { color: var(--brass); border-color: var(--brass); }
+
+  .sec { max-width: 860px; margin: 0 auto; scroll-margin-top: 100px; }
+  .sec + .sec { margin-top: 88px; }
+  .sec > h2 { font-size: clamp(1.9rem, 4vw, 2.4rem); text-align: center; }
+  .sec > .sub { text-align: center; color: var(--muted); margin: 8px auto 30px; max-width: 600px; }
+
+  /* FAQ accordion */
+  .faq { border-top: 1px solid var(--rule); }
+  .faq details { border-bottom: 1px solid var(--rule); }
+  .faq summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 4px;
+    font: 600 1.4rem/1.25 var(--serif);
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+";
+    flex: none;
+    font: 400 1.6rem var(--sans);
+    color: var(--brass);
+    transition: transform .2s ease;
+  }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq summary:hover { color: var(--brass-soft); }
+  .faq .a { padding: 0 4px 22px; color: var(--muted); max-width: 720px; }
+  .faq .a a { color: var(--brass); }
+
+  /* What to have ready */
+  .ready {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+  .card {
+    padding: 26px 28px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+  }
+  .card h3 { font-size: 1.5rem; margin-bottom: 12px; }
+  .card ul { list-style: none; display: grid; gap: 8px; }
+  .card li { position: relative; padding-left: 26px; color: var(--muted); }
+  .card li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 12px;
+    height: 7px;
+    border-left: 2px solid var(--brass);
+    border-bottom: 2px solid var(--brass);
+    transform: rotate(-45deg);
+  }
+  .card .go {
+    display: inline-block;
+    margin-top: 16px;
+    font: 700 0.72rem var(--sans);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .card .go:hover { text-decoration: underline; }
+
+  /* numbered steps */
+  .steps { list-style: none; counter-reset: s; display: grid; gap: 14px; }
+  .steps li {
+    counter-increment: s;
+    position: relative;
+    padding: 18px 22px 18px 74px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    color: var(--muted);
+  }
+  .steps li::before {
+    content: counter(s, lower-roman) ".";
+    position: absolute;
+    left: 22px;
+    top: 12px;
+    font: italic 500 1.8rem var(--serif);
+    color: var(--brass);
+  }
+  .steps strong { display: block; color: var(--cream); font-weight: 700; }
+  .addr {
+    margin-top: 22px;
+    padding: 22px;
+    text-align: center;
+    border: 1px solid var(--rule);
+  }
+  .addr .eyebrow { display: block; margin-bottom: 6px; }
+
+  .contact {
+    max-width: 860px;
+    margin: 96px auto 0;
+    padding-top: 48px;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+  }
+  .contact h2 { font-size: 2rem; }
+  .contact p { color: var(--muted); margin: 8px 0 22px; }
+  .contact .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+
+  @media (max-width: 760px) {
+    main { padding-top: 48px; }
+    .ready { grid-template-columns: 1fr; }
+    .faq summary { font-size: 1.22rem; }
+    .steps li { padding-left: 62px; }
+  }
+</style>
+</head>
+<body data-page="help">
+
+<header id="site-header"></header>
+
+<main>
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Help &amp; FAQ</span>
+      <h1 data-tail>How Can We Help?</h1>
+    </div>
+
+    <nav class="jump" aria-label="On this page">
+      <a href="#faq">Questions</a>
+      <a href="#ready">What to Have Ready</a>
+      <a href="#mail">Mailing Your Items</a>
+      <a href="#care">Caring for Your Piece</a>
+    </nav>
+
+    <section class="sec" id="faq">
+      <h2>Common Questions</h2>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p class="sub"></p>
+      <div class="faq" id="faq-list"></div>
+    </section>
+
+    <section class="sec" id="ready">
+      <h2>What to Have Ready</h2>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p class="sub">Having these on hand makes your order quick and your quote accurate.</p>
+      <div class="ready" id="ready-list"></div>
+    </section>
+
+    <section class="sec" id="mail">
+      <h2>Mailing Your Items</h2>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p class="sub">Not in the Watertown area? Here's how to get your items to us safely.</p>
+      <ol class="steps">
+        <li><strong>Start your order online first.</strong>Then call us at <a href="tel:315-773-3758">315-773-3758</a> so we know your package is coming.</li>
+        <li><strong>Keep a record.</strong>Photograph every item and keep a list of what's in the box.</li>
+        <li><strong>Wrap each item separately.</strong>Use acid-free tissue or soft cloth, then bubble wrap. Never tape directly to medals, ribbons or fabric.</li>
+        <li><strong>Keep flags and documents flat or folded as they are.</strong>Slip documents into a sleeve between two pieces of stiff cardboard.</li>
+        <li><strong>Use a sturdy box with padding on all sides</strong> so nothing shifts when you shake it.</li>
+        <li><strong>Ship with tracking and insurance.</strong>Put your name, phone and order reference on a note inside the box.</li>
+      </ol>
+      <div class="addr">
+        <span class="eyebrow">Ship to</span>
+        The Whimsical Pig · 50 Public Square, Suite E1 · Watertown, NY 13601
+      </div>
+    </section>
+
+    <section class="sec" id="care">
+      <h2>Caring for Your Piece</h2>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p class="sub">A few simple habits keep framed pieces looking their best for years.</p>
+      <div class="ready">
+        <div class="card">
+          <h3>Where to hang it</h3>
+          <ul>
+            <li>Out of direct sunlight, which fades fabric, photos and ribbons</li>
+            <li>Away from heat vents, fireplaces and damp rooms like bathrooms</li>
+            <li>On an inside wall when you can, where temperature stays steady</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Hanging &amp; cleaning</h3>
+          <ul>
+            <li>Use hardware rated for the weight; shadow boxes are heavier than they look</li>
+            <li>Dust the frame with a soft, dry cloth</li>
+            <li>Spray glass cleaner on the cloth, never directly on the glass</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="contact">
+      <h2>Still have a question?</h2>
+      <p>We're happy to help. Call during shop hours, Monday – Friday, 9:30am – 5:30pm.</p>
+      <div class="row" id="contact-row">
+        <a class="btn" href="tel:315-773-3758">Call 315-773-3758</a>
+        <a class="btn ghost" href="mailto:WhimsicalPig@hotmail.com">Email Us</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="settings.js"></script>
+<script src="site.js"></script>
+<script src="order-config.js"></script>
+<script>
+  const S = window.SETTINGS || {};
+  const fill = s => s.replace(/\{phone\}/g, '<a href="tel:315-773-3758">315-773-3758</a>')
+                     .replace(/\{email\}/g, '<a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a>');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // FAQ from settings.js
+  const faqList = document.getElementById("faq-list");
+  (S.faq || []).forEach((item, i) => {
+    const d = document.createElement("details");
+    if (i === 0) d.open = true;
+    d.innerHTML = `<summary>${esc(item.q)}</summary><div class="a">${fill(esc(item.a))}</div>`;
+    faqList.appendChild(d);
+  });
+
+  // "What to have ready" from each order type in order-config.js
+  const readyList = document.getElementById("ready-list");
+  for (const t of (window.ORDER && window.ORDER.types) || []) {
+    if (!t.bring || !t.bring.length) continue;
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<h3>${esc(t.title)}</h3><ul>${t.bring.map(b => `<li>${esc(b)}</li>`).join("")}</ul>
+      <a class="go" href="order.html?type=${encodeURIComponent(t.id)}">Start this order →</a>`;
+    readyList.appendChild(c);
+  }
+
+  // Optional booking button
+  if (S.bookingUrl) {
+    document.getElementById("contact-row").insertAdjacentHTML("beforeend",
+      `<a class="btn ghost" href="${S.bookingUrl}">Book a Consultation</a>`);
+  }
+</script>
+</body>
+</html>

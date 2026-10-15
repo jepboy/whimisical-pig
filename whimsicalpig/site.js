@@ -46,6 +46,13 @@ function buildHeader(current) {
   if (!el) return;
   const link = (href, label, key) =>
     `<li><a href="${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></li>`;
+  const S = window.SETTINGS || {};
+  if (S.announcement) {
+    const bar = document.createElement("div");
+    bar.className = "announce";
+    bar.textContent = S.announcement;
+    el.parentNode.insertBefore(bar, el);
+  }
   el.insertAdjacentHTML("beforebegin", `
     <div class="utility">
       <div class="wrap">
@@ -69,6 +76,7 @@ function buildHeader(current) {
           ${link("index.html#work", "Our Work", "work")}
           ${link("shop.html", "Shop", "shop")}
           ${link("order.html", "Start an Order", "order")}
+          ${link("help.html", "Help", "help")}
           <li class="products">
             <button type="button" aria-haspopup="true" aria-expanded="false">Products</button>
             <ul class="menu"></ul>
@@ -100,6 +108,12 @@ function buildHeader(current) {
 function buildFooter() {
   const el = document.getElementById("site-footer");
   if (!el) return;
+  const S = window.SETTINGS || {};
+  const extra = [
+    S.bookingUrl && `<li><a href="${S.bookingUrl}">Book a consultation</a></li>`,
+    S.giftCardUrl && `<li><a href="${S.giftCardUrl}">Gift cards</a></li>`,
+    S.reviewsUrl && `<li><a href="${S.reviewsUrl}" target="_blank" rel="noopener">Leave us a review</a></li>`,
+  ].filter(Boolean).join("");
   el.className = "site";
   el.innerHTML = `
     <div class="wrap">
@@ -125,12 +139,13 @@ function buildFooter() {
             <li><a href="tel:315-773-3758">315-773-3758</a></li>
             <li><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a></li>
             <li><a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></li>
+            ${extra}
           </ul>
         </div>
       </div>
       <div class="fine">
         <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Watertown, New York</span>
-        <span><a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a></span>
+        <span><a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a></span>
       </div>
     </div>`;
 }

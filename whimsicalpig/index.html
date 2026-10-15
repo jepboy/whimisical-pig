@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Whimsical Pig</title>
-<meta name="description" content="Custom military framing based out of Watertown, New York. Shop ready-made pieces or start a custom order online.">
+<title>The Whimsical Pig — Military &amp; Custom Framing, Watertown NY</title>
+<meta name="description" content="Custom military framing based out of Watertown, New York. Shadow boxes, flag cases, guidons, framing, embroidery and gifts. Shop online or start a custom order.">
 <meta property="og:title" content="The Whimsical Pig">
 <meta property="og:description" content="We make military framing &quot;too easy.&quot; Watertown, NY.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="images/logo.png">
-<meta name="theme-color" content="#16040c">
+<meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600,100,1;1,9..144,500,100,1&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
 <script type="application/ld+json">
 {
@@ -22,6 +22,7 @@
   "name": "The Whimsical Pig",
   "description": "Custom military framing based out of Watertown, New York.",
   "telephone": "+1-315-773-3758",
+  "email": "WhimsicalPig@hotmail.com",
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "50 Public Square, Suite E1",
@@ -40,215 +41,173 @@
 }
 </script>
 <style>
-  /* ---------- Slideshow band ---------- */
-  .band {
-    position: relative;
-    background: var(--band);
-    border-bottom: 1px solid var(--line);
-    box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 -10px 30px rgba(0, 0, 0, 0.6);
-    padding: 26px 20px;
-    overflow: hidden;
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 84px 0 96px;
+    text-align: center;
+    background:
+      radial-gradient(900px 420px at 50% 0%, rgba(198, 161, 91, 0.08), transparent 70%),
+      var(--bg);
   }
-  /* a sprinkle of tiny gold and pink sparkles */
-  .band::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      radial-gradient(circle, rgba(240, 215, 122, 0.5) 1.1px, transparent 1.5px),
-      radial-gradient(circle, rgba(235, 167, 185, 0.35) 1px, transparent 1.4px);
-    background-size: 90px 90px, 140px 140px;
-    background-position: 0 0, 40px 60px;
-    opacity: 0.5;
-    pointer-events: none;
+  .hero .eyebrow { display: block; margin-bottom: 18px; }
+  .hero h1 {
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    font-weight: 500;
   }
-  .show {
-    position: relative;
-    max-width: 807px;
-    margin: 0 auto;
-    aspect-ratio: 807 / 256;
+  .hero h1 em { font-style: italic; color: var(--brass-soft); }
+  .hero .lede {
+    max-width: 560px;
+    margin: 18px auto 34px;
+    color: var(--muted);
+    font-size: 1.08rem;
   }
-  .show .clip {
-    position: absolute;
-    inset: 0;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #1f0710;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6);
+  .hero .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; }
+
+  /* the three banners, hung in a frame */
+  .feature {
+    max-width: 900px;
+    margin: 64px auto 0;
   }
+  .feature .pic { aspect-ratio: 807 / 256; }
   .slide {
     position: absolute;
     inset: 0;
     opacity: 0;
-    transition: opacity .9s ease;
+    transition: opacity 1.1s ease;
   }
   .slide.on { opacity: 1; z-index: 1; }
   .slide img { width: 100%; height: 100%; object-fit: cover; }
-  .slide .cap {
-    position: absolute;
-    left: 50%;
-    bottom: 14px;
-    transform: translateX(-50%);
-    padding: 4px 18px 6px;
-    border-radius: 999px;
-    background: rgba(13, 2, 6, 0.75);
-    font-size: 1.35rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-  }
-  .slide:hover .cap { color: var(--gold); }
-  .arrow {
-    position: absolute;
-    top: 50%;
-    z-index: 4;
-    width: 40px;
-    height: 40px;
-    margin-top: -20px;
-    border: 0;
-    border-radius: 50%;
-    background: rgba(13, 2, 6, 0.65);
-    color: var(--text);
-    font-size: 1.4rem;
-    line-height: 40px;
-    cursor: pointer;
-  }
-  .arrow:hover { background: var(--gold); color: #1a0509; }
-  .prev { left: 10px; }
-  .next { right: 10px; }
-  .dots {
-    position: relative;
+  .plaque {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    margin-top: 16px;
-  }
-  .dots button {
-    width: 10px;
-    height: 10px;
-    padding: 0;
-    border-radius: 50%;
-    border: 1px solid var(--gold);
-    background: transparent;
-    cursor: pointer;
-  }
-  .dots button[aria-current="true"] { background: var(--gold); }
-
-  /* ---------- Two doors: shop and custom order ---------- */
-  .doors {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px;
-    max-width: 850px;
-    margin: 44px auto 0;
-  }
-  .door {
-    position: relative;
-    display: flex;
     align-items: center;
     gap: 18px;
-    padding: 22px 24px;
-    border-radius: var(--radius);
-    background: linear-gradient(135deg, #2c0c18, #1b0610);
-    border: 1px solid var(--line);
-    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    margin-top: 22px;
   }
-  .door:hover {
-    transform: translateY(-3px) rotate(-0.4deg);
-    border-color: var(--gold);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  .plaque .name {
+    min-width: 210px;
+    padding: 6px 18px;
+    background: linear-gradient(180deg, #e2c58a, #b98f45 60%, #9c7634);
+    color: #2a1d0f;
+    font: 700 0.72rem var(--sans);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   }
-  .door .icon {
-    flex: none;
+  .plaque button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--rule);
+    background: transparent;
+    color: var(--brass);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .plaque button:hover { background: var(--brass); color: var(--ink); }
+
+  /* ---------- Specialties ---------- */
+  .specs {
     display: grid;
-    place-items: center;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: rgba(235, 167, 185, 0.14);
-    color: var(--pink);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
   }
-  .door .icon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .door h2 { font-size: 1.45rem; }
-  .door p { color: var(--text-dim); font-size: 0.95rem; }
-  .door .go { margin-left: auto; color: var(--gold); font-size: 1.6rem; transition: transform .2s ease; }
-  .door:hover .go { transform: translateX(4px); }
+  .spec { display: block; }
+  .spec .pic { aspect-ratio: 4 / 3; }
+  .spec .pic img { transition: transform .6s ease; }
+  .spec:hover .pic img { transform: scale(1.04); }
+  .spec h3 { font-size: 1.75rem; margin-top: 22px; }
+  .spec p { color: var(--muted); margin-top: 6px; }
+  .spec .more {
+    display: inline-block;
+    margin-top: 14px;
+    font: 700 0.72rem var(--sans);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--brass);
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s ease;
+  }
+  .spec:hover .more { border-color: var(--brass); }
 
-  /* ---------- Product collage (same layout as the current site) ---------- */
-  .collage-sec { padding: 56px 0 70px; }
-  .collage {
-    position: relative;
-    width: 100%;
-    max-width: 850px;
-    margin: 0 auto;
-    aspect-ratio: 850 / 1066;
+  /* ---------- Gallery ---------- */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 34px 26px;
   }
-  .piece {
-    position: absolute;
+  .tile { display: block; text-align: center; }
+  .tile .pic {
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--hair);
+    transition: border-color .2s ease;
+  }
+  .tile .pic img { transition: transform .5s ease; }
+  .tile:hover .pic { border-color: var(--brass); }
+  .tile:hover .pic img { transform: scale(1.05); }
+  .tile .cap {
     display: block;
-    transform: rotate(var(--tilt, 0deg));
-    transition: transform .25s ease;
+    margin-top: 12px;
+    font: 500 1.22rem/1.25 var(--serif);
+    text-transform: capitalize;
   }
-  .piece .img {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-    overflow: hidden;
-    background: #2a0c18;
-    border: 3px solid #f3ead8;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
-    transition: box-shadow .25s ease, border-color .25s ease;
-  }
-  .piece img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: filter .35s ease;
-  }
-  .piece .label {
-    position: absolute;
-    left: 50%;
-    bottom: 8px;
-    transform: translateX(-50%);
-    width: max-content;
-    max-width: calc(100% - 12px);
-    padding: 2px 10px 4px;
-    border-radius: 999px;
-    background: rgba(13, 2, 6, 0.82);
-    font-size: 0.98rem;
-    font-weight: 500;
-    line-height: 1.15;
-    letter-spacing: 0.03em;
-    text-align: center;
-    transition: color .2s ease, background .2s ease;
-  }
-  .piece.small .label { font-size: 0.8rem; padding: 2px 6px 3px; bottom: 5px; }
-  @media (hover: hover) {
-    .piece img { filter: grayscale(1) brightness(0.85); }
-    .piece:hover img, .piece:focus-visible img { filter: none; }
-  }
-  .piece:hover, .piece:focus-visible { z-index: 5; transform: rotate(0deg) scale(1.06); }
-  .piece:hover .img, .piece:focus-visible .img {
-    border-color: var(--gold);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
-  }
-  .piece:hover .label, .piece:focus-visible .label { background: var(--gold); color: #1a0509; }
+  .tile:hover .cap { color: var(--brass-soft); }
 
-  @media (max-width: 760px) {
-    .band { padding: 16px 12px; }
-    .slide .cap { font-size: 1rem; bottom: 8px; }
-    .arrow { width: 32px; height: 32px; margin-top: -16px; line-height: 32px; font-size: 1.1rem; }
-    .doors { grid-template-columns: 1fr; margin-top: 32px; }
-    .collage {
-      aspect-ratio: auto;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
-    .piece { position: static; width: auto !important; height: auto !important; }
-    .piece .img { aspect-ratio: 1 / 1; height: auto; }
-    .piece .label, .piece.small .label { font-size: 0.9rem; padding: 2px 10px 4px; bottom: 8px; }
+  /* ---------- Ordering ---------- */
+  .how {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .how li { list-style: none; padding: 34px 30px; text-align: center; }
+  .how li + li { border-left: 1px solid var(--hair); }
+  .how .num {
+    display: block;
+    font: 500 2.6rem/1 var(--serif);
+    font-style: italic;
+    color: var(--brass);
+  }
+  .how h3 { font-size: 1.45rem; margin: 10px 0 6px; }
+  .how p { color: var(--muted); font-size: 0.95rem; }
+  .how-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
+
+  /* ---------- Visit ---------- */
+  .visit {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    border: 1px solid var(--rule);
+  }
+  .visit .info { padding: 44px 40px; background: var(--panel); }
+  .visit .info h2 { font-size: 2.2rem; margin: 8px 0 22px; }
+  .visit dl { display: grid; gap: 18px; }
+  .visit dt {
+    font: 700 0.7rem var(--sans);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .visit dd { margin-top: 2px; }
+  .visit dd a:hover { color: var(--brass-soft); }
+  .visit .map { min-height: 380px; background: #2a2420; }
+  .visit .map iframe { width: 100%; height: 100%; min-height: 380px; border: 0; display: block; filter: grayscale(0.4) contrast(1.05); }
+
+  @media (max-width: 900px) {
+    .specs { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+    .gallery { grid-template-columns: repeat(3, 1fr); }
+    .how { grid-template-columns: 1fr; }
+    .how li + li { border-left: 0; border-top: 1px solid var(--hair); }
+    .visit { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .hero { padding: 56px 0 64px; }
+    .feature { margin-top: 44px; }
+    .feature.frame { padding: 7px; }
+    .feature.frame .mat { padding: 8px; }
+    .plaque .name { min-width: 0; }
+    .gallery { grid-template-columns: repeat(2, 1fr); gap: 24px 14px; }
+    .tile .cap { font-size: 1.05rem; }
+    .visit .info { padding: 32px 24px; }
   }
 </style>
 </head>
@@ -257,42 +216,82 @@
 <header id="site-header"></header>
 
 <main>
-  <div class="band">
-    <div class="show sc corners" id="show">
-      <div class="clip" id="clip"></div>
-      <button class="arrow prev" type="button" aria-label="Previous slide">‹</button>
-      <button class="arrow next" type="button" aria-label="Next slide">›</button>
-    </div>
-    <div class="dots" id="dots"></div>
-  </div>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Watertown, New York</span>
+      <h1>We make military framing <em>“too easy”</em></h1>
+      <p class="lede">Shadow boxes, flag cases, guidons and fine custom framing, plus embroidery, apparel and gifts.</p>
+      <div class="actions">
+        <a class="btn" href="order.html">Start an Order</a>
+        <a class="btn ghost" href="shop.html">Visit the Shop</a>
+      </div>
 
-  <div class="wrap">
-    <div class="doors">
-      <a class="door" href="shop.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
-        <span>
-          <h2>Shop</h2>
-          <p>Ready-made pieces &amp; quick pay</p>
-        </span>
-        <span class="go" aria-hidden="true">→</span>
-      </a>
-      <a class="door" href="order.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="7.5" y="6.5" width="9" height="7" rx="1"/><path d="M8 17h8"/></svg></span>
-        <span>
-          <h2>Start an order</h2>
-          <p>Shadow boxes, flags, guidons &amp; more</p>
-        </span>
-        <span class="go" aria-hidden="true">→</span>
-      </a>
+      <div class="feature frame">
+        <div class="mat"><div class="pic" id="slides"></div></div>
+      </div>
+      <div class="plaque">
+        <button type="button" id="prev" aria-label="Previous">‹</button>
+        <span class="name" id="plaque-name" aria-live="polite"></span>
+        <button type="button" id="next" aria-label="Next">›</button>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <section class="collage-sec">
+  <section class="block alt">
     <div class="wrap">
       <div class="head">
+        <span class="eyebrow">What we do</span>
+        <h2 data-tail>Our Specialties</h2>
+      </div>
+      <div class="specs" id="specs"></div>
+    </div>
+  </section>
+
+  <section class="block" id="work">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">From the shop</span>
         <h2 data-tail>Our Work</h2>
       </div>
-      <div class="collage sc" id="collage"></div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Ordering</span>
+        <h2 data-tail>Simple from Start to Finish</h2>
+      </div>
+      <ol class="how">
+        <li><span class="num">i.</span><h3>Choose</h3><p>Pick the piece you have in mind and a style to start from.</p></li>
+        <li><span class="num">ii.</span><h3>Tell Us</h3><p>Answer a few questions and send photos of your items.</p></li>
+        <li><span class="num">iii.</span><h3>We Build It</h3><p>We follow up with a quote, then craft it in our shop.</p></li>
+      </ol>
+      <div class="how-actions">
+        <a class="btn" href="order.html">Start an Order</a>
+        <a class="btn ghost" href="shop.html">Shop &amp; Quick Pay</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="visit">
+        <div class="info">
+          <span class="eyebrow">Visit the shop</span>
+          <h2>Downtown on Public Square</h2>
+          <dl>
+            <div><dt>Address</dt><dd><a href="https://www.thewhimsicalpig.com/location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></dd></div>
+            <div><dt>Hours</dt><dd>Monday – Friday, 9:30am – 5:30pm<br>Saturday &amp; Sunday closed</dd></div>
+            <div><dt>Phone</dt><dd><a href="tel:315-773-3758">315-773-3758</a></dd></div>
+          </dl>
+        </div>
+        <div class="map">
+          <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -301,80 +300,72 @@
 
 <script src="site.js"></script>
 <script>
-  // ---- Slideshow (same three banners as the current site) ----
-  const slides = [
-    ["military framing", "slide-military-framing.jpg", "1.png", "military-framing.html"],
-    ["custom apparel", "slide-custom-apparel.jpg", "3.jpg", "custom-apparel.html"],
-    ["graphic design", "slide-graphic-design.jpg", "4.png", "graphic-design.html"],
+  // ---- Featured banners (the three from the current site), crossfading in a frame ----
+  const banners = [
+    ["Military Framing", "slide-military-framing.jpg", "1.png"],
+    ["Custom Apparel", "slide-custom-apparel.jpg", "3.jpg"],
+    ["Graphic Design", "slide-graphic-design.jpg", "4.png"],
   ];
-  const show = document.getElementById("show");
-  const clip = document.getElementById("clip");
-  const dots = document.getElementById("dots");
-  const slideEls = slides.map(([cap, local, live, page], i) => {
-    const a = document.createElement("a");
-    a.className = "slide" + (i === 0 ? " on" : "");
-    a.href = SITE + page;
-    a.innerHTML = '<img alt=""><span class="cap"></span>';
-    a.querySelector(".cap").textContent = cap;
-    a.querySelector("img").alt = cap;
-    loadImg(a.querySelector("img"), "images/" + local, liveImage(live));
-    clip.appendChild(a);
-    const d = document.createElement("button");
-    d.type = "button";
-    d.setAttribute("aria-label", "Show " + cap);
-    d.setAttribute("aria-current", i === 0);
-    d.onclick = () => { go(i); auto(); };
-    dots.appendChild(d);
-    return a;
+  const slidesBox = document.getElementById("slides");
+  const plaqueName = document.getElementById("plaque-name");
+  const slideEls = banners.map(([name, local, live], i) => {
+    const d = document.createElement("div");
+    d.className = "slide" + (i === 0 ? " on" : "");
+    d.innerHTML = '<img alt="">';
+    d.firstChild.alt = name;
+    loadImg(d.firstChild, "images/" + local, liveImage(live));
+    slidesBox.appendChild(d);
+    return d;
   });
   let cur = 0, timer;
-  function go(n) {
+  function show(n) {
     slideEls[cur].classList.remove("on");
-    dots.children[cur].setAttribute("aria-current", false);
     cur = (n + slideEls.length) % slideEls.length;
     slideEls[cur].classList.add("on");
-    dots.children[cur].setAttribute("aria-current", true);
+    plaqueName.textContent = banners[cur][0];
   }
   function auto() {
     clearInterval(timer);
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => go(cur + 1), 5000);
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) timer = setInterval(() => show(cur + 1), 5500);
   }
-  show.querySelector(".prev").onclick = () => { go(cur - 1); auto(); };
-  show.querySelector(".next").onclick = () => { go(cur + 1); auto(); };
-  show.onmouseenter = () => clearInterval(timer);
-  show.onmouseleave = auto;
+  document.getElementById("prev").onclick = () => { show(cur - 1); auto(); };
+  document.getElementById("next").onclick = () => { show(cur + 1); auto(); };
+  show(0);
   auto();
 
-  // ---- Product collage: positions match the current site's layout ----
-  // [x, y, w, h] in an 850 × 1066 box, in the same order as PRODUCTS
-  const spots = [
-    [12, 6, 147, 143], [174, 0, 165, 136], [352, 11, 174, 126], [540, 0, 139, 164], [692, 21, 157, 129],
-    [33, 163, 198, 246], [250, 151, 228, 241], [489, 178, 174, 246], [677, 180, 151, 211],
-    [51, 420, 176, 180], [249, 406, 174, 213], [439, 445, 206, 208], [660, 446, 153, 226],
-    [0, 610, 235, 272], [249, 629, 184, 271], [442, 663, 140, 208], [593, 679, 87, 163], [700, 684, 75, 139],
-    [460, 879, 119, 120], [265, 906, 176, 159],
+  // ---- Specialties ----
+  const specs = [
+    ["Military Framing", "Shadow boxes, flag cases, guidons and battalion spreads.", "military-framing.html", "military-framing.jpg", "button%202.jpg"],
+    ["Custom Apparel", "Embroidery, vinyl and printing for units, teams and businesses.", "custom-apparel.html", "custom-apparel.jpg", "52565901_10161418329605076_7165628496394321920_o.jpg"],
+    ["Graphic Design", "Custom prints, plaques, slate and personalized gifts.", "graphic-design.html", "graphic-design.jpg", "button%2012.jpg"],
   ];
-  const tilts = [-1.6, 1.2, -0.6, 1.8, -1.1, 0.8, -1.4, 1.5, -0.9, 1.1];
-  const W = 850, H = 1066;
-  const pct = (v, t) => (v / t * 100).toFixed(3) + "%";
-  const collage = document.getElementById("collage");
-
-  PRODUCTS.forEach(([label, page, live], i) => {
-    const [x, y, w, h] = spots[i];
+  const specsBox = document.getElementById("specs");
+  for (const [title, text, page, local, live] of specs) {
     const a = document.createElement("a");
-    a.className = "piece" + (w < 130 ? " small" : "");
+    a.className = "spec";
     a.href = SITE + page;
-    a.style.left = pct(x, W);
-    a.style.top = pct(y, H);
-    a.style.width = pct(w, W);
-    a.style.height = pct(h, H);
-    a.style.setProperty("--tilt", tilts[i % tilts.length] + "deg");
-    a.innerHTML = '<div class="img"><img alt="" loading="lazy"><span class="label"></span></div>';
-    a.querySelector(".label").textContent = label;
-    a.querySelector("img").alt = label;
-    loadImg(a.querySelector("img"), "images/" + slugify(label) + ".jpg", liveImage(live));
-    collage.appendChild(a);
-  });
+    a.innerHTML = '<div class="frame"><div class="mat"><div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div></div></div><h3></h3><p></p><span class="more">Explore →</span>';
+    a.querySelector("h3").textContent = title;
+    a.querySelector("p").textContent = text;
+    const im = a.querySelector("img");
+    im.alt = title;
+    loadImg(im, "images/" + local, liveImage(live));
+    specsBox.appendChild(a);
+  }
+
+  // ---- Gallery of every product category ----
+  const gallery = document.getElementById("gallery");
+  for (const [label, page, live] of PRODUCTS) {
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = SITE + page;
+    a.innerHTML = '<div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div><span class="cap"></span>';
+    a.querySelector(".cap").textContent = label;
+    const im = a.querySelector("img");
+    im.alt = label;
+    loadImg(im, "images/" + slugify(label) + ".jpg", liveImage(live));
+    gallery.appendChild(a);
+  }
 </script>
 </body>
 </html>

@@ -8,7 +8,7 @@ open `index.html` in a browser to preview.
 
 | File | What it is |
 | --- | --- |
-| `index.html` | Home: slideshow, Shop / Start an Order buttons, and the product collage (same layout as the current site) |
+| `index.html` | Home: featured banners in a frame, specialties, the full gallery of work, how ordering works, and visit info |
 | `shop.html` | Online shop for ready-made items, plus **Quick Pay** for invoices, deposits and balances |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |

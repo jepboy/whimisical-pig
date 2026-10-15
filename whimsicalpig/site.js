@@ -38,36 +38,42 @@ function loadImg(img, local, fallback) {
   img.src = local || fallback;
 }
 
-const TAIL_SVG = '<svg class="tail" viewBox="0 0 96 24" aria-hidden="true"><path d="M2 16 C 22 16, 34 16, 42 12 C 50 8, 50 2, 44 3 C 38 4, 38 13, 48 16 C 58 19, 72 16, 94 16"/></svg>';
+// Small brass ornament placed under section headings marked with data-tail
+const ORNAMENT = '<div class="rule-orn" aria-hidden="true"><span></span></div>';
 
 function buildHeader(current) {
   const el = document.getElementById("site-header");
   if (!el) return;
   const link = (href, label, key) =>
     `<li><a href="${href}"${current === key ? ' aria-current="page"' : ""}>${label}</a></li>`;
+  el.insertAdjacentHTML("beforebegin", `
+    <div class="utility">
+      <div class="wrap">
+        <span><a href="${SITE}location.html">50 Public Square, Suite E1 · Watertown, NY</a></span>
+        <span><span class="hours">Mon – Fri 9:30am – 5:30pm<span class="sep">|</span></span><a href="tel:315-773-3758">315-773-3758</a></span>
+      </div>
+    </div>`);
   el.className = "site";
   el.innerHTML = `
     <div class="wrap top">
       <a class="brand" href="index.html">
         <img src="images/logo.png" alt="" onerror="this.remove()">
         <span>
-          <span class="brand-name">The Whimsical <em>Pig</em></span>
-          <span class="brand-tag">we make military framing
-            <span class="squiggle">“too easy”<svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true"><path d="M4 12 C 40 4, 70 18, 110 9 S 170 6, 196 12" fill="none" stroke="#eba7b9" stroke-width="3.5" stroke-linecap="round"/></svg></span>
-          </span>
+          <span class="brand-name">The Whimsical Pig</span>
+          <span class="brand-tag">Military &amp; Custom Framing</span>
         </span>
       </a>
       <nav class="main" aria-label="Main">
         <ul>
-          ${link("index.html", "home", "home")}
-          ${link("shop.html", "shop", "shop")}
-          ${link("order.html", "start an order", "order")}
+          ${link("index.html", "Home", "home")}
+          ${link("index.html#work", "Our Work", "work")}
+          ${link("shop.html", "Shop", "shop")}
+          ${link("order.html", "Start an Order", "order")}
           <li class="products">
-            <button type="button" aria-haspopup="true" aria-expanded="false">products</button>
+            <button type="button" aria-haspopup="true" aria-expanded="false">Products</button>
             <ul class="menu"></ul>
           </li>
-          ${link(SITE + "location.html", "location", "")}
-          <li><a class="call" href="tel:315-773-3758">315-773-3758</a></li>
+          <li><a class="call" href="tel:315-773-3758">Call Us</a></li>
         </ul>
       </nav>
     </div>`;
@@ -99,21 +105,32 @@ function buildFooter() {
     <div class="wrap">
       <div class="foot">
         <div>
-          <h3>visit</h3>
+          <a class="brand" href="index.html">
+            <img src="images/logo.png" alt="" onerror="this.remove()">
+            <span><span class="brand-name">The Whimsical Pig</span></span>
+          </a>
+          <p>We make military framing “too easy.”</p>
+        </div>
+        <div>
+          <h3>Visit</h3>
           <p><a href="${SITE}location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></p>
         </div>
         <div>
-          <h3>call</h3>
-          <p><a class="phone" href="tel:315-773-3758">315-773-3758</a></p>
+          <h3>Hours</h3>
+          <p>Monday – Friday<br>9:30am – 5:30pm<br>Saturday &amp; Sunday closed</p>
         </div>
         <div>
-          <h3>hours</h3>
-          <p>Monday – Friday: 9:30am – 5:30pm<br>Saturday &amp; Sunday: Closed</p>
+          <h3>Contact</h3>
+          <ul>
+            <li><a href="tel:315-773-3758">315-773-3758</a></li>
+            <li><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a></li>
+            <li><a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Facebook</a></li>
+          </ul>
         </div>
       </div>
       <div class="fine">
-        <span class="oink"><img src="images/logo.png" alt="" onerror="this.remove()">&copy; ${new Date().getFullYear()} The Whimsical Pig</span>
-        <a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Find us on Facebook</a>
+        <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Watertown, New York</span>
+        <span><a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a></span>
       </div>
     </div>`;
 }
@@ -121,5 +138,5 @@ function buildFooter() {
 document.addEventListener("DOMContentLoaded", () => {
   buildHeader(document.body.dataset.page);
   buildFooter();
-  document.querySelectorAll("[data-tail]").forEach(h => h.insertAdjacentHTML("afterend", TAIL_SVG));
+  document.querySelectorAll("[data-tail]").forEach(h => h.insertAdjacentHTML("afterend", ORNAMENT));
 });

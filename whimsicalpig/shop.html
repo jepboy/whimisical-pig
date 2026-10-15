@@ -5,40 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shop — The Whimsical Pig</title>
 <meta name="description" content="Shop ready-made pieces from The Whimsical Pig, or pay an invoice or deposit online.">
-<meta name="theme-color" content="#16040c">
+<meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600,100,1;1,9..144,500,100,1&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
 <style>
-  main { padding: 48px 0 72px; }
+  main { padding: 72px 0 96px; }
 
   /* Quick pay */
   .quickpay {
     display: flex;
     align-items: center;
-    gap: 22px;
-    max-width: 850px;
-    margin: 0 auto 48px;
-    padding: 22px 26px;
-    border-radius: var(--radius);
-    background: linear-gradient(135deg, rgba(235, 167, 185, 0.16), rgba(235, 167, 185, 0.05));
-    border: 1px dashed rgba(235, 167, 185, 0.55);
+    gap: 26px;
+    max-width: 900px;
+    margin: 0 auto 64px;
+    padding: 28px 32px;
+    background: var(--panel);
+    border: 1px solid var(--rule);
   }
   .quickpay .icon {
     flex: none;
     display: grid;
     place-items: center;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: rgba(235, 167, 185, 0.18);
-    color: var(--pink);
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--rule);
+    color: var(--brass);
   }
-  .quickpay .icon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .quickpay h2 { font-size: 1.45rem; }
-  .quickpay p { color: var(--text-dim); font-size: 0.95rem; }
+  .quickpay .icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .quickpay h2 { font-size: 1.8rem; }
+  .quickpay p { color: var(--muted); }
   .quickpay .btn { margin-left: auto; white-space: nowrap; }
 
   /* Filters */
@@ -46,91 +44,79 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
-    margin: -8px 0 34px;
+    gap: 6px 22px;
+    margin: -12px 0 44px;
   }
   .filters button {
-    padding: 5px 16px 7px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: transparent;
-    color: var(--text-dim);
-    font: 500 1rem "Alegreya Sans SC", sans-serif;
-    letter-spacing: 0.04em;
+    padding: 6px 2px;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background: none;
+    color: var(--muted);
+    font: 700 0.74rem var(--sans);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
     cursor: pointer;
   }
-  .filters button:hover { color: var(--gold); border-color: var(--gold); }
-  .filters button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #1a0509; }
+  .filters button:hover { color: var(--cream); }
+  .filters button[aria-pressed="true"] { color: var(--brass); border-bottom-color: var(--brass); }
 
-  /* Items, shown as framed pieces */
+  /* Items, each hung in a frame */
   .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 34px 26px;
-    max-width: 900px;
+    gap: 56px 36px;
+    max-width: 1000px;
     margin: 0 auto;
   }
   .item { display: flex; flex-direction: column; }
   .item[hidden] { display: none; }
-  .frame {
-    padding: 9px;
-    border-radius: 3px;
-    background: linear-gradient(135deg, #6b4a1f, #3b2410 45%, #7a5626 70%, #3b2410);
-    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 220, 150, 0.25);
-    transform: rotate(var(--tilt, 0deg));
-    transition: transform .25s ease;
-  }
-  .item:hover .frame { transform: rotate(0deg) translateY(-3px); }
-  .mat { padding: 10px; background: #efe6d2; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35); }
-  .pic {
-    position: relative;
-    aspect-ratio: 1 / 1;
-    background: radial-gradient(circle at 50% 45%, #4a2a3c, #2c1322 75%);
-    overflow: hidden;
-  }
-  .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .item .frame { padding: 10px; }
+  .item .mat { padding: 14px; }
+  .item .pic { aspect-ratio: 1 / 1; }
   .sold {
     position: absolute;
-    top: 12px;
-    right: -34px;
+    top: 14px;
+    left: 0;
     z-index: 2;
-    width: 130px;
-    padding: 3px 0;
-    background: var(--pink-deep);
-    color: #fff;
-    text-align: center;
-    font: 700 0.85rem "Alegreya Sans SC", sans-serif;
-    transform: rotate(45deg);
+    padding: 4px 12px;
+    background: var(--ink);
+    color: var(--cream);
+    font: 700 0.68rem var(--sans);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
   }
-  .info { padding: 16px 4px 0; text-align: center; }
-  .info h3 { font-size: 1.2rem; }
-  .info .note { color: var(--text-dim); font-size: 0.9rem; margin-top: 2px; }
+  .info { padding-top: 20px; text-align: center; }
+  .info h3 { font-size: 1.5rem; }
+  .info .note { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
   .info .price {
     display: inline-block;
-    margin-top: 8px;
-    padding: 2px 12px;
-    border-radius: 4px;
-    background: linear-gradient(180deg, #f3dc86, #d6ab35 55%, #b98f25);
-    color: #2a1405;
-    font-weight: 700;
+    margin-top: 10px;
+    font: 600 1.35rem var(--serif);
+    color: var(--brass-soft);
   }
-  .info .btn { margin-top: 12px; padding: 8px 20px; font-size: 1rem; }
+  .info .btn { margin-top: 16px; padding: 11px 22px; }
 
   .custom {
-    max-width: 850px;
-    margin: 64px auto 0;
+    max-width: 900px;
+    margin: 88px auto 0;
+    padding-top: 48px;
+    border-top: 1px solid var(--rule);
     text-align: center;
   }
-  .custom h2 { font-size: 1.6rem; margin-bottom: 14px; }
+  .custom h2 { font-size: 2rem; margin-bottom: 20px; }
 
-  @media (max-width: 760px) {
-    main { padding-top: 32px; }
-    .quickpay { flex-direction: column; text-align: center; }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 40px 20px; }
+  }
+  @media (max-width: 640px) {
+    main { padding-top: 48px; }
+    .quickpay { flex-direction: column; text-align: center; padding: 26px 20px; }
     .quickpay .btn { margin: 4px 0 0; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 26px 14px; }
-    .frame { padding: 6px; }
-    .mat { padding: 6px; }
-    .info h3 { font-size: 1.02rem; }
+    .item .frame { padding: 6px; }
+    .item .mat { padding: 7px; }
+    .info h3 { font-size: 1.2rem; }
+    .info .btn { padding: 10px 14px; letter-spacing: 0.12em; }
   }
 </style>
 </head>
@@ -141,7 +127,8 @@
 <main>
   <div class="wrap">
     <div class="head">
-      <h1 data-tail>Shop</h1>
+      <span class="eyebrow">Ready-made &amp; quick pay</span>
+      <h1 data-tail>The Shop</h1>
     </div>
 
     <div class="quickpay">
@@ -150,7 +137,7 @@
         <h2>Quick Pay</h2>
         <p>Pay an invoice, deposit, or balance.</p>
       </div>
-      <a class="btn pink" id="quickpay-btn" href="tel:315-773-3758">Pay now</a>
+      <a class="btn" id="quickpay-btn" href="tel:315-773-3758">Pay now</a>
     </div>
 
     <div class="filters" id="filters" role="group" aria-label="Filter items"></div>
@@ -158,7 +145,7 @@
 
     <div class="custom">
       <h2>Looking for something one-of-a-kind?</h2>
-      <a class="btn ghost" href="order.html">Start a custom order →</a>
+      <a class="btn ghost" href="order.html">Start a Custom Order</a>
     </div>
   </div>
 </main>
@@ -179,20 +166,18 @@
   }
 
   const grid = document.getElementById("grid");
-  const tilts = [-1.2, 0.9, -0.5, 1.3, -0.8, 0.6];
   shop.items.forEach((it, i) => {
     const card = document.createElement("article");
     card.className = "item";
     card.dataset.category = it.category || "";
     card.innerHTML = `
-      <div class="frame"><div class="mat"><div class="pic"><img alt="" loading="lazy"></div></div></div>
+      <div class="frame"><div class="mat"><div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div></div></div>
       <div class="info">
         <h3></h3>
         <p class="note"></p>
         <span class="price"></span><br>
         <a class="btn"></a>
       </div>`;
-    card.querySelector(".frame").style.setProperty("--tilt", tilts[i % tilts.length] + "deg");
     const img = card.querySelector("img");
     img.alt = it.name;
     loadImg(img, it.image, it.live ? liveImage(it.live) : "");
@@ -209,7 +194,7 @@
 
     const btn = card.querySelector(".btn");
     if (it.soldOut) {
-      card.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">sold out</span>');
+      card.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">Sold out</span>');
       btn.textContent = "Sold out";
       btn.setAttribute("aria-disabled", "true");
       btn.style.opacity = ".45";
@@ -232,7 +217,7 @@
     for (const c of ["All", ...cats]) {
       const b = document.createElement("button");
       b.type = "button";
-      b.textContent = c.toLowerCase();
+      b.textContent = c;
       b.setAttribute("aria-pressed", c === "All");
       b.onclick = () => {
         for (const o of filters.children) o.setAttribute("aria-pressed", o === b);

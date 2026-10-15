@@ -5,100 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Start an Order — The Whimsical Pig</title>
 <meta name="description" content="Start a custom order with The Whimsical Pig: shadow boxes, flag cases, guidons, embroidery, framing and awards.">
-<meta name="theme-color" content="#16040c">
+<meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600,100,1;1,9..144,500,100,1&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
 <style>
-  main { padding: 44px 0 72px; }
-  .shell { max-width: 820px; margin: 0 auto; }
+  main { padding: 72px 0 96px; }
+  .shell { max-width: 860px; margin: 0 auto; }
 
-  /* Progress: the pig trots along as you go */
-  .progress { position: relative; margin: 6px 6px 40px; }
-  .track {
-    height: 6px;
-    border-radius: 999px;
-    background: rgba(239, 230, 218, 0.12);
-    overflow: hidden;
-  }
-  .fill {
-    height: 100%;
-    width: 0;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--pink), var(--gold));
-    transition: width .45s ease;
-  }
+  /* Progress */
+  .progress { position: relative; margin: 0 6px 52px; }
+  .track { height: 2px; background: var(--hair); }
+  .fill { height: 100%; width: 0; background: var(--brass); transition: width .45s ease; }
   .runner {
     position: absolute;
-    top: -22px;
+    top: -15px;
     left: 0;
-    width: 56px;
+    width: 60px;
     height: 30px;
-    margin-left: -28px;
+    margin-left: -30px;
     object-fit: cover;
+    mix-blend-mode: lighten;
     transition: left .45s ease;
   }
-  .runner.hop { animation: hop .45s ease; }
-  @keyframes hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px) rotate(-6deg); } }
   .steps {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: 16px;
     list-style: none;
-    font: 500 0.95rem "Alegreya Sans SC", sans-serif;
-    color: var(--text-dim);
+    font: 700 0.68rem var(--sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
-  .steps li[aria-current="step"] { color: var(--gold); }
-  .steps li.done { color: var(--text); }
+  .steps li[aria-current="step"] { color: var(--brass); }
+  .steps li.done { color: var(--cream); }
 
   .panel { display: none; }
   .panel.on { display: block; animation: fadein .3s ease; }
-  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .panel > h2 { font-size: clamp(1.6rem, 4vw, 2.1rem); text-align: center; }
-  .panel > .sub { text-align: center; color: var(--text-dim); margin: 4px 0 26px; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .panel > h2 { font-size: clamp(1.9rem, 4vw, 2.4rem); text-align: center; }
+  .panel > .sub { text-align: center; color: var(--muted); margin: 6px 0 34px; }
 
   /* Choice cards (order types and examples) */
   .choices {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 22px;
   }
   .choice { position: relative; display: block; cursor: pointer; }
   .choice input { position: absolute; opacity: 0; pointer-events: none; }
   .choice .card {
     height: 100%;
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--card);
-    border: 2px solid rgba(239, 230, 218, 0.1);
-    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    transition: border-color .2s ease, box-shadow .2s ease;
   }
-  .choice:hover .card { transform: translateY(-3px); border-color: var(--line); }
-  .choice input:checked + .card {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(230, 193, 61, 0.25), 0 14px 30px rgba(0, 0, 0, 0.45);
-  }
-  .choice input:focus-visible + .card { outline: 3px solid var(--pink); outline-offset: 3px; }
-  .choice .pic {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background: radial-gradient(circle at 50% 45%, #4a2a3c, #2c1322 75%);
-  }
-  .choice .pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .choice .pic .ph {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    color: rgba(239, 230, 218, 0.28);
-    font: 500 0.85rem "Alegreya Sans SC", sans-serif;
-    letter-spacing: 0.08em;
-  }
-  .choice .txt { padding: 12px 14px 14px; }
-  .choice h3 { font-size: 1.15rem; }
-  .choice p { color: var(--text-dim); font-size: 0.9rem; }
+  .choice:hover .card { border-color: var(--rule); }
+  .choice input:checked + .card { border-color: var(--brass); box-shadow: inset 0 0 0 1px var(--brass); }
+  .choice input:focus-visible + .card { outline: 2px solid var(--brass); outline-offset: 3px; }
+  .choice .pic { aspect-ratio: 4 / 3; }
+  .choice .txt { padding: 16px 18px 18px; }
+  .choice h3 { font-size: 1.4rem; }
+  .choice p { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
   .choice .tick {
     position: absolute;
     top: 10px;
@@ -106,101 +77,93 @@
     z-index: 2;
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--gold);
-    color: #1a0509;
+    width: 28px;
+    height: 28px;
+    background: var(--brass);
+    color: var(--ink);
     font-weight: 700;
     opacity: 0;
-    transform: scale(.6);
-    transition: opacity .2s ease, transform .2s ease;
+    transition: opacity .2s ease;
   }
-  .choice input:checked + .card .tick { opacity: 1; transform: scale(1); }
+  .choice input:checked + .card .tick { opacity: 1; }
   .choice.plain .pic { display: grid; place-items: center; }
-  .choice.plain .pic span { font-size: 2.6rem; color: var(--pink); }
+  .choice.plain .pic span { font: 500 2.4rem var(--serif); color: var(--brass); }
 
   /* Form fields */
   .fields {
     display: grid;
-    gap: 20px;
-    padding: 28px;
-    border-radius: var(--radius);
-    background: var(--card);
-    border: 1px solid rgba(239, 230, 218, 0.08);
+    gap: 24px;
+    padding: 36px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
   }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .field > label, .field > legend {
     display: block;
-    margin-bottom: 6px;
-    font: 500 1.05rem "Alegreya Sans SC", sans-serif;
-    letter-spacing: 0.03em;
+    margin-bottom: 8px;
+    font: 700 0.72rem var(--sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cream);
   }
-  .field .req { color: var(--pink); }
-  .field .help { color: var(--text-dim); font-size: 0.85rem; margin-top: 4px; }
+  .field .req { color: var(--brass); }
+  .field .help { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
   fieldset.field { border: 0; }
   .field input[type="text"], .field input[type="email"], .field input[type="tel"],
   .field input[type="number"], .field input[type="date"], .field select, .field textarea {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(239, 230, 218, 0.18);
-    background: #16050c;
-    color: var(--text);
-    transition: border-color .15s ease, box-shadow .15s ease;
+    padding: 12px 14px;
+    border: 1px solid rgba(242, 236, 226, 0.16);
+    border-radius: 0;
+    background: var(--bg);
+    color: var(--cream);
+    transition: border-color .15s ease;
   }
-  .field textarea { min-height: 96px; resize: vertical; }
-  .field input:focus, .field select:focus, .field textarea:focus {
-    outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(230, 193, 61, 0.2);
-  }
+  .field textarea { min-height: 100px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--brass); }
   .field input[type="date"] { color-scheme: dark; }
-  .field.bad input, .field.bad select, .field.bad textarea { border-color: var(--pink-deep); }
-  .field .err { display: none; color: var(--pink); font-size: 0.85rem; margin-top: 4px; }
+  .field.bad input, .field.bad select, .field.bad textarea { border-color: #d77a6f; }
+  .field .err { display: none; color: #e59a90; font-size: 0.85rem; margin-top: 6px; }
   .field.bad .err { display: block; }
   .opts { display: flex; flex-wrap: wrap; gap: 8px; }
   .opt { position: relative; }
   .opt input { position: absolute; opacity: 0; }
   .opt span {
     display: inline-block;
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(239, 230, 218, 0.22);
-    font-size: 0.93rem;
+    padding: 8px 14px;
+    border: 1px solid rgba(242, 236, 226, 0.18);
+    font-size: 0.92rem;
     cursor: pointer;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
   }
-  .opt span:hover { border-color: var(--gold); }
-  .opt input:checked + span { background: var(--gold); border-color: var(--gold); color: #1a0509; font-weight: 600; }
-  .opt input:focus-visible + span { outline: 2px solid var(--pink); outline-offset: 2px; }
+  .opt span:hover { border-color: var(--brass); }
+  .opt input:checked + span { background: var(--brass); border-color: var(--brass); color: var(--ink); font-weight: 700; }
+  .opt input:focus-visible + span { outline: 2px solid var(--brass); outline-offset: 2px; }
 
   /* Photo drop zone */
   .drop {
     display: grid;
     place-items: center;
     gap: 6px;
-    padding: 26px;
-    border-radius: var(--radius);
-    border: 2px dashed rgba(235, 167, 185, 0.5);
-    background: rgba(235, 167, 185, 0.06);
+    padding: 30px;
+    border: 1px dashed var(--rule);
+    background: rgba(198, 161, 91, 0.04);
     text-align: center;
     cursor: pointer;
     transition: background .15s ease, border-color .15s ease;
   }
-  .drop:hover, .drop.over { background: rgba(235, 167, 185, 0.12); border-color: var(--pink); }
-  .drop svg { width: 36px; height: 36px; fill: none; stroke: var(--pink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .drop strong { font: 600 1.1rem "Alegreya Sans SC", sans-serif; }
-  .drop small { color: var(--text-dim); }
-  .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .drop:hover, .drop.over { background: rgba(198, 161, 91, 0.09); border-color: var(--brass); }
+  .drop svg { width: 34px; height: 34px; fill: none; stroke: var(--brass); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .drop strong { font: 600 1.3rem var(--serif); }
+  .drop small { color: var(--muted); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
   .thumb {
     position: relative;
     width: 84px;
     height: 84px;
-    border-radius: 10px;
     overflow: hidden;
-    background: #2c1322;
-    border: 2px solid #f3ead8;
+    background: #2a2420;
+    border: 4px solid #ece5d6;
   }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
   .thumb .name { display: grid; place-items: center; height: 100%; padding: 4px; font-size: 0.7rem; text-align: center; word-break: break-all; }
@@ -211,74 +174,81 @@
     width: 22px;
     height: 22px;
     border: 0;
-    border-radius: 50%;
-    background: rgba(13, 2, 6, 0.8);
-    color: var(--text);
+    background: rgba(18, 16, 14, 0.85);
+    color: var(--cream);
     font-size: 0.9rem;
     line-height: 22px;
     cursor: pointer;
   }
 
-  /* Review */
+  /* Review: an order slip on cream paper */
   .review {
-    padding: 26px 28px;
-    border-radius: var(--radius);
-    background: #f3ead8;
-    color: #2a1405;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    padding: 36px 40px;
+    background: #f1ebdf;
+    color: #2b2219;
+    border-top: 4px solid var(--brass);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
   }
-  .review h3 { font-size: 1.3rem; margin: 18px 0 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(42, 20, 5, 0.18); }
+  .review h3 { font-size: 1.5rem; margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(43, 34, 25, 0.18); }
   .review h3:first-child { margin-top: 0; }
-  .review dl { display: grid; grid-template-columns: minmax(140px, 34%) 1fr; gap: 6px 16px; }
-  .review dt { font-weight: 600; color: #6b4a2f; }
+  .review dl { display: grid; grid-template-columns: minmax(150px, 34%) 1fr; gap: 8px 18px; }
+  .review dt { font: 700 0.7rem/1.9 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: #7a6248; }
   .review dd { white-space: pre-wrap; }
   .review .edit {
     float: right;
+    margin-top: 8px;
     border: 0;
     background: none;
-    color: #9c1c3c;
-    font: 600 0.9rem "Open Sans", sans-serif;
-    text-decoration: underline;
+    color: #8a6a2e;
+    font: 700 0.68rem var(--sans);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     cursor: pointer;
   }
+  .review .edit:hover { text-decoration: underline; }
 
   .nav-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    margin-top: 28px;
+    margin-top: 34px;
   }
   .nav-row .spacer { flex: 1; }
-  .status { margin-top: 14px; text-align: center; color: var(--pink); min-height: 1.4em; }
+  .status { margin-top: 16px; text-align: center; color: #e59a90; min-height: 1.4em; }
+  .status a { color: var(--brass); }
 
   /* Done */
-  .done-box { text-align: center; padding: 20px 0; }
-  .done-box img { width: 180px; height: 90px; object-fit: cover; margin: 0 auto 6px; animation: hop 1.2s ease 2; }
-  .done-box h2 { font-size: clamp(1.8rem, 4vw, 2.3rem); }
+  .done-box { text-align: center; padding: 24px 0; }
+  .done-box img { width: 160px; height: 80px; object-fit: cover; margin: 0 auto 10px; mix-blend-mode: lighten; }
+  .done-box h2 { font-size: clamp(2.2rem, 5vw, 3rem); }
   .done-box .ref {
     display: inline-block;
-    margin: 14px 0;
-    padding: 6px 16px;
-    border-radius: 6px;
-    background: linear-gradient(180deg, #f3dc86, #d6ab35 55%, #b98f25);
-    color: #2a1405;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    margin: 18px 0;
+    padding: 7px 20px;
+    background: linear-gradient(180deg, #e2c58a, #b98f45 60%, #9c7634);
+    color: #2a1d0f;
+    font: 700 0.8rem var(--sans);
+    letter-spacing: 0.2em;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   }
-  .done-box p { color: var(--text-dim); max-width: 520px; margin: 0 auto 10px; }
-  .done-box .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
+  .done-box p { color: var(--muted); max-width: 520px; margin: 0 auto 10px; }
+  .done-box p a { color: var(--brass); }
+  .done-box .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 26px; }
 
   @media (max-width: 640px) {
-    .fields { padding: 20px 16px; }
+    main { padding-top: 48px; }
+    .fields { padding: 24px 18px; }
     .two { grid-template-columns: 1fr; }
     .choices { grid-template-columns: 1fr 1fr; gap: 12px; }
-    .choice h3 { font-size: 1rem; }
+    .choice h3 { font-size: 1.15rem; }
     .choice p { font-size: 0.82rem; }
-    .steps { font-size: 0.78rem; }
-    .review { padding: 20px 16px; }
-    .review dl { grid-template-columns: 1fr; gap: 0 0; }
-    .review dd { margin-bottom: 8px; }
+    .choice .txt { padding: 12px; }
+    .steps { font-size: 0.56rem; letter-spacing: 0.08em; }
+    .review { padding: 24px 18px; }
+    .review dl { grid-template-columns: 1fr; gap: 0; }
+    .review dd { margin-bottom: 10px; }
+    .nav-row .btn { padding: 13px 18px; }
   }
 </style>
 </head>
@@ -289,6 +259,7 @@
 <main>
   <div class="wrap shell">
     <div class="head">
+      <span class="eyebrow">Custom orders</span>
       <h1 data-tail>Start an Order</h1>
       <p>A few quick questions and we'll have everything we need.</p>
     </div>
@@ -297,7 +268,7 @@
       <img class="runner" id="runner" src="images/logo.png" alt="" onerror="this.remove()">
       <div class="track"><div class="fill" id="fill"></div></div>
       <ol class="steps" id="steps">
-        <li>type</li><li>style</li><li>details</li><li>photos &amp; contact</li><li>review</li>
+        <li>Type</li><li>Style</li><li>Details</li><li>Photos &amp; contact</li><li>Review</li>
       </ol>
     </div>
 
@@ -390,9 +361,9 @@
       </section>
 
       <div class="nav-row" id="nav-row">
-        <button type="button" class="btn ghost" id="back">← Back</button>
+        <button type="button" class="btn light" id="back">Back</button>
         <span class="spacer"></span>
-        <button type="button" class="btn" id="next">Next →</button>
+        <button type="button" class="btn" id="next">Continue</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
     </form>
@@ -427,7 +398,7 @@
       <input type="radio" name="${name}" value="${esc(value)}">
       <div class="card">
         <span class="tick" aria-hidden="true">✓</span>
-        <div class="pic">${plain ? '<span aria-hidden="true">✎</span>' : '<span class="ph">example photo</span><img alt="" loading="lazy">'}</div>
+        <div class="pic">${plain ? '<span aria-hidden="true">+</span>' : '<span class="ph">example photo</span><img alt="" loading="lazy">'}</div>
         <div class="txt"><h3>${esc(title)}</h3>${text ? `<p>${esc(text)}</p>` : ""}</div>
       </div>`;
     const im = label.querySelector("img");
@@ -631,7 +602,6 @@
     document.getElementById("fill").style.width = pct + "%";
     if (runner) {
       runner.style.left = pct + "%";
-      runner.classList.remove("hop"); void runner.offsetWidth; runner.classList.add("hop");
     }
     [...document.getElementById("steps").children].forEach((li, i) => {
       li.classList.toggle("done", i < n);
@@ -640,7 +610,7 @@
     document.getElementById("nav-row").style.display = n === 5 ? "none" : "";
     document.getElementById("progress").style.display = n === 5 ? "none" : "";
     backBtn.style.visibility = n === 0 ? "hidden" : "visible";
-    nextBtn.textContent = n === 4 ? "Send my order" : "Next →";
+    nextBtn.textContent = n === 4 ? "Send My Order" : "Continue";
     statusEl.textContent = "";
     if (started) window.scrollTo({ top: document.querySelector(".head").offsetTop - 10, behavior: "smooth" });
     started = true;
@@ -710,11 +680,11 @@
       <span class="ref">${esc(ref)}</span>
       ${viaEmail
         ? `<p>Your email app should have opened with your order filled in.${files.length ? " <strong>Attach your photos</strong>, then" : ""} press send.</p>
-           <p>Didn't open? Email <a href="mailto:${esc(CFG.email)}" style="color:var(--gold)">${esc(CFG.email)}</a> or call 315-773-3758.</p>`
+           <p>Didn't open? Email <a href="mailto:${esc(CFG.email)}" >${esc(CFG.email)}</a> or call 315-773-3758.</p>`
         : `<p>Thanks! We'll look it over and reach out with a quote, usually within a business day.</p>`}
       <div class="row">
-        <a class="btn pink" href="shop.html">Pay a deposit</a>
-        <a class="btn ghost" href="index.html">Back to home</a>
+        <a class="btn" href="shop.html">Pay a Deposit</a>
+        <a class="btn ghost" href="index.html">Back to Home</a>
       </div>`;
     go(5);
   }

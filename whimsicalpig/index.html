@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Whimsical Pig</title>
-<meta name="description" content="Custom military framing based out of Watertown, New York.">
+<meta name="description" content="Custom military framing based out of Watertown, New York. Shop ready-made pieces or start a custom order online.">
 <meta property="og:title" content="The Whimsical Pig">
 <meta property="og:description" content="We make military framing &quot;too easy.&quot; Watertown, NY.">
 <meta property="og:type" content="website">
@@ -13,7 +13,8 @@
 <link rel="icon" href="images/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans+SC:wght@400;500;700&family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,600,100,1;1,9..144,500,100,1&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -39,128 +40,41 @@
 }
 </script>
 <style>
-  :root {
-    --bg: #16040c;
-    --bg-2: #22070f;
-    --band: #0d0206;
-    --gold: #e6c13d;
-    --gold-soft: #f0d77a;
-    --pink: #eba7b9;
-    --text: #efe6da;
-    --text-dim: #bfae9f;
-    --line: rgba(230, 193, 61, 0.25);
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background:
-      radial-gradient(1200px 700px at 50% 30%, #2b0a16 0%, transparent 70%),
-      var(--bg);
-    color: var(--text);
-    font-family: "Open Sans", "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5;
-    overflow-x: hidden;
-  }
-  img { display: block; max-width: 100%; }
-  a { color: inherit; text-decoration: none; }
-  .sc { font-family: "Alegreya Sans SC", "Open Sans", sans-serif; }
-
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
-
-  /* ---------- Header ---------- */
-  header { position: relative; z-index: 20; background: var(--bg); }
-  .top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 18px 0 14px;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  /* Logo art sits on black; "lighten" lets the black melt into the page */
-  .brand img {
-    width: 120px;
-    height: 62px;
-    object-fit: cover;
-    mix-blend-mode: lighten;
-    margin: 0 -14px 0 -18px;
-  }
-  .brand-name {
-    font-family: "Alegreya Sans SC", sans-serif;
-    font-weight: 700;
-    font-size: 1.9rem;
-    line-height: 1;
-    letter-spacing: 0.02em;
-  }
-  .brand-tag {
-    display: block;
-    margin-top: 4px;
-    font-family: "Alegreya Sans SC", sans-serif;
-    font-size: 1rem;
-    color: var(--gold);
-    letter-spacing: 0.04em;
-  }
-
-  nav ul { display: flex; align-items: center; gap: 6px; list-style: none; }
-  nav a, nav button {
-    display: block;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font: 500 1.05rem "Alegreya Sans SC", sans-serif;
-    letter-spacing: 0.04em;
-    color: var(--text);
-    background: none;
-    border: 0;
-    cursor: pointer;
-  }
-  nav a:hover, nav button:hover, nav a[aria-current] { color: var(--gold); }
-  .products { position: relative; }
-  .products button::after { content: " ▾"; font-size: 0.8em; }
-  .menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    width: 300px;
-    max-height: 70vh;
-    overflow: auto;
-    padding: 8px;
-    list-style: none;
-    background: #1c0610;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-  }
-  .products:hover .menu, .products:focus-within .menu, .products.open .menu { display: block; }
-  .menu a { font-size: 1rem; padding: 6px 10px; }
-  .menu a:hover { background: rgba(230, 193, 61, 0.1); }
-  .call {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 7px 14px !important;
-    border-radius: 999px !important;
-    background: var(--gold);
-    color: #1a0509 !important;
-    font-weight: 700 !important;
-  }
-  .call:hover { background: var(--gold-soft); }
-
   /* ---------- Slideshow band ---------- */
   .band {
+    position: relative;
     background: var(--band);
-    border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     box-shadow: inset 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 -10px 30px rgba(0, 0, 0, 0.6);
-    padding: 9px 0;
+    padding: 26px 20px;
+    overflow: hidden;
+  }
+  /* a sprinkle of tiny gold and pink sparkles */
+  .band::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(240, 215, 122, 0.5) 1.1px, transparent 1.5px),
+      radial-gradient(circle, rgba(235, 167, 185, 0.35) 1px, transparent 1.4px);
+    background-size: 90px 90px, 140px 140px;
+    background-position: 0 0, 40px 60px;
+    opacity: 0.5;
+    pointer-events: none;
   }
   .show {
     position: relative;
     max-width: 807px;
     margin: 0 auto;
     aspect-ratio: 807 / 256;
-    border-radius: 10px;
+  }
+  .show .clip {
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
     overflow: hidden;
     background: #1f0710;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6);
   }
   .slide {
     position: absolute;
@@ -177,7 +91,7 @@
     transform: translateX(-50%);
     padding: 4px 18px 6px;
     border-radius: 999px;
-    background: rgba(13, 2, 6, 0.72);
+    background: rgba(13, 2, 6, 0.75);
     font-size: 1.35rem;
     font-weight: 500;
     letter-spacing: 0.05em;
@@ -187,13 +101,13 @@
   .arrow {
     position: absolute;
     top: 50%;
-    z-index: 2;
+    z-index: 4;
     width: 40px;
     height: 40px;
     margin-top: -20px;
     border: 0;
     border-radius: 50%;
-    background: rgba(13, 2, 6, 0.6);
+    background: rgba(13, 2, 6, 0.65);
     color: var(--text);
     font-size: 1.4rem;
     line-height: 40px;
@@ -202,9 +116,66 @@
   .arrow:hover { background: var(--gold); color: #1a0509; }
   .prev { left: 10px; }
   .next { right: 10px; }
+  .dots {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .dots button {
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    background: transparent;
+    cursor: pointer;
+  }
+  .dots button[aria-current="true"] { background: var(--gold); }
+
+  /* ---------- Two doors: shop and custom order ---------- */
+  .doors {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    max-width: 850px;
+    margin: 44px auto 0;
+  }
+  .door {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 22px 24px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #2c0c18, #1b0610);
+    border: 1px solid var(--line);
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .door:hover {
+    transform: translateY(-3px) rotate(-0.4deg);
+    border-color: var(--gold);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  }
+  .door .icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: rgba(235, 167, 185, 0.14);
+    color: var(--pink);
+  }
+  .door .icon svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .door h2 { font-size: 1.45rem; }
+  .door p { color: var(--text-dim); font-size: 0.95rem; }
+  .door .go { margin-left: auto; color: var(--gold); font-size: 1.6rem; transition: transform .2s ease; }
+  .door:hover .go { transform: translateX(4px); }
 
   /* ---------- Product collage (same layout as the current site) ---------- */
-  .collage-sec { padding: 40px 0 60px; }
+  .collage-sec { padding: 56px 0 70px; }
   .collage {
     position: relative;
     width: 100%;
@@ -215,6 +186,8 @@
   .piece {
     position: absolute;
     display: block;
+    transform: rotate(var(--tilt, 0deg));
+    transition: transform .25s ease;
   }
   .piece .img {
     position: relative;
@@ -223,24 +196,15 @@
     border-radius: 6px;
     overflow: hidden;
     background: #2a0c18;
+    border: 3px solid #f3ead8;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
-    transition: transform .25s ease, box-shadow .25s ease;
+    transition: box-shadow .25s ease, border-color .25s ease;
   }
   .piece img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: filter .35s ease;
-  }
-  .piece .ph {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 8px;
-    text-align: center;
-    font-size: 0.8rem;
-    color: rgba(239, 230, 218, 0.3);
   }
   .piece .label {
     position: absolute;
@@ -251,7 +215,7 @@
     max-width: calc(100% - 12px);
     padding: 2px 10px 4px;
     border-radius: 999px;
-    background: rgba(13, 2, 6, 0.8);
+    background: rgba(13, 2, 6, 0.82);
     font-size: 0.98rem;
     font-weight: 500;
     line-height: 1.15;
@@ -259,178 +223,117 @@
     text-align: center;
     transition: color .2s ease, background .2s ease;
   }
+  .piece.small .label { font-size: 0.8rem; padding: 2px 6px 3px; bottom: 5px; }
   @media (hover: hover) {
     .piece img { filter: grayscale(1) brightness(0.85); }
     .piece:hover img, .piece:focus-visible img { filter: none; }
   }
-  .piece.small .label { font-size: 0.8rem; padding: 2px 6px 3px; bottom: 5px; }
-  .piece:hover, .piece:focus-visible { z-index: 5; }
+  .piece:hover, .piece:focus-visible { z-index: 5; transform: rotate(0deg) scale(1.06); }
   .piece:hover .img, .piece:focus-visible .img {
-    transform: scale(1.06);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 0 2px var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
   }
   .piece:hover .label, .piece:focus-visible .label { background: var(--gold); color: #1a0509; }
 
-  /* ---------- Footer ---------- */
-  footer {
-    background: var(--band);
-    border-top: 1px solid var(--line);
-    padding: 34px 0 24px;
-    color: var(--text-dim);
-  }
-  .foot {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    text-align: center;
-  }
-  .foot h3 {
-    margin-bottom: 4px;
-    font: 700 1.1rem "Alegreya Sans SC", sans-serif;
-    letter-spacing: 0.06em;
-    color: var(--gold);
-  }
-  .foot a:hover { color: var(--gold); }
-  .foot .phone { font-size: 1.35rem; color: var(--text); font-weight: 600; }
-  .fine {
-    margin-top: 28px;
-    padding-top: 16px;
-    border-top: 1px solid rgba(239, 230, 218, 0.08);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 0.85rem;
-  }
-  .fine a { color: var(--gold); }
-
-  /* ---------- Small screens: collage becomes a tidy grid ---------- */
   @media (max-width: 760px) {
-    .top { flex-wrap: wrap; justify-content: center; text-align: center; }
-    .brand { flex-direction: column; gap: 4px; }
-    .brand img { margin: 0; }
-    .brand-name { font-size: 1.7rem; }
-    nav ul { flex-wrap: wrap; justify-content: center; }
-    .menu { right: auto; left: 50%; transform: translateX(-50%); width: min(300px, 90vw); }
+    .band { padding: 16px 12px; }
     .slide .cap { font-size: 1rem; bottom: 8px; }
     .arrow { width: 32px; height: 32px; margin-top: -16px; line-height: 32px; font-size: 1.1rem; }
+    .doors { grid-template-columns: 1fr; margin-top: 32px; }
     .collage {
       aspect-ratio: auto;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      gap: 16px;
     }
     .piece { position: static; width: auto !important; height: auto !important; }
     .piece .img { aspect-ratio: 1 / 1; height: auto; }
     .piece .label, .piece.small .label { font-size: 0.9rem; padding: 2px 10px 4px; bottom: 8px; }
-    .foot { grid-template-columns: 1fr; gap: 18px; }
-    .fine { justify-content: center; text-align: center; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
   }
 </style>
 </head>
-<body>
+<body data-page="home">
 
-<header>
-  <div class="wrap top">
-    <a class="brand" href="index.html">
-      <img src="images/logo.png" alt="" onerror="this.remove()">
-      <span>
-        <span class="brand-name">The Whimsical Pig</span>
-        <span class="brand-tag">we make military framing “too easy”</span>
-      </span>
-    </a>
-    <nav aria-label="Main">
-      <ul>
-        <li><a href="index.html" aria-current="page">home</a></li>
-        <li><a href="https://www.thewhimsicalpig.com/location.html">location</a></li>
-        <li><a href="https://www.thewhimsicalpig.com/contact-us.html">contact us</a></li>
-        <li class="products">
-          <button type="button" aria-haspopup="true" aria-expanded="false">products</button>
-          <ul class="menu" id="menu"></ul>
-        </li>
-        <li><a class="call" href="tel:315-773-3758">315-773-3758</a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
+<header id="site-header"></header>
 
 <main>
   <div class="band">
-    <div class="show sc" id="show">
+    <div class="show sc corners" id="show">
+      <div class="clip" id="clip"></div>
       <button class="arrow prev" type="button" aria-label="Previous slide">‹</button>
       <button class="arrow next" type="button" aria-label="Next slide">›</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="doors">
+      <a class="door" href="shop.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
+        <span>
+          <h2>Shop</h2>
+          <p>Ready-made pieces &amp; quick pay</p>
+        </span>
+        <span class="go" aria-hidden="true">→</span>
+      </a>
+      <a class="door" href="order.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><rect x="7.5" y="6.5" width="9" height="7" rx="1"/><path d="M8 17h8"/></svg></span>
+        <span>
+          <h2>Start an order</h2>
+          <p>Shadow boxes, flags, guidons &amp; more</p>
+        </span>
+        <span class="go" aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
 
   <section class="collage-sec">
     <div class="wrap">
+      <div class="head">
+        <h2 data-tail>Our Work</h2>
+      </div>
       <div class="collage sc" id="collage"></div>
     </div>
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="foot">
-      <div>
-        <h3>visit</h3>
-        <p><a href="https://www.thewhimsicalpig.com/location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></p>
-      </div>
-      <div>
-        <h3>call</h3>
-        <p><a class="phone" href="tel:315-773-3758">315-773-3758</a></p>
-      </div>
-      <div>
-        <h3>hours</h3>
-        <p>Monday – Friday: 9:30am – 5:30pm<br>Saturday &amp; Sunday: Closed</p>
-      </div>
-    </div>
-    <div class="fine">
-      <span>&copy; <span id="year"></span> The Whimsical Pig</span>
-      <a href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Find us on Facebook</a>
-    </div>
-  </div>
-</footer>
+<footer id="site-footer"></footer>
 
+<script src="site.js"></script>
 <script>
-  const SITE = "https://www.thewhimsicalpig.com/";
-
-  // Load images/<local> if it exists in this folder, otherwise the photo
-  // from the current live site; if neither loads, keep the placeholder.
-  function loadImg(img, local, remote) {
-    img.onerror = () => {
-      if (remote && img.src !== remote) img.src = remote;
-      else img.remove();
-    };
-    img.src = "images/" + local;
-  }
-
   // ---- Slideshow (same three banners as the current site) ----
   const slides = [
-    ["military framing", "slide-military-framing.jpg", "images/1.png", "military-framing.html"],
-    ["custom apparel", "slide-custom-apparel.jpg", "images/3.jpg", "custom-apparel.html"],
-    ["graphic design", "slide-graphic-design.jpg", "images/4.png", "graphic-design.html"],
+    ["military framing", "slide-military-framing.jpg", "1.png", "military-framing.html"],
+    ["custom apparel", "slide-custom-apparel.jpg", "3.jpg", "custom-apparel.html"],
+    ["graphic design", "slide-graphic-design.jpg", "4.png", "graphic-design.html"],
   ];
   const show = document.getElementById("show");
-  const slideEls = slides.map(([cap, local, remote, page], i) => {
+  const clip = document.getElementById("clip");
+  const dots = document.getElementById("dots");
+  const slideEls = slides.map(([cap, local, live, page], i) => {
     const a = document.createElement("a");
     a.className = "slide" + (i === 0 ? " on" : "");
     a.href = SITE + page;
     a.innerHTML = '<img alt=""><span class="cap"></span>';
     a.querySelector(".cap").textContent = cap;
     a.querySelector("img").alt = cap;
-    loadImg(a.querySelector("img"), local, SITE + remote);
-    show.insertBefore(a, show.firstChild);
+    loadImg(a.querySelector("img"), "images/" + local, liveImage(live));
+    clip.appendChild(a);
+    const d = document.createElement("button");
+    d.type = "button";
+    d.setAttribute("aria-label", "Show " + cap);
+    d.setAttribute("aria-current", i === 0);
+    d.onclick = () => { go(i); auto(); };
+    dots.appendChild(d);
     return a;
   });
   let cur = 0, timer;
   function go(n) {
     slideEls[cur].classList.remove("on");
+    dots.children[cur].setAttribute("aria-current", false);
     cur = (n + slideEls.length) % slideEls.length;
     slideEls[cur].classList.add("on");
+    dots.children[cur].setAttribute("aria-current", true);
   }
   function auto() {
     clearInterval(timer);
@@ -442,37 +345,22 @@
   show.onmouseleave = auto;
   auto();
 
-  // ---- Product collage ----
-  // [label, page, live image, x, y, w, h] — positions match the current site's layout.
-  const pieces = [
-    ["flag & shadow boxes", "flag---shadow-boxes.html", "button%202.jpg", 12, 6, 147, 143],
-    ["battalion spreads", "battalion-spreads.html", "button%201.jpg", 174, 0, 165, 136],
-    ["regulation guidons", "regulation-guidons.html", "button%205.jpg", 352, 11, 174, 126],
-    ["non regulation guidons", "non-regulation-guidons.html", "button%2020.jpg", 540, 0, 139, 164],
-    ["framed military artwork", "framed-military-artwork.html", "button%203.jpg", 692, 21, 157, 129],
-    ["embroidery", "embroidery.html", "52565901_10161418329605076_7165628496394321920_o.jpg", 33, 163, 198, 246],
-    ["vinyl applied custom apparel", "vinyl-applied-custom-apparel.html", "button%2006.png", 250, 151, 228, 241],
-    ["non military framing", "non-military-framing.html", "button%204.jpg", 489, 178, 174, 246],
-    ["10th mountain snowshoes", "10th-mountain-snowshoes.html", "button%2011.jpg", 677, 180, 151, 211],
-    ["evident truths products", "evident-truths-products.html", "button%20013.png", 51, 420, 176, 180],
-    ["customized gifts", "customized-gifts.html", "button%207.jpg", 249, 406, 174, 213],
-    ["sublimated images on slate", "sublimated-images-on-slate.html", "button%2010.jpg", 439, 445, 206, 208],
-    ["custom designed prints", "custom-designed-prints.html", "button%2012.jpg", 660, 446, 153, 226],
-    ["custom printing", "custom-printing.html", "fb_img_1576654875481.jpg", 0, 610, 235, 272],
-    ["sublimated plates on wooden plaques", "sublimated-plates-on-wooden-plaques.html", "button%2019.jpg", 249, 629, 184, 271],
-    ["racing plaques, awards, etc.", "racing-plaques%2c-awards%2c-etc.html", "button%2018.jpg", 442, 663, 140, 208],
-    ["path tracing", "path-tracing.html", "button%2016.jpg", 593, 679, 87, 163],
-    ["masonic items", "masonic-items.html", "button%2015.png", 700, 684, 75, 139],
-    ["firemen, emt, & leo items", "firemen%2c-emt%2c---leo-items.html", "button%20014.png", 460, 879, 119, 120],
-    ["purple hearts reunited inc.", "purple-hearts-reunited-inc.html", "button%2017.jpg", 265, 906, 176, 159],
+  // ---- Product collage: positions match the current site's layout ----
+  // [x, y, w, h] in an 850 × 1066 box, in the same order as PRODUCTS
+  const spots = [
+    [12, 6, 147, 143], [174, 0, 165, 136], [352, 11, 174, 126], [540, 0, 139, 164], [692, 21, 157, 129],
+    [33, 163, 198, 246], [250, 151, 228, 241], [489, 178, 174, 246], [677, 180, 151, 211],
+    [51, 420, 176, 180], [249, 406, 174, 213], [439, 445, 206, 208], [660, 446, 153, 226],
+    [0, 610, 235, 272], [249, 629, 184, 271], [442, 663, 140, 208], [593, 679, 87, 163], [700, 684, 75, 139],
+    [460, 879, 119, 120], [265, 906, 176, 159],
   ];
+  const tilts = [-1.6, 1.2, -0.6, 1.8, -1.1, 0.8, -1.4, 1.5, -0.9, 1.1];
   const W = 850, H = 1066;
   const pct = (v, t) => (v / t * 100).toFixed(3) + "%";
   const collage = document.getElementById("collage");
-  const menu = document.getElementById("menu");
-  const slug = s => s.replace(/&/g, "and").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
 
-  for (const [label, page, remote, x, y, w, h] of pieces) {
+  PRODUCTS.forEach(([label, page, live], i) => {
+    const [x, y, w, h] = spots[i];
     const a = document.createElement("a");
     a.className = "piece" + (w < 130 ? " small" : "");
     a.href = SITE + page;
@@ -480,31 +368,13 @@
     a.style.top = pct(y, H);
     a.style.width = pct(w, W);
     a.style.height = pct(h, H);
-    a.innerHTML = '<div class="img"><span class="ph"></span><img alt="" loading="lazy"><span class="label"></span></div>';
+    a.style.setProperty("--tilt", tilts[i % tilts.length] + "deg");
+    a.innerHTML = '<div class="img"><img alt="" loading="lazy"><span class="label"></span></div>';
     a.querySelector(".label").textContent = label;
     a.querySelector("img").alt = label;
-    loadImg(a.querySelector("img"), slug(label) + ".jpg", SITE + "images/" + remote);
+    loadImg(a.querySelector("img"), "images/" + slugify(label) + ".jpg", liveImage(live));
     collage.appendChild(a);
-
-    const li = document.createElement("li");
-    li.innerHTML = '<a></a>';
-    li.firstChild.href = SITE + page;
-    li.firstChild.textContent = label;
-    menu.appendChild(li);
-  }
-
-  // Products menu: tap to open on touch screens
-  const prod = document.querySelector(".products");
-  const prodBtn = prod.querySelector("button");
-  prodBtn.onclick = () => {
-    const open = prod.classList.toggle("open");
-    prodBtn.setAttribute("aria-expanded", open);
-  };
-  document.addEventListener("click", e => {
-    if (!prod.contains(e.target)) { prod.classList.remove("open"); prodBtn.setAttribute("aria-expanded", false); }
   });
-
-  document.getElementById("year").textContent = new Date().getFullYear();
 </script>
 </body>
 </html>

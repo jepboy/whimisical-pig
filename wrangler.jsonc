@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Name must match the Cloudflare project that is connected to this repo
-  "name": "deflocklewis",
+  // Must match the Worker's name in Cloudflare (whimisical-pig.wwagner.workers.dev)
+  "name": "whimisical-pig",
   "compatibility_date": "2026-07-21",
   "observability": {
     "enabled": true

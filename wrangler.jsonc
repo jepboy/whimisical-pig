@@ -8,7 +8,9 @@
   },
   // Serve the static site straight from the repo root
   "assets": {
-    "directory": "."
+    "directory": ".",
+    // Unknown addresses show 404.html instead of a blank error
+    "not_found_handling": "404-page"
   },
   "compatibility_flags": [
     "nodejs_compat"

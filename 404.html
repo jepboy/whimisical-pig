@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found — The Whimsical Pig</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1a1816">
+<link rel="icon" href="/images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+  .lost { padding: 110px 0 120px; text-align: center; }
+  .lost img { width: 160px; height: 80px; object-fit: cover; margin: 0 auto 14px; mix-blend-mode: lighten; }
+  .lost h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); }
+  .lost p { color: var(--muted); margin: 12px auto 30px; max-width: 460px; }
+  .lost .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+</style>
+</head>
+<body>
+<main class="lost">
+  <div class="wrap">
+    <img src="/images/logo.png" alt="" onerror="this.remove()">
+    <span class="eyebrow">Page not found</span>
+    <h1>This piece isn't on the wall</h1>
+    <div class="rule-orn" aria-hidden="true"><span></span></div>
+    <p>The page you were looking for has moved or doesn't exist.</p>
+    <div class="row">
+      <a class="btn" href="/">Back to Home</a>
+      <a class="btn ghost" href="/order.html">Start an Order</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

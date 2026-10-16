@@ -143,7 +143,7 @@ function buildFooter() {
         </div>
       </div>
       <div class="fine">
-        <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Watertown, New York</span>
+        <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Made with a little whimsy in Watertown, New York</span>
         <span><a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a></span>
       </div>
     </div>`;

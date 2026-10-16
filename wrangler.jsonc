@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   // Must match the Worker's name in Cloudflare (whimisical-pig.wwagner.workers.dev)
   "name": "whimisical-pig",
+  // Shop back end: product list, Square checkout, admin API (see src/worker.js)
+  "main": "src/worker.js",
   "compatibility_date": "2026-07-21",
   "observability": {
     "enabled": true
@@ -9,10 +11,17 @@
   // Serve the static site straight from the repo root
   "assets": {
     "directory": ".",
+    "binding": "ASSETS",
     // Unknown addresses show 404.html instead of a blank error
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    // These addresses go to the back end instead of the static files
+    "run_worker_first": ["/api/*", "/img/*"]
   },
-  "compatibility_flags": [
-    "nodejs_compat"
+  // Shop database. Cloudflare creates it automatically on the first deploy.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "whimsical-pig-shop"
+    }
   ]
 }

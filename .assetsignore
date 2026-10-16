@@ -1,6 +1,11 @@
 # Files in the repo that should not be served on the website
 .git
 .wrangler
+.dev.vars*
+node_modules
+src
+package.json
+package-lock.json
 wrangler.jsonc
 .assetsignore
 .gitignore

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Admin — The Whimsical Pig</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1a1816">
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<style>
+  .bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+  .bar .brand-name { font-size: 1.2rem; }
+  .bar .who { display: flex; gap: 10px; align-items: center; }
+  main { padding: 40px 0 80px; }
+  [hidden] { display: none !important; }
+
+  /* login */
+  .login { max-width: 380px; margin: 60px auto; padding: 36px; background: var(--panel); border: 1px solid var(--rule); text-align: center; }
+  .login h1 { font-size: 2rem; margin-bottom: 18px; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--hair); margin-bottom: 26px; }
+  .tabs button {
+    padding: 12px 2px; border: 0; background: none; cursor: pointer;
+    font: 700 0.76rem var(--sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tabs button[aria-selected="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .toolbar h2 { font-size: 1.8rem; }
+  .hint { color: var(--muted); font-size: 0.9rem; }
+
+  /* item list */
+  .items { display: grid; gap: 10px; }
+  .item {
+    display: grid; grid-template-columns: 64px 1fr auto auto auto; gap: 18px; align-items: center;
+    padding: 12px 16px; background: var(--panel); border: 1px solid var(--hair);
+  }
+  .item.off { opacity: .55; }
+  .thumb { width: 64px; height: 64px; background: #2a2420; overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item h3 { font-size: 1.3rem; }
+  .item .meta { color: var(--muted); font-size: 0.85rem; }
+  .price { font: 600 1.3rem var(--serif); color: var(--brass-soft); white-space: nowrap; }
+  .stock { display: flex; align-items: center; gap: 6px; }
+  .stock button {
+    width: 30px; height: 30px; border: 1px solid var(--rule); background: none; color: var(--brass);
+    font-size: 1.1rem; cursor: pointer;
+  }
+  .stock button:hover { background: var(--brass); color: var(--ink); }
+  .stock .n { min-width: 58px; text-align: center; font-weight: 700; }
+  .stock .n small { display: block; font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+  .low { color: #e59a90; }
+  .acts { display: flex; gap: 6px; }
+  .acts button {
+    padding: 7px 10px; border: 1px solid var(--hair); background: none; color: var(--cream); cursor: pointer;
+    font: 700 0.68rem var(--sans); letter-spacing: 0.14em; text-transform: uppercase;
+  }
+  .acts button:hover { border-color: var(--brass); color: var(--brass); }
+  .empty { padding: 40px; text-align: center; color: var(--muted); border: 1px dashed var(--rule); }
+
+  /* editor */
+  dialog {
+    width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto;
+    padding: 28px; border: 1px solid var(--rule); background: var(--bg-2); color: var(--cream);
+  }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+  dialog h2 { font-size: 1.8rem; margin-bottom: 18px; }
+  .f { display: grid; gap: 16px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  label.l { display: block; margin-bottom: 6px; font: 700 0.7rem var(--sans); letter-spacing: 0.18em; text-transform: uppercase; }
+  .f input[type="text"], .f input[type="number"], .f input[type="password"], .f textarea, .login input {
+    width: 100%; padding: 11px 12px; border: 1px solid rgba(242, 236, 226, 0.16); background: var(--bg); color: var(--cream);
+  }
+  .f textarea { min-height: 80px; resize: vertical; }
+  .f input:focus, .f textarea:focus, .login input:focus { outline: none; border-color: var(--brass); }
+  .photo { display: flex; gap: 14px; align-items: center; }
+  .photo .thumb { width: 90px; height: 90px; flex: none; }
+  .check { display: flex; gap: 10px; align-items: center; }
+  .check input { width: 18px; height: 18px; accent-color: #c6a15b; }
+  .row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+  .msg { min-height: 1.3em; color: #e59a90; font-size: 0.9rem; }
+  .msg.ok { color: #a9c98f; }
+
+  /* orders */
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 11px 10px; text-align: left; border-bottom: 1px solid var(--hair); font-size: 0.92rem; }
+  th { font: 700 0.68rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--brass); }
+  .tag { display: inline-block; padding: 2px 8px; font: 700 0.66rem var(--sans); letter-spacing: 0.12em; text-transform: uppercase; }
+  .tag.paid { background: #3f5a33; color: #dfeccf; }
+  .tag.pending { background: #4b3b1d; color: #f0dcae; }
+
+  @media (max-width: 760px) {
+    .item { grid-template-columns: 56px 1fr; }
+    .thumb { width: 56px; height: 56px; }
+    .item .price, .item .stock, .item .acts { grid-column: 2; }
+    .two { grid-template-columns: 1fr; }
+    table, thead, tbody, tr, td { display: block; }
+    thead { display: none; }
+    tr { padding: 10px 0; border-bottom: 1px solid var(--hair); }
+    td { border: 0; padding: 2px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <img src="images/logo.png" alt="" onerror="this.remove()">
+      <span><span class="brand-name">The Whimsical Pig</span><span class="brand-tag">Shop admin</span></span>
+    </a>
+    <div class="who" id="who" hidden>
+      <a class="btn light" href="shop.html" target="_blank" rel="noopener">View Shop</a>
+      <button class="btn ghost" id="logout" type="button">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <!-- login -->
+  <form class="login" id="login-box" hidden>
+    <h1>Shop Admin</h1>
+    <label class="l sr-only" for="pw">Password</label>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="Password" required>
+    <p class="msg" id="login-msg"></p>
+    <button class="btn" type="submit" style="width:100%;margin-top:6px">Log In</button>
+  </form>
+
+  <!-- app -->
+  <div id="app" hidden>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="items">Items</button>
+      <button role="tab" aria-selected="false" data-tab="orders">Orders</button>
+    </div>
+
+    <section id="tab-items">
+      <div class="toolbar">
+        <div>
+          <h2>Shop Items</h2>
+          <p class="hint">Use + and − to update stock after in-store sales. Online sales lower it automatically.</p>
+        </div>
+        <button class="btn" id="add" type="button">+ Add Item</button>
+      </div>
+      <div class="items" id="items"></div>
+    </section>
+
+    <section id="tab-orders" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>Online Orders</h2>
+          <p class="hint">Paid orders, plus checkouts in progress (held for 30 minutes). Full payment details are in Square.</p>
+        </div>
+        <button class="btn ghost" id="refresh-orders" type="button">Refresh</button>
+      </div>
+      <div id="orders"></div>
+    </section>
+  </div>
+</main>
+
+<dialog id="editor">
+  <form class="f" id="item-form" method="dialog">
+    <h2 id="editor-title">Add Item</h2>
+    <div>
+      <label class="l" for="e-name">Name</label>
+      <input type="text" id="e-name" required maxlength="120">
+    </div>
+    <div class="two">
+      <div>
+        <label class="l" for="e-price">Price ($)</label>
+        <input type="number" id="e-price" min="0.5" step="0.01" required inputmode="decimal">
+      </div>
+      <div>
+        <label class="l" for="e-stock">How many in stock</label>
+        <input type="number" id="e-stock" min="0" step="1" required inputmode="numeric">
+      </div>
+    </div>
+    <div class="two">
+      <div>
+        <label class="l" for="e-category">Category</label>
+        <input type="text" id="e-category" maxlength="40" placeholder="e.g. Military, Gifts" list="cats">
+        <datalist id="cats"></datalist>
+      </div>
+      <div>
+        <label class="l" for="e-sort">Order on page</label>
+        <input type="number" id="e-sort" step="1" placeholder="0 = first">
+      </div>
+    </div>
+    <div>
+      <label class="l" for="e-desc">Short note (optional)</label>
+      <textarea id="e-desc" maxlength="300" placeholder="e.g. Ready to ship. Solid oak."></textarea>
+    </div>
+    <div>
+      <span class="l">Photo</span>
+      <div class="photo">
+        <div class="thumb" id="e-thumb"></div>
+        <div>
+          <input type="file" id="e-photo" accept="image/*">
+          <p class="hint">Photos are shrunk automatically before uploading.</p>
+        </div>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="e-active" checked> Show in the shop</label>
+    <p class="msg" id="editor-msg"></p>
+    <div class="row">
+      <button class="btn light" type="button" id="cancel">Cancel</button>
+      <button class="btn" type="submit" id="save">Save Item</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const money = c => "$" + (c / 100).toFixed(2);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  let products = [];
+  let editing = null;      // product being edited, or null for new
+  let imageId = null;      // photo for the item in the editor
+
+  async function api(path, opts = {}) {
+    const res = await fetch(path, { credentials: "same-origin", ...opts });
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (res.status === 401 && path !== "/api/admin/login") { showLogin(); throw new Error(data.error || "Please log in."); }
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    return data;
+  }
+  const send = (path, method, body) => api(path, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+  // ---------- login ----------
+  function showLogin() { $("app").hidden = true; $("who").hidden = true; $("login-box").hidden = false; $("pw").focus(); }
+  function showApp() { $("login-box").hidden = true; $("app").hidden = false; $("who").hidden = false; loadItems(); }
+
+  $("login-box").onsubmit = async e => {
+    e.preventDefault();
+    $("login-msg").textContent = "";
+    try {
+      await send("/api/admin/login", "POST", { password: $("pw").value });
+      $("pw").value = "";
+      showApp();
+    } catch (err) { $("login-msg").textContent = err.message; }
+  };
+  $("logout").onclick = async () => { await send("/api/admin/logout", "POST", {}); showLogin(); };
+
+  // ---------- tabs ----------
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+    document.querySelectorAll("[data-tab]").forEach(o => o.setAttribute("aria-selected", o === b));
+    $("tab-items").hidden = b.dataset.tab !== "items";
+    $("tab-orders").hidden = b.dataset.tab !== "orders";
+    if (b.dataset.tab === "orders") loadOrders();
+  });
+
+  // ---------- items ----------
+  async function loadItems() {
+    const data = await api("/api/admin/products");
+    products = data.products;
+    $("cats").innerHTML = [...new Set(products.map(p => p.category).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join("");
+    const box = $("items");
+    if (!products.length) {
+      box.innerHTML = '<div class="empty">No items yet. Click <strong>+ Add Item</strong> to put your first piece in the shop.</div>';
+      return;
+    }
+    box.innerHTML = products.map(p => `
+      <div class="item${p.active ? "" : " off"}" data-id="${p.id}">
+        <div class="thumb">${p.image_id ? `<img src="/img/${p.image_id}" alt="">` : ""}</div>
+        <div>
+          <h3>${esc(p.name)}</h3>
+          <div class="meta">${esc(p.category || "No category")}${p.active ? "" : " · hidden from shop"}</div>
+        </div>
+        <div class="price">${money(p.price_cents)}</div>
+        <div class="stock">
+          <button type="button" data-d="-1" aria-label="One fewer">−</button>
+          <span class="n${p.stock <= 1 ? " low" : ""}">${p.stock}<small>${p.held ? p.held + " in checkout" : "in stock"}</small></span>
+          <button type="button" data-d="1" aria-label="One more">+</button>
+        </div>
+        <div class="acts">
+          <button type="button" data-act="edit">Edit</button>
+          <button type="button" data-act="del">Remove</button>
+        </div>
+      </div>`).join("");
+  }
+
+  $("items").onclick = async e => {
+    const row = e.target.closest(".item");
+    if (!row) return;
+    const p = products.find(x => x.id === +row.dataset.id);
+    const d = e.target.dataset.d;
+    const act = e.target.dataset.act;
+    try {
+      if (d) {
+        const stock = Math.max(0, p.stock + +d);
+        await send(`/api/admin/products/${p.id}`, "PUT", { ...asForm(p), stock });
+        await loadItems();
+      } else if (act === "edit") {
+        openEditor(p);
+      } else if (act === "del" && confirm(`Remove "${p.name}" from the shop?`)) {
+        const r = await api(`/api/admin/products/${p.id}`, { method: "DELETE" });
+        if (r.hidden) alert("This item has past orders, so it was hidden instead of deleted.");
+        await loadItems();
+      }
+    } catch (err) { alert(err.message); }
+  };
+
+  const asForm = p => ({
+    name: p.name, description: p.description, category: p.category, price: p.price_cents / 100,
+    stock: p.stock, image_id: p.image_id, active: !!p.active, sort: p.sort,
+  });
+
+  // ---------- editor ----------
+  const editor = $("editor");
+  function openEditor(p) {
+    editing = p || null;
+    $("editor-title").textContent = p ? "Edit Item" : "Add Item";
+    $("e-name").value = p ? p.name : "";
+    $("e-price").value = p ? (p.price_cents / 100).toFixed(2) : "";
+    $("e-stock").value = p ? p.stock : 1;
+    $("e-category").value = p ? p.category : "";
+    $("e-sort").value = p ? p.sort : "";
+    $("e-desc").value = p ? p.description : "";
+    $("e-active").checked = p ? !!p.active : true;
+    $("e-photo").value = "";
+    imageId = p ? p.image_id : null;
+    $("e-thumb").innerHTML = imageId ? `<img src="/img/${imageId}" alt="">` : "";
+    $("editor-msg").textContent = "";
+    editor.showModal();
+    $("e-name").focus();
+  }
+  $("add").onclick = () => openEditor(null);
+  $("cancel").onclick = () => editor.close();
+
+  // Shrink photos in the browser so uploads are quick and pages stay fast
+  function shrink(file, max = 1200) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(b => b ? resolve(b) : reject(new Error("Couldn't read that photo.")), "image/jpeg", 0.85);
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => reject(new Error("Couldn't read that photo. Try a JPG or PNG."));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  $("e-photo").onchange = async () => {
+    const file = $("e-photo").files[0];
+    if (!file) return;
+    $("editor-msg").className = "msg ok";
+    $("editor-msg").textContent = "Uploading photo…";
+    try {
+      const blob = await shrink(file);
+      const r = await api("/api/admin/images", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob });
+      imageId = r.id;
+      $("e-thumb").innerHTML = `<img src="/img/${imageId}" alt="">`;
+      $("editor-msg").textContent = "Photo added.";
+    } catch (err) {
+      $("editor-msg").className = "msg";
+      $("editor-msg").textContent = err.message;
+    }
+  };
+
+  $("item-form").onsubmit = async e => {
+    e.preventDefault();
+    const body = {
+      name: $("e-name").value, price: $("e-price").value, stock: $("e-stock").value,
+      category: $("e-category").value, sort: $("e-sort").value, description: $("e-desc").value,
+      image_id: imageId, active: $("e-active").checked,
+    };
+    $("editor-msg").className = "msg";
+    $("editor-msg").textContent = "";
+    try {
+      if (editing) await send(`/api/admin/products/${editing.id}`, "PUT", body);
+      else await send("/api/admin/products", "POST", body);
+      editor.close();
+      await loadItems();
+    } catch (err) { $("editor-msg").textContent = err.message; }
+  };
+
+  // ---------- orders ----------
+  async function loadOrders() {
+    const box = $("orders");
+    try {
+      const { orders } = await api("/api/admin/orders");
+      if (!orders.length) { box.innerHTML = '<div class="empty">No online orders yet.</div>'; return; }
+      box.innerHTML = `<table><thead><tr><th>#</th><th>Date</th><th>Item</th><th>Qty</th><th>Total</th><th>Customer</th><th>Status</th></tr></thead><tbody>` +
+        orders.map(o => `<tr>
+          <td>WP-${o.id}</td>
+          <td>${esc((o.paid_at || o.created_at).replace("T", " ").slice(0, 16))} UTC</td>
+          <td>${esc(o.product_name)}</td>
+          <td>${o.qty}</td>
+          <td>${money(o.amount_cents)}</td>
+          <td>${esc(o.buyer_email || "—")}</td>
+          <td><span class="tag ${o.status}">${o.status === "paid" ? "Paid" : "In checkout"}</span></td>
+        </tr>`).join("") + "</tbody></table>";
+    } catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; }
+  }
+  $("refresh-orders").onclick = loadOrders;
+
+  // ---------- start ----------
+  api("/api/admin/me").then(showApp).catch(showLogin);
+</script>
+</body>
+</html>

@@ -97,7 +97,20 @@
     font: 600 1.35rem var(--serif);
     color: var(--brass-soft);
   }
-  .info .btn { margin-top: 16px; padding: 11px 22px; }
+  .info .btn { padding: 11px 22px; }
+  .info .left { margin-top: 6px; font-size: 0.85rem; letter-spacing: 0.04em; color: var(--muted); }
+  .info .left.few { color: var(--pink); font-weight: 700; }
+  .buy { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .buy select {
+    padding: 0 10px; border: 1px solid var(--rule); background: var(--bg); color: var(--cream); cursor: pointer;
+  }
+  .info .err { min-height: 1.2em; margin-top: 8px; color: #e59a90; font-size: 0.88rem; }
+  .thanks {
+    max-width: 900px; margin: 0 auto 40px; padding: 18px 24px; text-align: center;
+    border: 1px solid var(--brass); background: rgba(198, 161, 91, 0.1);
+  }
+  .thanks strong { font: 600 1.35rem var(--serif); color: var(--brass-soft); display: block; }
+  .thanks[hidden] { display: none; }
 
   .custom {
     max-width: 900px;
@@ -131,6 +144,10 @@
     <div class="head">
       <span class="eyebrow">Ready-made &amp; quick pay</span>
       <h1 data-tail>The Shop</h1>
+    </div>
+
+    <div class="thanks" id="thanks" hidden role="status">
+      <strong>Thank you for your order!</strong> Square will email your receipt, and we'll be in touch about pickup or shipping.
     </div>
 
     <div class="quickpay">
@@ -168,6 +185,9 @@
 <script src="shop-items.js"></script>
 <script>
   const shop = window.SHOP || { items: [] };
+  const grid = document.getElementById("grid");
+  const filters = document.getElementById("filters");
+  const money = c => "$" + (c / 100).toFixed(2).replace(/\.00$/, "");
 
   // Quick pay: use the payment link if there is one, otherwise call the shop
   const qp = document.getElementById("quickpay-btn");
@@ -183,55 +203,104 @@
     document.getElementById("giftcard-btn").href = SETTINGS.giftCardUrl;
   }
 
-  const grid = document.getElementById("grid");
-  shop.items.forEach((it, i) => {
-    const card = document.createElement("article");
-    card.className = "item";
-    card.dataset.category = it.category || "";
-    card.innerHTML = `
-      <div class="frame"><div class="mat"><div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div></div></div>
-      <div class="info">
-        <h3></h3>
-        <p class="note"></p>
-        <span class="price"></span><br>
-        <a class="btn"></a>
-      </div>`;
-    const img = card.querySelector("img");
-    img.alt = it.name;
-    loadImg(img, it.image, it.live ? liveImage(it.live) : "");
-    card.querySelector("h3").textContent = it.name;
-    const note = card.querySelector(".note");
-    if (it.note) note.textContent = it.note; else note.remove();
-    const price = card.querySelector(".price");
-    if (it.price) {
-      price.textContent = it.price;
-    } else {
-      price.nextElementSibling.remove();   // the <br> after it
-      price.remove();
-    }
+  // Back from Square checkout
+  if (new URLSearchParams(location.search).has("thanks")) {
+    document.getElementById("thanks").hidden = false;
+  }
 
-    const btn = card.querySelector(".btn");
-    if (it.soldOut) {
-      card.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">Sold out</span>');
-      btn.textContent = "Sold out";
-      btn.setAttribute("aria-disabled", "true");
-      btn.style.opacity = ".45";
-      btn.style.pointerEvents = "none";
-    } else if (it.buyUrl) {
-      btn.textContent = "Buy now";
-      btn.href = it.buyUrl;
-    } else {
-      btn.textContent = "Call to order";
-      btn.classList.add("ghost");
-      btn.href = "tel:315-773-3758";
+  function card(category) {
+    const el = document.createElement("article");
+    el.className = "item";
+    el.dataset.category = category || "";
+    el.innerHTML = `
+      <div class="frame"><div class="mat"><div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div></div></div>
+      <div class="info"><h3></h3></div>`;
+    return el;
+  }
+
+  // Live items from the shop database (managed at /admin)
+  function renderLive(products) {
+    for (const p of products) {
+      const el = card(p.category);
+      const img = el.querySelector("img");
+      img.alt = p.name;
+      if (p.image_id) loadImg(img, "/img/" + p.image_id); else img.remove();
+      const info = el.querySelector(".info");
+      info.querySelector("h3").textContent = p.name;
+      if (p.description) info.insertAdjacentHTML("beforeend", '<p class="note"></p>'), info.lastChild.textContent = p.description;
+      info.insertAdjacentHTML("beforeend", `<span class="price">${money(p.price_cents)}</span>`);
+
+      if (p.available > 0) {
+        const left = p.available <= 3 ? `Only ${p.available} left` : `${p.available} in stock`;
+        const max = Math.min(p.available, 10);
+        info.insertAdjacentHTML("beforeend", `
+          <p class="left${p.available <= 3 ? " few" : ""}">${left}</p>
+          <div class="buy">
+            ${max > 1 ? `<label class="sr-only" for="q${p.id}">Quantity</label>
+              <select id="q${p.id}">${Array.from({ length: max }, (_, i) => `<option>${i + 1}</option>`).join("")}</select>` : ""}
+            <button class="btn" type="button">Buy Now</button>
+          </div>
+          <p class="err" role="alert"></p>`);
+        const btn = info.querySelector(".buy .btn");
+        btn.onclick = async () => {
+          const qty = max > 1 ? +info.querySelector("select").value : 1;
+          const err = info.querySelector(".err");
+          err.textContent = "";
+          btn.disabled = true;
+          btn.textContent = "One moment…";
+          try {
+            const res = await fetch("/api/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: p.id, qty }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.url) throw new Error(data.error || "Checkout couldn't start.");
+            location.href = data.url;          // Square's secure checkout page
+          } catch (e) {
+            err.textContent = e.message;
+            btn.disabled = false;
+            btn.textContent = "Buy Now";
+          }
+        };
+      } else {
+        el.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">Sold out</span>');
+        info.insertAdjacentHTML("beforeend", '<p class="left">Sold out. Check back soon</p>');
+      }
+      grid.appendChild(el);
     }
-    grid.appendChild(card);
-  });
+    return products.map(p => p.category);
+  }
+
+  // Fallback list from shop-items.js (used before any items are added at /admin,
+  // or when the page is opened as a plain file without the back end)
+  function renderStatic(items) {
+    for (const it of items) {
+      const el = card(it.category);
+      const img = el.querySelector("img");
+      img.alt = it.name;
+      loadImg(img, it.image, it.live ? liveImage(it.live) : "");
+      const info = el.querySelector(".info");
+      info.querySelector("h3").textContent = it.name;
+      if (it.note) info.insertAdjacentHTML("beforeend", '<p class="note"></p>'), info.lastChild.textContent = it.note;
+      if (it.price) info.insertAdjacentHTML("beforeend", '<span class="price"></span>'), info.lastChild.textContent = it.price;
+      const a = document.createElement("a");
+      a.className = "btn ghost";
+      if (it.buyUrl) { a.className = "btn"; a.textContent = "Buy Now"; a.href = it.buyUrl; }
+      else { a.textContent = "Call to Order"; a.href = "tel:315-773-3758"; }
+      const wrap = document.createElement("div");
+      wrap.className = "buy";
+      wrap.appendChild(a);
+      info.appendChild(wrap);
+      grid.appendChild(el);
+    }
+    return items.map(it => it.category);
+  }
 
   // Category filters (only shown when there's more than one category)
-  const cats = [...new Set(shop.items.map(it => it.category).filter(Boolean))];
-  const filters = document.getElementById("filters");
-  if (cats.length > 1) {
+  function buildFilters(categories) {
+    const cats = [...new Set(categories.filter(Boolean))];
+    if (cats.length < 2) { filters.remove(); return; }
     for (const c of ["All", ...cats]) {
       const b = document.createElement("button");
       b.type = "button";
@@ -239,13 +308,22 @@
       b.setAttribute("aria-pressed", c === "All");
       b.onclick = () => {
         for (const o of filters.children) o.setAttribute("aria-pressed", o === b);
-        for (const card of grid.children) card.hidden = c !== "All" && card.dataset.category !== c;
+        for (const el of grid.children) el.hidden = c !== "All" && el.dataset.category !== c;
       };
       filters.appendChild(b);
     }
-  } else {
-    filters.remove();
   }
+
+  (async () => {
+    let live = null;
+    if (location.protocol.startsWith("http")) {
+      try {
+        const res = await fetch("/api/products", { headers: { Accept: "application/json" } });
+        if (res.ok) live = (await res.json()).products;
+      } catch (e) {}
+    }
+    buildFilters(live && live.length ? renderLive(live) : renderStatic(shop.items));
+  })();
 </script>
 </body>
 </html>

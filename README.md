@@ -3,23 +3,24 @@
 Rebuild of https://www.thewhimsicalpig.com. Plain HTML/CSS/JS, no build step:
 open `index.html` in a browser to preview.
 
-## Publishing with GitHub Pages
+## Hosting (Cloudflare, free)
 
-In the repo, go to **Settings → Pages**, choose **Deploy from a branch**, pick the
-branch and `/ (root)`, and save. The site is published at
-`https://<username>.github.io/<repo-name>/`.
+The site runs on Cloudflare Workers at https://whimisical-pig.wwagner.workers.dev.
+Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
 
 ## Pages
 
 | File | What it is |
 | --- | --- |
 | `index.html` | Home: featured banners in a frame, specialties, the full gallery of work, how ordering works, and visit info |
-| `shop.html` | Online shop for ready-made items, plus **Quick Pay** for invoices, deposits and balances |
+| `shop.html` | Online shop: ready-made items with prices and stock left, Square checkout, plus **Quick Pay** |
+| `admin.html` | **Shop admin** at `/admin`: add items, prices, photos and stock; see online orders |
+| `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
 | `settings.js` | **Edit this** for the announcement bar, review and gift card links, and the FAQ answers |
-| `shop-items.js` | **Edit this** to change shop items, prices and checkout links |
+| `shop-items.js` | Backup item list, shown only before any items are added at `/admin` |
 | `order-config.js` | **Edit this** to change order types, examples and questions, and where orders are sent |
 
 ## Shop-wide settings (`settings.js`)
@@ -36,29 +37,39 @@ branch and `/ (root)`, and save. The site is published at
 deposit policy or typical turnaround, put it in those answers so customers see it
 before ordering.
 
-## Setting up the shop (payments)
+## The shop and its admin page
 
-The site has no server, so payments go through a hosted checkout page from
-**Square** or **Stripe**. Customers click "Buy now", pay on Square's or Stripe's
-secure page, and the shop gets the order and the money there. If the shop already
-uses Square at the register, Square keeps everything in one place.
+Items, prices, photos and stock live in a small database on Cloudflare (created
+automatically). Manage them at **`/admin`**. Square only handles the payment.
 
-1. **Create a payment link for each item.**
-   - Square: Dashboard → Online → Checkout links (or Payment links) → Create link.
-   - Stripe: Dashboard → Payment Links → New.
-   Turn on shipping-address collection for anything that ships.
-2. **Paste each link into `shop-items.js`** as that item's `buyUrl`, and fill in `price`.
-   Items without a link show a "Call to order" button instead, so the page works before setup is finished.
-3. **Quick Pay:** create one link where the customer types the amount (Stripe:
-   "Let customers choose what to pay"; Square has a similar option) and paste it into `quickPay.buyUrl`.
-4. **Photos:** put item photos in `images/shop/` and set each item's `image`
-   (e.g. `"images/shop/snowshoes.jpg"`). Without one, the photo from the current website is used.
+**How it works**
 
-To add an item, copy one `{ ... },` block in `shop-items.js` and change it.
-Set `soldOut: true` to mark an item as sold out.
+- The Shop page lists every item marked "Show in the shop", with its price and how many are left.
+- **Buy Now** checks stock, holds the item for 30 minutes, and sends the customer to Square's secure checkout.
+- When Square reports the payment complete, the order shows as **Paid** in the admin page and the stock goes down by itself.
+- Sales rung up **in the store** don't change the website's count. Use the − button in the admin page after an in-store sale of a shop item.
 
-The shop items listed now are a starting point taken from the current site's
-product list. **Prices and checkout links are blank on purpose**; fill in the real ones.
+**One-time setup**
+
+1. **Admin password.** In Cloudflare: *Workers & Pages → whimisical-pig → Settings → Variables and Secrets → Add*.
+   Type **Secret**, name `ADMIN_PASSWORD`, value: a strong password. Then open `/admin` and log in.
+2. **Square app.** Go to https://developer.squareup.com, sign in with the shop's Square account, and create an app
+   (any name, e.g. "Whimsical Pig website"). Under **Production**, copy the **Access token**, and under **Locations**
+   copy the shop's **Location ID**. Add both in Cloudflare as Secrets:
+   `SQUARE_ACCESS_TOKEN` and `SQUARE_LOCATION_ID`.
+3. **Payment notices.** In the Square app, open **Webhooks → Subscriptions → Add subscription** (Production):
+   - URL: `https://whimisical-pig.wwagner.workers.dev/api/square-webhook` (use the shop's own domain later if it moves)
+   - Event: `payment.updated`
+
+   Save, copy the subscription's **Signature key**, and add it in Cloudflare as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`.
+4. **Test first (optional).** Use the Square app's **Sandbox** token, location and webhook instead, and add the secret
+   `SQUARE_ENVIRONMENT` = `sandbox`. Buy something with Square's test card, check it shows as Paid, then switch the
+   secrets to Production and delete `SQUARE_ENVIRONMENT`.
+
+Until steps 2–3 are done, Buy Now shows "Online checkout isn't set up yet. Please call…".
+
+**Quick Pay** (invoices and deposits) is still a single Square payment link where the customer types the amount:
+create it in Square and paste it into `shop-items.js` as `quickPay.buyUrl`.
 
 ## Setting up "Start an Order"
 
@@ -112,8 +123,8 @@ below and it takes priority:
 - Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
   `flag-and-shadow-boxes.jpg`, `10th-mountain-snowshoes.jpg`, `firemen-emt-and-leo-items.jpg`
 
-`images/logo.png` is a redrawn copy of the logo (made from `logo.svg`); replace it
-with the original file for an exact match.
+`images/logo-original.png` is the original logo file. `images/logo.png` is the same
+logo with the black background around it made transparent; the site uses that one.
 
 ## Downloading the current site into `original/`
 

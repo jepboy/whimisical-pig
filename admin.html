@@ -92,6 +92,35 @@
   .msg { min-height: 1.3em; color: #e59a90; font-size: 0.9rem; }
   .msg.ok { color: #a9c98f; }
 
+  /* order requests */
+  .tabs .count:not(:empty) {
+    display: inline-block; min-width: 20px; padding: 1px 6px; margin-left: 4px;
+    border-radius: 999px; background: var(--pink); color: #000; font-size: 0.7rem; letter-spacing: 0;
+  }
+  .req-tools { display: flex; gap: 10px; align-items: center; }
+  .req-tools select, .req select {
+    padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream);
+  }
+  #requests { display: grid; gap: 14px; }
+  .req { padding: 20px 22px; background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; }
+  .req header { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+  .req h3 { font-size: 1.45rem; margin-top: 6px; }
+  .req .meta { color: var(--muted); font-size: 0.85rem; }
+  .req .facts { display: flex; gap: 22px; }
+  .req .facts span { display: block; font: 700 0.66rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--pink); }
+  .req details { margin-top: 14px; }
+  .req summary { color: var(--pink); font-weight: 700; font-size: 0.9rem; }
+  .req pre {
+    margin-top: 10px; padding: 14px 16px; white-space: pre-wrap; font: 0.9rem/1.55 var(--sans);
+    background: var(--bg); border-radius: 10px; color: var(--cream);
+  }
+  .req .files { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .req .files img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 2px solid var(--hair); }
+  .req .files .file { padding: 8px 12px; border: 1px solid var(--rule); border-radius: 8px; color: var(--pink); }
+  .req footer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+  .req footer label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--muted); margin-right: auto; }
+  .req footer .btn { padding: 9px 16px; }
+
   /* orders */
   table { width: 100%; border-collapse: collapse; }
   th, td { padding: 11px 10px; text-align: left; border-bottom: 1px solid var(--hair); font-size: 0.92rem; }
@@ -140,11 +169,33 @@
   <!-- app -->
   <div id="app" hidden>
     <div class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-tab="items">Items</button>
-      <button role="tab" aria-selected="false" data-tab="orders">Orders</button>
+      <button role="tab" aria-selected="true" data-tab="requests">Order Requests <span class="count" id="new-count"></span></button>
+      <button role="tab" aria-selected="false" data-tab="items">Shop Items</button>
+      <button role="tab" aria-selected="false" data-tab="orders">Shop Sales</button>
     </div>
 
-    <section id="tab-items">
+    <section id="tab-requests">
+      <div class="toolbar">
+        <div>
+          <h2>Order Requests</h2>
+          <p class="hint">Everything customers sent from the Start an Order form, with their photos.</p>
+        </div>
+        <div class="req-tools">
+          <select id="req-filter" aria-label="Show">
+            <option value="open">Open (not done)</option>
+            <option value="all">All</option>
+            <option value="new">New</option>
+            <option value="quoted">Quoted</option>
+            <option value="in progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+          <button class="btn ghost" id="refresh-requests" type="button">Refresh</button>
+        </div>
+      </div>
+      <div id="requests"></div>
+    </section>
+
+    <section id="tab-items" hidden>
       <div class="toolbar">
         <div>
           <h2>Shop Items</h2>
@@ -239,7 +290,7 @@
 
   // ---------- login ----------
   function showLogin() { $("app").hidden = true; $("who").hidden = true; $("login-box").hidden = false; $("pw").focus(); }
-  function showApp() { $("login-box").hidden = true; $("app").hidden = false; $("who").hidden = false; loadItems(); }
+  function showApp() { $("login-box").hidden = true; $("app").hidden = false; $("who").hidden = false; loadRequests(); }
 
   $("login-box").onsubmit = async e => {
     e.preventDefault();
@@ -255,8 +306,11 @@
   // ---------- tabs ----------
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(o => o.setAttribute("aria-selected", o === b));
+    $("tab-requests").hidden = b.dataset.tab !== "requests";
     $("tab-items").hidden = b.dataset.tab !== "items";
     $("tab-orders").hidden = b.dataset.tab !== "orders";
+    if (b.dataset.tab === "requests") loadRequests();
+    if (b.dataset.tab === "items") loadItems();
     if (b.dataset.tab === "orders") loadOrders();
   });
 
@@ -408,6 +462,57 @@
     } catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; }
   }
   $("refresh-orders").onclick = loadOrders;
+
+  // ---------- order requests ----------
+  const STATUSES = ["new", "quoted", "in progress", "done"];
+  let requests = [];
+  async function loadRequests() {
+    const box = $("requests");
+    try {
+      requests = (await api("/api/admin/requests")).requests;
+    } catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+    const fresh = requests.filter(r => r.status === "new").length;
+    $("new-count").textContent = fresh ? fresh : "";
+    const want = $("req-filter").value;
+    const list = requests.filter(r => want === "all" ? true : want === "open" ? r.status !== "done" : r.status === want);
+    if (!list.length) { box.innerHTML = '<div class="empty">Nothing here yet. New orders from the website show up here.</div>'; return; }
+    box.innerHTML = list.map(r => `
+      <article class="req" data-id="${r.id}">
+        <header>
+          <div>
+            <span class="tag ${r.status === "done" ? "paid" : "pending"}">${esc(r.status)}</span>
+            <h3>${esc(r.type || "Order")} · ${esc(r.name)}</h3>
+            <p class="meta">${esc(r.ref)} · sent ${esc(r.created_at.slice(0, 16))} UTC</p>
+          </div>
+          <div class="facts">
+            <div><span>Needed by</span>${esc(r.needed_by || "—")}</div>
+            <div><span>Pick up / ship</span>${esc(r.fulfill || "—")}</div>
+          </div>
+        </header>
+        <details>
+          <summary>Show everything they sent${r.files.length ? ` · ${r.files.length} file${r.files.length > 1 ? "s" : ""}` : ""}</summary>
+          <pre>${esc(r.summary)}</pre>
+          ${r.files.length ? `<div class="files">${r.files.map(f => f.mime.startsWith("image/")
+            ? `<a href="/api/admin/request-files/${f.id}" target="_blank" rel="noopener"><img src="/api/admin/request-files/${f.id}" alt="${esc(f.name)}" loading="lazy"></a>`
+            : `<a class="file" href="/api/admin/request-files/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a>`).join("")}</div>` : ""}
+        </details>
+        <footer>
+          <label>Status
+            <select data-act="status">${STATUSES.map(s => `<option${s === r.status ? " selected" : ""}>${s}</option>`).join("")}</select>
+          </label>
+          ${r.email ? `<a class="btn" href="mailto:${esc(r.email)}?subject=${encodeURIComponent("Your Whimsical Pig order " + r.ref)}">Reply by Email</a>` : ""}
+          ${r.phone ? `<a class="btn ghost" href="tel:${esc(r.phone)}">Call ${esc(r.phone)}</a>` : ""}
+        </footer>
+      </article>`).join("");
+  }
+  $("requests").onchange = async e => {
+    if (e.target.dataset.act !== "status") return;
+    const id = e.target.closest(".req").dataset.id;
+    try { await send(`/api/admin/requests/${id}`, "PUT", { status: e.target.value }); await loadRequests(); }
+    catch (err) { alert(err.message); }
+  };
+  $("req-filter").onchange = loadRequests;
+  $("refresh-requests").onclick = loadRequests;
 
   // ---------- start ----------
   api("/api/admin/me").then(showApp).catch(showLogin);

@@ -83,17 +83,18 @@ with everything, plus an order reference like `WP-261015-K3QZ`.
 
 **Where orders go:**
 
-- **Recommended: Formspree** (https://formspree.io): create a form, copy its URL
-  (`https://formspree.io/f/xxxxxxx`), and paste it as `endpoint` in `order-config.js`.
-  Orders then arrive in the shop's email inbox with the photos attached.
-  Check that the plan you pick includes file uploads.
-- **Until then** (`endpoint: ""`): pressing "Send my order" opens the customer's
-  email app addressed to `WhimsicalPig@hotmail.com` with every answer filled in,
-  and asks them to attach their photos.
+- **Admin page (always, on the live site):** every order is saved with its photos and
+  shows up at `/admin` → **Order Requests**. Mark each one New → Quoted → In progress → Done,
+  and reply with one click. Customer uploads can only be opened by someone logged in.
+- **Email copy (optional):** create a free form at https://formspree.io and paste its URL as
+  `endpoint` in `order-config.js` to also get each order by email.
+- **Fallback:** if the site can't save (for example a copy opened from a zip), the customer's
+  email app opens with everything filled in.
 
-**"Have these ready" lists:** each order type has a `bring` list shown above its
-questions and on the Help page. Links like `order.html?type=shadow-box` open the
-form with that order type already picked, handy for emails and Facebook posts.
+The order types and questions follow the shop's own checklists (embroidery and military
+framing) and the past year of orders: military plaques and framing were most common, then
+embroidery and apparel, then plaques and engraving. Every order also asks when it's needed
+in hand and whether it will be picked up or shipped (with the address if shipped).
 
 **Changing questions:** each order type in `order-config.js` has a `questions` list.
 Question types are `text`, `textarea`, `number`, `date`, `select`, `radio` (pick one)
@@ -106,15 +107,14 @@ Save a photo for each in `images/examples/`, named after its `id`:
 
 | Order type | Example photo files |
 | --- | --- |
-| Military Shadow Box | `classic-retirement.jpg`, `full-career.jpg`, `medals-ribbons.jpg` |
-| Flag Case | `burial-flag-case.jpg`, `flag-3x5-case.jpg`, `flag-and-certificate.jpg` |
-| Guidon | `regulation-guidon.jpg`, `non-regulation-guidon.jpg` |
+| Military Framing | `farewell-plaque.jpg`, `retirement-shadow-box.jpg`, `guidon-display.jpg` |
 | Embroidery & Apparel | `unit-shirts.jpg`, `embroidered-polos-hats.jpg`, `custom-printing.jpg` |
+| Plaques & Engraving | `engraved-plates.jpg`, `award-plaque.jpg`, `league-awards.jpg` |
+| Guidons | `regulation-guidon.jpg`, `non-regulation-guidon.jpg` |
 | Custom Framing | `art-print.jpg`, `jersey.jpg`, `diploma-certificate.jpg` |
-| Plaque or Award | `racing-plaque.jpg`, `appreciation-plaque.jpg`, `first-responder.jpg` |
 
 The order-type cards themselves use `images/examples/<type id>.jpg`
-(`shadow-box.jpg`, `flag-case.jpg`, `guidon.jpg`, `apparel.jpg`, `framing.jpg`, `award.jpg`, `other.jpg`).
+(`military.jpg`, `apparel.jpg`, `award.jpg`, `guidon.jpg`, `framing.jpg`, `other.jpg`). List each one in `settings.js` → `localPhotos` as `examples/<file>`.
 Until those exist, photos from the current website are used where one fits.
 
 ## Photos on the home page

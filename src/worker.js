@@ -7,6 +7,7 @@
 //   POST /api/checkout                  { id, qty } -> Square checkout URL
 //   POST /api/square-webhook            Square payment notices -> lowers stock
 //   GET  /img/:id                       item photos stored in the database
+//   POST /api/order-request             "Start an Order" form -> saved for the admin page
 //   POST /api/admin/login | logout      admin password login
 //   GET/POST/PUT/DELETE /api/admin/...  manage items and view orders
 //
@@ -21,6 +22,8 @@ const SQUARE_VERSION = "2026-05-20";
 const HOLD_MINUTES = 30;          // stock is held this long while a customer is paying
 const SESSION_DAYS = 7;
 const MAX_IMAGE_BYTES = 1_500_000;
+const MAX_REQUEST_FILES = 8;
+const MAX_REQUEST_FILE_BYTES = 1_900_000;   // D1 rows hold up to 2 MB
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS products (
@@ -41,6 +44,27 @@ const SCHEMA = [
      mime TEXT NOT NULL,
      data BLOB NOT NULL,
      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+   )`,
+  `CREATE TABLE IF NOT EXISTS requests (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     ref TEXT NOT NULL,
+     type TEXT NOT NULL DEFAULT '',
+     name TEXT NOT NULL DEFAULT '',
+     email TEXT NOT NULL DEFAULT '',
+     phone TEXT NOT NULL DEFAULT '',
+     needed_by TEXT NOT NULL DEFAULT '',
+     fulfill TEXT NOT NULL DEFAULT '',
+     summary TEXT NOT NULL,
+     status TEXT NOT NULL DEFAULT 'new',
+     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+   )`,
+  // Customer uploads are kept apart from shop photos: only the admin can open them.
+  `CREATE TABLE IF NOT EXISTS request_files (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     request_id INTEGER NOT NULL,
+     name TEXT NOT NULL,
+     mime TEXT NOT NULL,
+     data BLOB NOT NULL
    )`,
   `CREATE TABLE IF NOT EXISTS orders (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,6 +112,7 @@ async function route(request, env, url, path) {
   if (path === "/api/checkout" && m === "POST") return checkout(request, env, url);
   if (path === "/api/square-webhook" && m === "POST") return squareWebhook(request, env);
   if (path.startsWith("/img/") && m === "GET") return serveImage(env, path.slice(5));
+  if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env);
 
   if (path === "/api/admin/login" && m === "POST") return login(request, env);
   if (path === "/api/admin/logout" && m === "POST") return logout();
@@ -102,6 +127,11 @@ async function route(request, env, url, path) {
     if (pm && m === "DELETE") return deleteProduct(env, +pm[1]);
     if (path === "/api/admin/images" && m === "POST") return uploadImage(request, env);
     if (path === "/api/admin/orders" && m === "GET") return listOrders(env);
+    if (path === "/api/admin/requests" && m === "GET") return listRequests(env);
+    const rm = path.match(/^\/api\/admin\/requests\/(\d+)$/);
+    if (rm && m === "PUT") return updateRequest(request, env, +rm[1]);
+    const fm = path.match(/^\/api\/admin\/request-files\/(\d+)$/);
+    if (fm && m === "GET") return serveRequestFile(env, +fm[1]);
   }
   return json({ error: "Not found" }, 404);
 }
@@ -232,6 +262,68 @@ async function serveImage(env, idText) {
   if (!img) return new Response("Not found", { status: 404 });
   return new Response(new Uint8Array(img.data), {
     headers: { "Content-Type": img.mime, "Cache-Control": "public, max-age=31536000, immutable" },
+  });
+}
+
+// ---------------------------------------------------------------- order requests
+
+async function saveOrderRequest(request, env) {
+  let form;
+  try { form = await request.formData(); } catch { return json({ error: "Couldn't read the form." }, 400); }
+  if (form.get("website")) return json({ ok: true });          // hidden field only bots fill in
+  const field = (k, max = 200) => String(form.get(k) || "").trim().slice(0, max);
+  const summary = field("summary", 20000);
+  const ref = field("ref", 40);
+  if (!summary || !ref) return json({ error: "The order was empty." }, 400);
+
+  const files = form.getAll("photos").filter(f => f && typeof f === "object" && f.size > 0);
+  if (files.length > MAX_REQUEST_FILES) return json({ error: `Please send ${MAX_REQUEST_FILES} files or fewer.` }, 413);
+  for (const f of files) {
+    if (f.size > MAX_REQUEST_FILE_BYTES) return json({ error: `"${f.name}" is too large. Please send a smaller copy.` }, 413);
+    if (!/^(image\/(jpeg|png|webp|gif|heic|heif)|application\/pdf)$/.test(f.type)) {
+      return json({ error: `"${f.name}" isn't a photo or PDF.` }, 415);
+    }
+  }
+
+  const row = await env.DB.prepare(
+    `INSERT INTO requests (ref, type, name, email, phone, needed_by, fulfill, summary)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(ref, field("type", 80), field("name"), field("email"), field("phone", 40),
+         field("needed_by", 40), field("fulfill", 80), summary).first();
+  for (const f of files) {
+    await env.DB.prepare(`INSERT INTO request_files (request_id, name, mime, data) VALUES (?, ?, ?, ?)`)
+      .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer()).run();
+  }
+  return json({ ok: true, id: row.id });
+}
+
+async function listRequests(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT r.*, (SELECT json_group_array(json_object('id', f.id, 'name', f.name, 'mime', f.mime))
+                    FROM request_files f WHERE f.request_id = r.id) AS files
+       FROM requests r ORDER BY r.id DESC LIMIT 200`
+  ).all();
+  for (const r of results) r.files = JSON.parse(r.files || "[]");
+  return json({ requests: results }, 200, { "Cache-Control": "no-store" });
+}
+
+async function updateRequest(request, env, id) {
+  const b = await readJson(request);
+  const status = ["new", "quoted", "in progress", "done"].includes(b.status) ? b.status : null;
+  if (!status) return json({ error: "Unknown status." }, 400);
+  await env.DB.prepare(`UPDATE requests SET status = ? WHERE id = ?`).bind(status, id).run();
+  return json({ ok: true });
+}
+
+async function serveRequestFile(env, id) {
+  const f = await env.DB.prepare(`SELECT name, mime, data FROM request_files WHERE id = ?`).bind(id).first();
+  if (!f) return new Response("Not found", { status: 404 });
+  return new Response(new Uint8Array(f.data), {
+    headers: {
+      "Content-Type": f.mime,
+      "Content-Disposition": `inline; filename="${f.name.replace(/["\\\r\n]/g, "")}"`,
+      "Cache-Control": "private, no-store",
+    },
   });
 }
 

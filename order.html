@@ -240,6 +240,19 @@
     transform: rotate(-45deg);
   }
 
+  /* spam trap, hidden from people */
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  /* info note inside a question list (e.g. the digitizing fee) */
+  .fields .note {
+    padding: 14px 18px;
+    border-left: 3px solid var(--pink);
+    border-radius: 0 10px 10px 0;
+    background: rgba(231, 163, 184, 0.1);
+    color: var(--cream);
+    font-size: 0.95rem;
+  }
+
   /* Done */
   .done-box .next {
     list-style: none;
@@ -391,11 +404,22 @@
               <input type="email" id="c_email" name="c_email" autocomplete="email">
               <p class="err">Please add a valid email.</p>
             </div>
-            <div class="field">
-              <label for="c_date">Needed by</label>
+            <div class="field" data-req>
+              <label for="c_date">When do you need it in your hands? <span class="req">*</span></label>
               <input type="date" id="c_date" name="c_date">
-              <p class="help">Ceremony or event date, if there is one.</p>
+              <p class="help">Ceremony or event date. Most orders are scheduled about two weeks out.</p>
+              <p class="err">Please pick a date.</p>
             </div>
+          </div>
+          <fieldset class="field" data-req>
+            <legend>Will this be picked up or shipped? <span class="req">*</span></legend>
+            <div class="opts" data-name="c_fulfill"></div>
+            <p class="err">Please choose one.</p>
+          </fieldset>
+          <div class="field" data-req data-show-if='{"name":"c_fulfill","is":"Ship it to me"}'>
+            <label for="c_address">Shipping address <span class="req">*</span></label>
+            <textarea id="c_address" name="c_address" autocomplete="shipping street-address" placeholder="Name, street, city, state, ZIP"></textarea>
+            <p class="err">Please add the address to ship to.</p>
           </div>
           <fieldset class="field">
             <legend>Best way to reach you</legend>
@@ -424,6 +448,8 @@
         <div class="done-box" id="done"></div>
       </section>
       <div class="slip" id="slip"></div>
+
+      <div class="hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
       <div class="nav-row" id="nav-row">
         <button type="button" class="btn light" id="back">Back</button>
@@ -502,8 +528,11 @@
     const help = q.help ? `<p class="help">${esc(q.help)}</p>` : "";
     const ph = q.placeholder ? ` placeholder="${esc(q.placeholder)}"` : "";
     const attrs = `id="${id}" name="${id}"${ph}`;
-    const reqAttr = q.required ? " data-req" : "";
+    const reqAttr = (q.required ? " data-req" : "") +
+      (q.showIf ? ` data-show-if='${esc(JSON.stringify({ name: prefix + q.showIf.q, is: q.showIf.is }))}'` : "");
     switch (q.type) {
+      case "note":
+        return `<p class="note">${esc(q.text)}</p>`;
       case "textarea":
         return `<div class="field"${reqAttr}><label for="${id}">${esc(q.label)}${req}</label><textarea ${attrs}></textarea>${help}${err}</div>`;
       case "select":
@@ -534,7 +563,17 @@
       ? `<span class="eyebrow">Have these ready</span><ul>${t.bring.map(b => `<li>${esc(b)}</li>`).join("")}</ul>`
       : "";
     document.getElementById("details-title").textContent = t.title + " details";
+    applyConditions();
   }
+
+  // Questions with showIf only appear when another answer matches
+  function applyConditions() {
+    form.querySelectorAll("[data-show-if]").forEach(f => {
+      const c = JSON.parse(f.dataset.showIf);
+      f.hidden = !valueOf(c.name).split(", ").includes(c.is);
+    });
+  }
+  const isShown = el => !el.closest("[hidden]");
 
   // ---------- Step 4: contact options & photos ----------
   function fillOpts(name, options) {
@@ -542,6 +581,7 @@
     box.innerHTML = options.map(o => `<label class="opt"><input type="radio" name="${name}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("");
   }
   fillOpts("c_contact", ["Call", "Text", "Email"]);
+  fillOpts("c_fulfill", ["I'll pick it up at the shop", "Ship it to me"]);
   fillOpts("c_delivery", ["I'll drop them off at the shop", "I'll mail them", "No items to send"]);
 
   const photoInput = document.getElementById("photos");
@@ -599,13 +639,18 @@
       ["Order type", t ? t.title : ""],
       ["Starting point", valueOf("example")],
     ]]);
-    if (t) sections.push([t.title + " details", t.questions.map(q => [q.label, valueOf("q_" + q.id)])]);
+    if (t) sections.push([t.title + " details", t.questions
+      .filter(q => q.type !== "note")
+      .filter(q => { const el = form.querySelector(`[name="q_${q.id}"]`); return el && isShown(el); })
+      .map(q => [q.label, valueOf("q_" + q.id)])]);
     sections.push(["Contact", [
       ["Name", valueOf("c_name")],
       ["Phone", valueOf("c_phone")],
       ["Email", valueOf("c_email")],
       ["Best way to reach", valueOf("c_contact")],
-      ["Needed by", valueOf("c_date")],
+      ["Needed in hand by", valueOf("c_date")],
+      ["Pick up or ship", valueOf("c_fulfill")],
+      ["Shipping address", valueOf("c_fulfill") === "Ship it to me" ? valueOf("c_address") : ""],
       ["Getting items to us", valueOf("c_delivery")],
       ["Notes", valueOf("c_notes")],
       ["Photos", files.length ? files.map(f => f.name).join(", ") : ""],
@@ -620,6 +665,7 @@
     if (n === 0 && !valueOf("type")) { statusEl.textContent = "Pick what we're making to keep going."; return false; }
     if (n === 1 && !valueOf("example")) { statusEl.textContent = "Pick a starting point (or “Something different”)."; return false; }
     panel.querySelectorAll("[data-req]").forEach(f => {
+      if (!isShown(f)) { f.classList.remove("bad"); return; }
       const input = f.querySelector("input, select, textarea");
       let v = input ? valueOf(input.name) : "";
       let good = !!v;
@@ -635,6 +681,7 @@
     return ok;
   }
   form.addEventListener("input", e => {
+    applyConditions();
     const f = e.target.closest(".field.bad");
     if (f) f.classList.remove("bad");
     statusEl.textContent = "";
@@ -706,37 +753,84 @@
       summary().flatMap(([h, rows]) => ["== " + h + " ==", ...rows.map(([k, v]) => k + ": " + v), ""])
     ).join("\n");
   }
+  // Shrink big phone photos before sending so uploads are quick (PDFs are sent as-is)
+  function shrinkPhoto(file, max = 1800) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return Promise.resolve(file);
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(b => resolve(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file),
+          "image/jpeg", 0.85);
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function submit() {
     const ref = makeRef();
     const t = currentType();
     const subject = `New order ${ref}: ${t ? t.title : ""} for ${valueOf("c_name")}`;
+    nextBtn.disabled = backBtn.disabled = true;
+    nextBtn.textContent = "Sending…";
+    let saved = false, emailed = false, problem = "";
 
-    if (!CFG.endpoint) {
-      // No form service set up yet: open the customer's email app, filled in.
+    try {
+      // 1) Save to the shop's admin page (works on the live site)
+      if (location.protocol.startsWith("http")) {
+        const fd = new FormData();
+        fd.append("ref", ref);
+        fd.append("type", t ? t.title : "");
+        fd.append("name", valueOf("c_name"));
+        fd.append("email", valueOf("c_email"));
+        fd.append("phone", valueOf("c_phone"));
+        fd.append("needed_by", valueOf("c_date"));
+        fd.append("fulfill", valueOf("c_fulfill"));
+        fd.append("summary", plainText(ref));
+        fd.append("website", form.elements.website ? form.elements.website.value : "");
+        for (const f of await Promise.all(files.map(f => shrinkPhoto(f)))) fd.append("photos", f, f.name);
+        try {
+          const res = await fetch("/api/order-request", { method: "POST", body: fd });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok) saved = true;
+          else if (res.status >= 400 && res.status < 500 && data.error) problem = data.error;
+        } catch (e) {}
+      }
+      if (problem) {
+        statusEl.textContent = problem;
+        nextBtn.textContent = "Try again";
+        return;
+      }
+
+      // 2) Optional email copy through a form service (see order-config.js)
+      if (CFG.endpoint) {
+        const fd = new FormData();
+        fd.append("_subject", subject);
+        fd.append("Order reference", ref);
+        for (const [h, rows] of summary()) for (const [k, v] of rows) fd.append(h === "Order" || h === "Contact" ? k : h.replace(/ details$/, "") + " — " + k, v);
+        if (valueOf("c_email")) fd.append("_replyto", valueOf("c_email"));
+        if (!saved) files.forEach(f => fd.append("photos", f, f.name));
+        try {
+          const res = await fetch(CFG.endpoint, { method: "POST", body: fd, headers: { Accept: "application/json" } });
+          emailed = res.ok;
+        } catch (e) {}
+      }
+
+      if (saved || emailed) { showDone(ref, false); return; }
+
+      // 3) Last resort: open the customer's email app with everything filled in
       const body = plainText(ref) + (files.length ? "\n(Please attach your photos to this email before sending.)" : "");
       location.href = `mailto:${CFG.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       showDone(ref, true);
-      return;
-    }
-
-    const fd = new FormData();
-    fd.append("_subject", subject);
-    fd.append("Order reference", ref);
-    for (const [h, rows] of summary()) for (const [k, v] of rows) fd.append(h === "Order" || h === "Contact" ? k : h.replace(/ details$/, "") + " — " + k, v);
-    if (valueOf("c_email")) fd.append("_replyto", valueOf("c_email"));
-    files.forEach(f => fd.append("photos", f, f.name));
-
-    nextBtn.disabled = backBtn.disabled = true;
-    nextBtn.textContent = "Sending…";
-    try {
-      const res = await fetch(CFG.endpoint, { method: "POST", body: fd, headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      showDone(ref, false);
-    } catch (err) {
-      statusEl.innerHTML = `Hmm, that didn't send. Please try again, or email us at <a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a>.`;
-      nextBtn.textContent = "Try again";
     } finally {
       nextBtn.disabled = backBtn.disabled = false;
+      if (nextBtn.textContent === "Sending…") nextBtn.textContent = "Send My Order";
     }
   }
   function showDone(ref, viaEmail) {
@@ -794,11 +888,14 @@
       if (!el) continue;
       if (Array.isArray(v)) setChecked(name, v); else el.value = v;
     }
+    applyConditions();
   }
 
   restoreDraft();
   // Links like order.html?type=shadow-box open with that order type already picked
-  const wanted = typeById(new URLSearchParams(location.search).get("type") || "");
+  const legacy = { "shadow-box": "military", "flag-case": "military" };
+  const asked = new URLSearchParams(location.search).get("type") || "";
+  const wanted = typeById(legacy[asked] || asked);
   const pick = wanted && form.querySelector(`input[name="type"][value="${wanted.id}"]`);
   if (pick) {
     pick.checked = true;

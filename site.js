@@ -73,7 +73,7 @@ function buildHeader(current) {
       <nav class="main" aria-label="Main">
         <ul>
           ${link("index.html", "Home", "home")}
-          ${link("index.html#work", "Our Work", "work")}
+          ${link("story.html", "Our Story", "story")}
           ${link("shop.html", "Shop", "shop")}
           ${link("order.html", "Start an Order", "order")}
           ${link("help.html", "Help", "help")}
@@ -123,6 +123,7 @@ function buildFooter() {
             <span><span class="brand-name">The Whimsical Pig</span></span>
           </a>
           <p>We make military framing “too easy.”</p>
+          <img class="flying-pig foot-pig" src="images/flying-pig.png" alt="" loading="lazy">
         </div>
         <div>
           <h3>Visit</h3>
@@ -144,7 +145,7 @@ function buildFooter() {
       </div>
       <div class="fine">
         <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Made with a little whimsy in Watertown, New York</span>
-        <span><a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a></span>
+        <span><a href="story.html">Our Story</a> · <a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a></span>
       </div>
     </div>`;
 }

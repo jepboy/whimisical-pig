@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Story — The Whimsical Pig</title>
+<meta name="description" content="The Whimsical Pig is a family owned and operated shop on Public Square in Watertown, New York, since 2003.">
+<meta name="theme-color" content="#141112">
+<link rel="icon" href="images/logo.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<style>
+  .intro { position: relative; padding: 64px 0 110px; text-align: center; overflow: hidden; }
+  .intro::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(223, 127, 138, 0.18) 2px, transparent 2.5px);
+    background-size: 34px 34px;
+    pointer-events: none;
+  }
+  .intro .wrap { position: relative; }
+  .intro h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 500; margin-top: 12px; }
+  .intro h1 em { font-style: italic; color: var(--rose); }
+  .intro .rule-orn { margin-top: 18px; }
+  .intro .flying-pig { position: absolute; right: 4%; top: -6px; width: 150px; }
+  .wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 60px; }
+
+  /* painting + story */
+  .tale {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 64px;
+    align-items: center;
+  }
+  .painting {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    margin: 0 auto;
+    filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6));
+    transform: rotate(-1.5deg);
+    transition: transform .4s ease;
+  }
+  .painting:hover { transform: rotate(0deg) scale(1.02); }
+  .tale .eyebrow { display: block; margin-bottom: 10px; }
+  .tale h2 { font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 18px; }
+  .tale p { color: var(--muted); font-size: 1.06rem; }
+  .tale p + p { margin-top: 16px; }
+  .tale p strong { color: var(--cream); }
+
+  /* three facts */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 2px solid #000;
+    border-bottom: 2px solid #000;
+  }
+  .facts div { padding: 34px 24px; text-align: center; }
+  .facts div + div { border-left: 1px solid rgba(0, 0, 0, 0.15); }
+  .facts strong { display: block; font: 600 3.2rem/1 var(--serif); color: var(--rose); }
+  .facts span { display: block; margin-top: 8px; font: 700 0.74rem var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: #1a0f13; }
+
+  /* what we make */
+  .make {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  .make a {
+    display: block;
+    padding: 26px 26px 24px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    transition: transform .2s ease, border-color .2s ease;
+  }
+  .make a:hover { transform: translateY(-3px) rotate(-0.6deg); border-color: var(--pink); }
+  .make h3 { font-size: 1.5rem; margin-bottom: 6px; }
+  .make p { color: var(--muted); font-size: 0.95rem; }
+  .make .go { display: inline-block; margin-top: 12px; font: 700 0.72rem var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--pink); }
+
+  /* visit */
+  .visit { text-align: center; }
+  .visit h2 { font-size: clamp(2rem, 4.4vw, 2.8rem); }
+  .visit p { margin: 10px auto 26px; max-width: 520px; }
+  .visit .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+  .visit .flying-pig { width: 120px; margin: 0 auto 6px; }
+
+  @media (max-width: 900px) {
+    .tale { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+    .make { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+    .intro .flying-pig { width: 96px; right: 2%; top: -10px; }
+  }
+  @media (max-width: 640px) {
+    .intro { padding: 44px 0 90px; }
+    .facts { grid-template-columns: 1fr; }
+    .facts div + div { border-left: 0; border-top: 1px solid rgba(0, 0, 0, 0.15); }
+    .intro .flying-pig { width: 72px; }
+  }
+</style>
+</head>
+<body data-page="story">
+
+<header id="site-header"></header>
+
+<main>
+  <section class="intro blush">
+    <div class="wrap">
+      <img class="flying-pig" src="images/flying-pig.png" alt="">
+      <span class="eyebrow">Our Story</span>
+      <h1>A little <em>whimsy</em> since 2003</h1>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+    </div>
+    <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
+  </section>
+
+  <section class="block">
+    <div class="wrap tale">
+      <img class="painting" src="images/painting.webp" alt="A painting of a happy pink pig in the grass, in an oval gold frame" width="760" height="937" loading="lazy">
+      <div>
+        <span class="eyebrow">Family owned &amp; operated</span>
+        <h2>Downtown on Public Square</h2>
+        <p><strong>The Whimsical Pig</strong> is a family owned and operated shop on Public Square in downtown Watertown, New York. We've been here since 2003, and four generations of our family have been part of the story.</p>
+        <p>Our specialty is <strong>military framing</strong>: shadow boxes, flag cases, guidons and battalion spreads that honor service members, retirees and the families who love them. We also do custom framing for art and keepsakes, embroidery and printing, awards and plaques, and personalized gifts.</p>
+        <p>And yes, there's a pig. A little whimsy goes a long way, even alongside the most meaningful pieces we make. Our goal is simple: make every order feel <em>“too easy.”</em></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="blush">
+    <div class="wrap">
+      <div class="facts">
+        <div><strong>2003</strong><span>Family owned since</span></div>
+        <div><strong>4</strong><span>Generations of family</span></div>
+        <div><strong>1</strong><span>Shop on Public Square</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">What we make</span>
+        <h2 data-tail>From Our Shop to Your Wall</h2>
+      </div>
+      <div class="make">
+        <a href="order.html?type=shadow-box">
+          <h3>Military Framing</h3>
+          <p>Shadow boxes, flag cases, guidons and battalion spreads.</p>
+          <span class="go">Start an order →</span>
+        </a>
+        <a href="order.html?type=framing">
+          <h3>Custom Framing</h3>
+          <p>Art, photos, jerseys, diplomas and keepsakes.</p>
+          <span class="go">Start an order →</span>
+        </a>
+        <a href="shop.html">
+          <h3>Gifts &amp; More</h3>
+          <p>Embroidery, printing, awards, plaques and ready-made pieces.</p>
+          <span class="go">Visit the shop →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block blush visit">
+    <div class="wrap">
+      <img class="flying-pig" src="images/flying-pig.png" alt="">
+      <h2>Come Say Hello</h2>
+      <p>50 Public Square, Suite E1, Watertown, New York. Open Monday – Friday, 9:30am – 5:30pm.</p>
+      <div class="row">
+        <a class="btn" href="order.html">Start an Order</a>
+        <a class="btn ghost" href="https://www.thewhimsicalpig.com/location.html">Get Directions</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="settings.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

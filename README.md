@@ -17,6 +17,7 @@ Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
 | `admin.html` | **Shop admin** at `/admin`: add items, prices, photos and stock; see online orders |
 | `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
+| `story.html` | **Our Story**: the shop's story with the pig painting. Written from known facts only — add your own history (who started it, how, and why a pig) |
 | `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
 | `settings.js` | **Edit this** for the announcement bar, review and gift card links, and the FAQ answers |
@@ -122,6 +123,10 @@ below and it takes priority:
 - Slideshow: `slide-military-framing.jpg`, `slide-custom-apparel.jpg`, `slide-graphic-design.jpg`
 - Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
   `flag-and-shadow-boxes.jpg`, `10th-mountain-snowshoes.jpg`, `firemen-emt-and-leo-items.jpg`
+
+Brand images: `images/logo-full.png` (full logo with the name, used on the home page),
+`images/flying-pig.png` (the flying pig mascot), and `images/painting.webp` (the pig
+painting on Our Story). White backgrounds were made transparent.
 
 `images/logo-original.png` is the original logo file. `images/logo.png` is the same
 logo with the black background around it made transparent; the site uses that one.

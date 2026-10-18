@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Work — The Whimsical Pig</title>
+<meta name="description" content="Military framing, shadow boxes, guidons, custom framing, embroidery, printing, awards and gifts from The Whimsical Pig in Watertown, NY.">
+<meta name="theme-color" content="#141112">
+<link rel="icon" href="images/logo.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: -10px 0 44px;
+  }
+  .filters button {
+    padding: 8px 18px;
+    border: 2px solid var(--pink);
+    border-radius: 999px;
+    background: none;
+    color: var(--pink);
+    font: 700 0.72rem var(--sans);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .filters button:hover { background: rgba(231, 163, 184, 0.12); }
+  .filters button[aria-pressed="true"] { background: var(--pink); color: #000; border-color: var(--pink); }
+  .tile[hidden] { display: none; }
+  .cta { text-align: center; }
+  .cta h2 { font-size: clamp(2rem, 4.4vw, 2.8rem); }
+  .cta p { margin: 10px auto 26px; max-width: 520px; }
+  .cta .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+</style>
+</head>
+<body data-page="work">
+
+<header id="site-header"></header>
+
+<main>
+  <section class="page-intro blush">
+    <div class="wrap">
+      <img class="flying-pig" src="images/flying-pig.png" alt="">
+      <span class="eyebrow">From the shop</span>
+      <h1>Our <em>Work</em></h1>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p>Tap any piece to see more of what we make.</p>
+    </div>
+    <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="filters" id="filters" role="group" aria-label="Filter our work"></div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <section class="block blush cta">
+    <div class="wrap">
+      <h2>See something you like?</h2>
+      <p>Tell us what you have in mind and we'll take it from there.</p>
+      <div class="row">
+        <a class="btn" href="order.html">Start an Order</a>
+        <a class="btn ghost" href="shop.html">Shop Ready-Made</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+
+<script src="settings.js"></script>
+<script src="site.js"></script>
+<script>
+  // Which filter each piece belongs to
+  const GROUPS = {
+    "Military": ["flag & shadow boxes", "battalion spreads", "regulation guidons", "non regulation guidons",
+                 "framed military artwork", "10th mountain snowshoes", "purple hearts reunited inc."],
+    "Framing": ["non military framing", "custom designed prints", "path tracing"],
+    "Apparel": ["embroidery", "vinyl applied custom apparel", "custom printing"],
+    "Awards & Gifts": ["customized gifts", "sublimated images on slate", "sublimated plates on wooden plaques",
+                       "racing plaques, awards, etc.", "firemen, emt, & leo items", "masonic items", "evident truths products"],
+  };
+  const groupOf = label => Object.keys(GROUPS).find(g => GROUPS[g].includes(label)) || "";
+
+  const tiles = renderGallery(document.getElementById("gallery"));
+  tiles.forEach((t, i) => { t.dataset.group = groupOf(PRODUCTS[i][0]); });
+
+  const filters = document.getElementById("filters");
+  for (const g of ["All", ...Object.keys(GROUPS)]) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = g;
+    b.setAttribute("aria-pressed", g === "All");
+    b.onclick = () => {
+      for (const o of filters.children) o.setAttribute("aria-pressed", o === b);
+      for (const t of tiles) t.hidden = g !== "All" && t.dataset.group !== g;
+    };
+    filters.appendChild(b);
+  }
+</script>
+</body>
+</html>

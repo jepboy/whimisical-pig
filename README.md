@@ -12,7 +12,9 @@ Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
 
 | File | What it is |
 | --- | --- |
-| `index.html` | Home: featured banners in a frame, specialties, the full gallery of work, how ordering works, and visit info |
+| `index.html` | Home: the full logo with the flying pig, featured banners, specialties, a peek at our work, and how ordering works |
+| `work.html` | **Our Work**: the full gallery with Military / Framing / Apparel / Awards & Gifts filters |
+| `visit.html` | **Visit**: address, hours, phone, email, map, and ways to reach us from out of town |
 | `shop.html` | Online shop: ready-made items with prices and stock left, Square checkout, plus **Quick Pay** |
 | `admin.html` | **Shop admin** at `/admin`: add items, prices, photos and stock; see online orders |
 | `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
@@ -123,6 +125,8 @@ below and it takes priority:
 - Slideshow: `slide-military-framing.jpg`, `slide-custom-apparel.jpg`, `slide-graphic-design.jpg`
 - Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
   `flag-and-shadow-boxes.jpg`, `10th-mountain-snowshoes.jpg`, `firemen-emt-and-leo-items.jpg`
+
+Pig cursors: `images/cursor-hoof.png` (a hoof print for the normal pointer) and `images/cursor-tail.png` (a curly tail over links and buttons), with `@2x` versions for sharp screens.
 
 Brand images: `images/logo-full.png` (full logo with the name, used on the home page),
 `images/flying-pig.png` (the flying pig mascot), and `images/painting.webp` (the pig

@@ -168,33 +168,7 @@
   }
   .spec:hover .more { border-color: var(--brass); }
 
-  /* ---------- Gallery ---------- */
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 34px 26px;
-  }
-  .tile { display: block; text-align: center; }
-  .tile .pic {
-    transform: rotate(var(--tilt, 0deg));
-    transition: transform .35s ease, border-color .2s ease;
-    aspect-ratio: 1 / 1;
-    border: 1px solid var(--hair);
-  }
-  .tile .pic img { transition: transform .5s ease; }
-  .tile:nth-child(4n+1) .pic { --tilt: -0.7deg; }
-  .tile:nth-child(4n+2) .pic { --tilt: 0.5deg; }
-  .tile:nth-child(4n+3) .pic { --tilt: -0.4deg; }
-  .tile:nth-child(4n) .pic { --tilt: 0.8deg; }
-  .tile:hover .pic { border-color: var(--brass); transform: rotate(0deg); }
-  .tile:hover .pic img { transform: scale(1.05); }
-  .tile .cap {
-    display: block;
-    margin-top: 12px;
-    font: 500 1.22rem/1.25 var(--serif);
-    text-transform: capitalize;
-  }
-  .tile:hover .cap { color: var(--brass-soft); }
+  .more-work { text-align: center; margin-top: 44px; }
 
   /* ---------- Ordering ---------- */
   .how {
@@ -220,32 +194,10 @@
   .blush .how p { color: #5b4148; }
   .how-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
 
-  /* ---------- Visit ---------- */
-  .visit {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    border: 1px solid var(--rule);
-  }
-  .visit .info { padding: 44px 40px; background: var(--panel); }
-  .visit .info h2 { font-size: 2.2rem; margin: 8px 0 22px; }
-  .visit dl { display: grid; gap: 18px; }
-  .visit dt {
-    font: 700 0.7rem var(--sans);
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--brass);
-  }
-  .visit dd { margin-top: 2px; }
-  .visit dd a:hover { color: var(--brass-soft); }
-  .visit .map { min-height: 380px; background: #2a2420; }
-  .visit .map iframe { width: 100%; height: 100%; min-height: 380px; border: 0; display: block; filter: grayscale(0.4) contrast(1.05); }
-
   @media (max-width: 900px) {
     .specs { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
-    .gallery { grid-template-columns: repeat(3, 1fr); }
     .how { grid-template-columns: 1fr; }
     .how li + li { border-left: 0; border-top: 1px solid var(--hair); }
-    .visit { grid-template-columns: 1fr; }
   }
   @media (max-width: 900px) {
     .hero-pig { right: -4%; top: -10%; width: 110px; }
@@ -316,6 +268,7 @@
         <h2 data-tail>Our Work</h2>
       </div>
       <div class="gallery" id="gallery"></div>
+      <div class="more-work"><a class="btn ghost" href="work.html">See All Our Work</a></div>
     </div>
   </section>
 
@@ -338,25 +291,6 @@
     </div>
   </section>
 
-  <section class="block">
-    <div class="wrap">
-      <div class="visit">
-        <div class="info">
-          <span class="eyebrow">Visit the shop</span>
-          <h2>Downtown on Public Square</h2>
-          <dl>
-            <div><dt>Address</dt><dd><a href="https://www.thewhimsicalpig.com/location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></dd></div>
-            <div><dt>Hours</dt><dd>Monday – Friday, 9:30am – 5:30pm<br>Saturday &amp; Sunday closed</dd></div>
-            <div><dt>Phone</dt><dd><a href="tel:315-773-3758">315-773-3758</a></dd></div>
-          </dl>
-        </div>
-        <div class="map">
-          <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&output=embed"></iframe>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer id="site-footer"></footer>
@@ -417,19 +351,8 @@
     specsBox.appendChild(a);
   }
 
-  // ---- Gallery of every product category ----
-  const gallery = document.getElementById("gallery");
-  for (const [label, page, live] of PRODUCTS) {
-    const a = document.createElement("a");
-    a.className = "tile";
-    a.href = SITE + page;
-    a.innerHTML = '<div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div><span class="cap"></span>';
-    a.querySelector(".cap").textContent = label;
-    const im = a.querySelector("img");
-    im.alt = label;
-    loadImg(im, "images/" + slugify(label) + ".jpg", liveImage(live));
-    gallery.appendChild(a);
-  }
+  // ---- A peek at our work (the full gallery is on work.html) ----
+  renderGallery(document.getElementById("gallery"), PRODUCTS.slice(0, 8));
 </script>
 </body>
 </html>

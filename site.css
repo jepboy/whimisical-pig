@@ -194,6 +194,69 @@ nav.main a.call:hover { background: var(--pink); color: #000; }
 .blush .btn.ghost:hover { background: #000; color: var(--pink); box-shadow: none; }
 .blush .rule-orn::before, .blush .rule-orn::after { background: #000; }
 
+/* ---------- Gallery ---------- */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 34px 26px;
+}
+.tile { display: block; text-align: center; }
+.tile .pic {
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform .35s ease, border-color .2s ease;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--hair);
+}
+.tile .pic img { transition: transform .5s ease; }
+.tile:nth-child(4n+1) .pic { --tilt: -0.7deg; }
+.tile:nth-child(4n+2) .pic { --tilt: 0.5deg; }
+.tile:nth-child(4n+3) .pic { --tilt: -0.4deg; }
+.tile:nth-child(4n) .pic { --tilt: 0.8deg; }
+.tile:hover .pic { border-color: var(--brass); transform: rotate(0deg); }
+.tile:hover .pic img { transform: scale(1.05); }
+.tile .cap {
+  display: block;
+  margin-top: 12px;
+  font: 500 1.22rem/1.25 var(--serif);
+  text-transform: capitalize;
+}
+.tile:hover .cap { color: var(--brass-soft); }
+
+@media (max-width: 900px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .gallery { grid-template-columns: repeat(2, 1fr); gap: 24px 14px; } .tile .cap { font-size: 1.05rem; } }
+
+/* ---------- Pink page intro with a wavy bottom edge ---------- */
+.page-intro { position: relative; padding: 64px 0 110px; text-align: center; overflow: hidden; }
+.page-intro::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(223, 127, 138, 0.18) 2px, transparent 2.5px);
+  background-size: 34px 34px;
+  pointer-events: none;
+}
+.page-intro .wrap { position: relative; }
+.page-intro h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 500; margin-top: 12px; }
+.page-intro h1 em { font-style: italic; color: var(--rose); }
+.page-intro p { max-width: 560px; margin: 14px auto 0; }
+.page-intro .rule-orn { margin-top: 18px; }
+.page-intro .flying-pig { position: absolute; right: 4%; top: -6px; width: 150px; }
+.wave { position: absolute; left: 0; bottom: -1px; width: 100%; height: 60px; }
+@media (max-width: 900px) { .page-intro .flying-pig { width: 96px; right: 2%; top: -10px; } }
+@media (max-width: 640px) { .page-intro { padding: 44px 0 90px; } .page-intro .flying-pig { width: 72px; } }
+
+/* ---------- Pig cursors: a hoof print, and a curly tail over anything clickable ---------- */
+html {
+  cursor: url("images/cursor-hoof.png") 16 3, auto;
+  cursor: -webkit-image-set(url("images/cursor-hoof.png") 1x, url("images/cursor-hoof@2x.png") 2x) 16 3, auto;
+}
+a, button, summary, label, select, [role="button"], [role="tab"], .tile, .choice,
+input[type="checkbox"], input[type="radio"], input[type="file"], input[type="submit"] {
+  cursor: url("images/cursor-tail.png") 3 3, pointer !important;
+  cursor: -webkit-image-set(url("images/cursor-tail.png") 1x, url("images/cursor-tail@2x.png") 2x) 3 3, pointer !important;
+}
+input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"],
+input[type="password"], input:not([type]), textarea { cursor: text; }
+.btn[disabled], button[disabled] { cursor: not-allowed !important; }
+
 /* ---------- The flying pig ---------- */
 .flying-pig { width: 150px; pointer-events: none; animation: flap 3.2s ease-in-out infinite; }
 @keyframes flap {

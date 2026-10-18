@@ -38,6 +38,23 @@ function loadImg(img, local, fallback) {
   img.src = local || fallback;
 }
 
+// Gallery of framed work tiles, linking to each product's page.
+// `items` defaults to every product; returns the tiles it added.
+function renderGallery(container, items = PRODUCTS) {
+  return items.map(([label, page, live]) => {
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = SITE + page;
+    a.innerHTML = '<div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div><span class="cap"></span>';
+    a.querySelector(".cap").textContent = label;
+    const im = a.querySelector("img");
+    im.alt = label;
+    loadImg(im, "images/" + slugify(label) + ".jpg", liveImage(live));
+    container.appendChild(a);
+    return a;
+  });
+}
+
 // Small brass ornament placed under section headings marked with data-tail
 const ORNAMENT = '<div class="rule-orn" aria-hidden="true"><span></span></div>';
 
@@ -74,35 +91,16 @@ function buildHeader(current) {
         <ul>
           ${link("index.html", "Home", "home")}
           ${link("story.html", "Our Story", "story")}
+          ${link("work.html", "Our Work", "work")}
           ${link("shop.html", "Shop", "shop")}
           ${link("order.html", "Start an Order", "order")}
           ${link("help.html", "Help", "help")}
-          <li class="products">
-            <button type="button" aria-haspopup="true" aria-expanded="false">Products</button>
-            <ul class="menu"></ul>
-          </li>
+          ${link("visit.html", "Visit", "visit")}
           <li><a class="call" href="tel:315-773-3758">Call Us</a></li>
         </ul>
       </nav>
     </div>`;
 
-  const menu = el.querySelector(".menu");
-  for (const [label, page] of PRODUCTS) {
-    const li = document.createElement("li");
-    const a = document.createElement("a");
-    a.href = SITE + page;
-    a.textContent = label;
-    li.appendChild(a);
-    menu.appendChild(li);
-  }
-
-  // Products menu: hover on desktop, tap on touch screens
-  const prod = el.querySelector(".products");
-  const btn = prod.querySelector("button");
-  btn.onclick = () => btn.setAttribute("aria-expanded", prod.classList.toggle("open"));
-  document.addEventListener("click", e => {
-    if (!prod.contains(e.target)) { prod.classList.remove("open"); btn.setAttribute("aria-expanded", false); }
-  });
 }
 
 function buildFooter() {
@@ -145,7 +143,7 @@ function buildFooter() {
       </div>
       <div class="fine">
         <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Made with a little whimsy in Watertown, New York</span>
-        <span><a href="story.html">Our Story</a> · <a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a></span>
+        <span><a href="story.html">Our Story</a> · <a href="work.html">Our Work</a> · <a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a> · <a href="visit.html">Visit</a></span>
       </div>
     </div>`;
 }

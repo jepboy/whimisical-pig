@@ -64,7 +64,7 @@ function buildHeader(current) {
   el.innerHTML = `
     <div class="wrap top">
       <a class="brand" href="index.html">
-        <img src="images/logo.png" alt="" onerror="this.remove()">
+        <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
         <span>
           <span class="brand-name">The Whimsical Pig</span>
           <span class="brand-tag">Military &amp; Custom Framing</span>
@@ -119,7 +119,7 @@ function buildFooter() {
       <div class="foot">
         <div>
           <a class="brand" href="index.html">
-            <img src="images/logo.png" alt="" onerror="this.remove()">
+            <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
             <span><span class="brand-name">The Whimsical Pig</span></span>
           </a>
           <p>We make military framing “too easy.”</p>

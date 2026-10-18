@@ -6,7 +6,7 @@
 <title>Start an Order — The Whimsical Pig</title>
 <meta name="description" content="Start a custom order with The Whimsical Pig: shadow boxes, flag cases, guidons, embroidery, framing and awards.">
 <meta name="theme-color" content="#1a1816">
-<link rel="icon" href="images/logo.png">
+<link rel="icon" href="images/logo.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -321,7 +321,7 @@
     </div>
 
     <div class="progress" id="progress">
-      <img class="runner" id="runner" src="images/logo.png" alt="" onerror="this.remove()">
+      <img class="runner" id="runner" src="images/logo.png?v=2" alt="" onerror="this.remove()">
       <div class="track"><div class="fill" id="fill"></div></div>
       <ol class="steps" id="steps">
         <li>Type</li><li>Style</li><li>Details</li><li>Photos &amp; contact</li><li>Review</li>
@@ -738,7 +738,7 @@
     clearDraft();
     const box = document.getElementById("done");
     box.innerHTML = `
-      <img src="images/logo.png" alt="" onerror="this.remove()">
+      <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
       <h2>${viaEmail ? "Almost there!" : "Order received!"}</h2>
       <span class="ref">${esc(ref)}</span>
       ${viaEmail

@@ -6,13 +6,13 @@
 <title>Start an Order — The Whimsical Pig</title>
 <meta name="description" content="Start a custom order with The Whimsical Pig: shadow boxes, flag cases, guidons, embroidery, framing and awards.">
 <meta name="theme-color" content="#1a1816">
-<link rel="icon" href="images/logo.png?v=2">
+<link rel="icon" href="images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
 <style>
-  main { padding: 72px 0 96px; }
+  .shell { padding-top: 56px; padding-bottom: 96px; }
   .shell { max-width: 860px; margin: 0 auto; }
 
   /* Progress */
@@ -262,7 +262,7 @@
   .slip { display: none; }
   @media print {
     body { background: #fff; color: #000; }
-    body > *:not(main), .utility, .announce, main .head, .progress, .panel, .nav-row, .status { display: none !important; }
+    body > *:not(main), .utility, .announce, .page-intro, .progress, .panel, .nav-row, .status { display: none !important; }
     main { padding: 0; }
     .slip { display: block; color: #000; font-family: Georgia, serif; }
     .slip h2 { font-size: 20pt; margin-bottom: 4pt; }
@@ -289,7 +289,7 @@
   .done-box .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 26px; }
 
   @media (max-width: 640px) {
-    main { padding-top: 48px; }
+    .shell { padding-top: 40px; }
     .fields { padding: 24px 18px; }
     .two { grid-template-columns: 1fr; }
     .choices { grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -311,17 +311,24 @@
 <body data-page="order">
 
 <header id="site-header"></header>
+<script src="settings.js"></script>
+<script src="site.js"></script>
 
 <main>
-  <div class="wrap shell">
-    <div class="head">
+  <section class="page-intro blush">
+    <div class="wrap">
+      <img class="flying-pig" src="images/flying-pig.webp" alt="">
       <span class="eyebrow">Custom orders</span>
-      <h1 data-tail>Start an Order</h1>
-      <p>A few quick questions and we'll have everything we need. Questions first? See <a href="help.html" style="color:var(--brass)">Help &amp; FAQ</a>.</p>
+      <h1>Start an <em>Order</em></h1>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p>A few quick questions and we'll have everything we need. Questions first? See <a href="help.html" style="color:var(--rose);text-decoration:underline">Help &amp; FAQ</a>.</p>
     </div>
+    <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
+  </section>
+  <div class="wrap shell">
 
     <div class="progress" id="progress">
-      <img class="runner" id="runner" src="images/logo.png?v=2" alt="" onerror="this.remove()">
+      <img class="runner" id="runner" src="images/logo-mark.webp" alt="" onerror="this.remove()">
       <div class="track"><div class="fill" id="fill"></div></div>
       <ol class="steps" id="steps">
         <li>Type</li><li>Style</li><li>Details</li><li>Photos &amp; contact</li><li>Review</li>
@@ -430,8 +437,6 @@
 
 <footer id="site-footer"></footer>
 
-<script src="settings.js"></script>
-<script src="site.js"></script>
 <script src="order-config.js"></script>
 <script>
   const CFG = window.ORDER;
@@ -675,7 +680,7 @@
     backBtn.style.visibility = n === 0 ? "hidden" : "visible";
     nextBtn.textContent = n === 4 ? "Send My Order" : "Continue";
     statusEl.textContent = "";
-    if (started) window.scrollTo({ top: document.querySelector(".head").offsetTop - 10, behavior: "smooth" });
+    if (started) window.scrollTo({ top: document.getElementById("progress").offsetTop - 120, behavior: "smooth" });
     started = true;
   }
   backBtn.onclick = () => {
@@ -738,7 +743,7 @@
     clearDraft();
     const box = document.getElementById("done");
     box.innerHTML = `
-      <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
+      <img src="images/logo-mark.webp" alt="" onerror="this.remove()">
       <h2>${viaEmail ? "Almost there!" : "Order received!"}</h2>
       <span class="ref">${esc(ref)}</span>
       ${viaEmail

@@ -6,15 +6,17 @@
 <title>Help &amp; FAQ — The Whimsical Pig</title>
 <meta name="description" content="Answers to common questions, what to bring for your order, how to mail your items, and caring for your framed piece.">
 <meta name="theme-color" content="#1a1816">
-<link rel="icon" href="images/logo.png?v=2">
+<link rel="icon" href="images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site.css">
 <style>
-  main { padding: 72px 0 96px; }
+  .help-body { padding: 56px 24px 96px; }
 
   /* jump links */
+  .card { display: flex; flex-direction: column; }
+  .card .go { align-self: flex-start; margin-top: auto; padding-top: 16px; }
   .jump {
     display: flex;
     flex-wrap: wrap;
@@ -90,7 +92,6 @@
   }
   .card .go {
     display: inline-block;
-    margin-top: 16px;
     font: 700 0.72rem var(--sans);
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -137,7 +138,7 @@
   .contact .row { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
 
   @media (max-width: 760px) {
-    main { padding-top: 48px; }
+    .help-body { padding-top: 40px; }
     .ready { grid-template-columns: 1fr; }
     .faq summary { font-size: 1.22rem; }
     .steps li { padding-left: 62px; }
@@ -147,13 +148,21 @@
 <body data-page="help">
 
 <header id="site-header"></header>
+<script src="settings.js"></script>
+<script src="site.js"></script>
 
 <main>
-  <div class="wrap">
-    <div class="head">
+  <section class="page-intro blush">
+    <div class="wrap">
+      <img class="flying-pig" src="images/flying-pig.webp" alt="">
       <span class="eyebrow">Help &amp; FAQ</span>
-      <h1 data-tail>How Can We Help?</h1>
+      <h1>How Can We <em>Help?</em></h1>
+      <div class="rule-orn" aria-hidden="true"><span></span></div>
+      <p>Answers, what to have ready, and how to get your items to us.</p>
     </div>
+    <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
+  </section>
+  <div class="wrap help-body">
 
     <nav class="jump" aria-label="On this page">
       <a href="#faq">Questions</a>
@@ -231,8 +240,6 @@
 
 <footer id="site-footer"></footer>
 
-<script src="settings.js"></script>
-<script src="site.js"></script>
 <script src="order-config.js"></script>
 <script>
   const S = window.SETTINGS || {};

@@ -34,6 +34,7 @@ Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
 | `reviewsUrl` | Adds a "Leave us a review" link in the footer. Send it to customers at pickup too |
 | `giftCardUrl` | Adds a Gift Cards panel to the Shop |
 | `faq` | The questions and answers on the Help page |
+| `localPhotos` | File names of photos you've added to `images/` (see "Photos" below) |
 
 **Please read through the FAQ answers.** They're written to be safe and general
 (no promised turnaround times or deposit amounts). Once the shop decides on a
@@ -118,9 +119,10 @@ Until those exist, photos from the current website are used where one fits.
 
 ## Photos on the home page
 
-Until photos are copied into this folder, pictures load straight from
-thewhimsicalpig.com. To host one here instead, save it in `images/` with the name
-below and it takes priority:
+Pictures load straight from thewhimsicalpig.com. To host one here instead, save it
+in `images/` with the name below **and add the file name to `localPhotos` in
+`settings.js`** (the site only looks for photos that are listed there, so pages
+don't waste time asking for files that don't exist):
 
 - Slideshow: `slide-military-framing.jpg`, `slide-custom-apparel.jpg`, `slide-graphic-design.jpg`
 - Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
@@ -128,8 +130,8 @@ below and it takes priority:
 
 Pig cursors: `images/cursor-hoof.png` (a hoof print for the normal pointer) and `images/cursor-tail.png` (a curly tail over links and buttons), with `@2x` versions for sharp screens.
 
-Brand images: `images/logo-full.png` (full logo with the name, used on the home page),
-`images/flying-pig.png` (the flying pig mascot), and `images/painting.webp` (the pig
+Brand images: `images/logo-full.webp` (full logo with the name, used on the home page),
+`images/flying-pig.webp` (the flying pig mascot), `images/logo-mark.webp` (header/footer logo), `images/favicon.png`, and `images/painting.webp` (the pig
 painting on Our Story). White backgrounds were made transparent.
 
 `images/logo-original.png` is the original logo file. `images/logo.png` is the same

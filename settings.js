@@ -15,6 +15,11 @@ window.SETTINGS = {
   // Gift card purchase link (e.g. Square eGift Cards).
   giftCardUrl: "",
 
+  // Photos you've added to the images/ folder. Until a name is listed here, the
+  // site uses the photo from the current website instead.
+  // e.g. ["embroidery.jpg", "flag-and-shadow-boxes.jpg", "slide-military-framing.jpg"]
+  localPhotos: [],
+
   // Help page: questions customers ask most. Edit the answers to match how
   // the shop works. {phone} and {email} are filled in automatically.
   faq: [

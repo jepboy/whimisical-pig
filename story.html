@@ -6,7 +6,7 @@
 <title>Our Story — The Whimsical Pig</title>
 <meta name="description" content="The Whimsical Pig is a family owned and operated shop on Public Square in Watertown, New York, since 2003.">
 <meta name="theme-color" content="#141112">
-<link rel="icon" href="images/logo.png?v=2">
+<link rel="icon" href="images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -39,10 +39,9 @@
     height: auto;
     margin: 0 auto;
     filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6));
-    transform: rotate(-1.5deg);
-    transition: transform .4s ease;
+    transition: transform .25s ease-out;
   }
-  .painting:hover { transform: rotate(0deg) scale(1.02); }
+  .painting:hover { transform: translateY(-3px); }
   .tale .eyebrow { display: block; margin-bottom: 10px; }
   .tale h2 { font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 18px; }
   .tale p { color: var(--muted); font-size: 1.06rem; }
@@ -73,7 +72,7 @@
     background: var(--panel);
     border: 1px solid var(--hair);
     border-radius: 18px;
-    transition: transform .2s ease, border-color .2s ease;
+    transition: transform .15s ease-out, border-color .15s ease;
   }
   .make a:hover { transform: translateY(-3px) rotate(-0.6deg); border-color: var(--pink); }
   .make h3 { font-size: 1.5rem; margin-bottom: 6px; }
@@ -103,11 +102,13 @@
 <body data-page="story">
 
 <header id="site-header"></header>
+<script src="settings.js"></script>
+<script src="site.js"></script>
 
 <main>
   <section class="intro blush">
     <div class="wrap">
-      <img class="flying-pig" src="images/flying-pig.png" alt="">
+      <img class="flying-pig" src="images/flying-pig.webp" alt="">
       <span class="eyebrow">Our Story</span>
       <h1>A little <em>whimsy</em> since 2003</h1>
       <div class="rule-orn" aria-hidden="true"><span></span></div>
@@ -166,7 +167,7 @@
 
   <section class="block blush visit">
     <div class="wrap">
-      <img class="flying-pig" src="images/flying-pig.png" alt="">
+      <img class="flying-pig" src="images/flying-pig.webp" alt="">
       <h2>Come Say Hello</h2>
       <p>50 Public Square, Suite E1, Watertown, New York. Open Monday – Friday, 9:30am – 5:30pm.</p>
       <div class="row">
@@ -179,7 +180,5 @@
 
 <footer id="site-footer"></footer>
 
-<script src="settings.js"></script>
-<script src="site.js"></script>
 </body>
 </html>

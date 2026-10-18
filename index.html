@@ -8,9 +8,9 @@
 <meta property="og:title" content="The Whimsical Pig">
 <meta property="og:description" content="We make military framing &quot;too easy.&quot; Watertown, NY.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="images/logo.png?v=2">
+<meta property="og:image" content="images/logo-mark.webp">
 <meta name="theme-color" content="#1a1816">
-<link rel="icon" href="images/logo.png?v=2">
+<link rel="icon" href="images/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -144,21 +144,19 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
   }
-  .spec { display: block; }
+  .spec { display: flex; flex-direction: column; }
   .spec .pic { aspect-ratio: 4 / 3; }
-  /* frames hang a hair crooked and straighten when you look at them */
-  .spec .frame { transform: rotate(var(--tilt, 0deg)); transition: transform .35s ease; }
-  .spec:nth-child(1) .frame { --tilt: -0.8deg; }
-  .spec:nth-child(2) .frame { --tilt: 0.6deg; }
-  .spec:nth-child(3) .frame { --tilt: -0.5deg; }
-  .spec:hover .frame { transform: rotate(0deg); }
-  .spec .pic img { transition: transform .6s ease; }
+  .spec .frame { transition: transform .18s ease-out; }
+  .spec:hover .frame { transform: translateY(-3px); }
+  .spec .pic img { transition: transform .3s ease-out; }
   .spec:hover .pic img { transform: scale(1.04); }
   .spec h3 { font-size: 1.75rem; margin-top: 22px; }
-  .spec p { color: var(--muted); margin-top: 6px; }
+  .spec p { color: var(--muted); margin-top: 6px; margin-bottom: 4px; }
   .spec .more {
     display: inline-block;
-    margin-top: 14px;
+    align-self: flex-start;
+    margin-top: auto;
+    padding-top: 14px;
     font: 700 0.72rem var(--sans);
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -219,13 +217,15 @@
 <body data-page="home">
 
 <header id="site-header"></header>
+<script src="settings.js"></script>
+<script src="site.js"></script>
 
 <main>
   <section class="welcome blush">
     <div class="wrap">
       <div class="logo-stage">
-        <img class="logo-full" src="images/logo-full.png" alt="The Whimsical Pig" width="1200" height="800">
-        <img class="flying-pig hero-pig" src="images/flying-pig.png" alt="">
+        <img class="logo-full" src="images/logo-full.webp" alt="The Whimsical Pig" width="1200" height="800">
+        <img class="flying-pig hero-pig" src="images/flying-pig.webp" alt="">
       </div>
       <span class="eyebrow">Watertown, New York · Family owned since 2003</span>
       <h1>We make military framing <em>“too easy”<svg viewBox="0 0 200 16" preserveAspectRatio="none" aria-hidden="true"><path d="M3 10 C 45 3, 80 14, 120 8 S 180 5, 197 10" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"/></svg></em></h1>
@@ -295,8 +295,6 @@
 
 <footer id="site-footer"></footer>
 
-<script src="settings.js"></script>
-<script src="site.js"></script>
 <script>
   // ---- Featured banners (the three from the current site), crossfading in a frame ----
   const banners = [

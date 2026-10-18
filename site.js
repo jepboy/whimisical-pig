@@ -28,14 +28,20 @@ const PRODUCTS = [
 const liveImage = file => SITE + "images/" + file;
 const slugify = s => s.replace(/&/g, "and").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
 
-// Show `local` (a path in this folder) if it exists, else `fallback` (e.g. the live
-// site's photo); if neither loads, remove the <img> so its placeholder shows.
+// Load a photo. Uses `local` (a file in this site's images/ folder) only when that
+// file is listed in SETTINGS.localPhotos, otherwise goes straight to `fallback`
+// (the photo on the current website), so there are no wasted failed requests.
+// If nothing loads, the <img> is removed so its placeholder shows.
 function loadImg(img, local, fallback) {
+  const listed = (window.SETTINGS && SETTINGS.localPhotos) || [];
+  const name = local ? local.replace(/^\/?images\//, "") : "";
+  const first = local && (!fallback || listed.includes(name)) ? local : fallback;
+  img.decoding = "async";
   img.onerror = () => {
-    if (fallback && img.src !== fallback) img.src = fallback;
+    if (fallback && img.src !== fallback && first !== fallback) img.src = fallback;
     else img.remove();
   };
-  img.src = local || fallback;
+  if (first) img.src = first; else img.remove();
 }
 
 // Gallery of framed work tiles, linking to each product's page.
@@ -81,7 +87,7 @@ function buildHeader(current) {
   el.innerHTML = `
     <div class="wrap top">
       <a class="brand" href="index.html">
-        <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
+        <img src="images/logo-mark.webp" alt="" onerror="this.remove()">
         <span>
           <span class="brand-name">The Whimsical Pig</span>
           <span class="brand-tag">Military &amp; Custom Framing</span>
@@ -117,11 +123,11 @@ function buildFooter() {
       <div class="foot">
         <div>
           <a class="brand" href="index.html">
-            <img src="images/logo.png?v=2" alt="" onerror="this.remove()">
+            <img src="images/logo-mark.webp" alt="" onerror="this.remove()">
             <span><span class="brand-name">The Whimsical Pig</span></span>
           </a>
           <p>We make military framing “too easy.”</p>
-          <img class="flying-pig foot-pig" src="images/flying-pig.png" alt="" loading="lazy">
+          <img class="flying-pig foot-pig" src="images/flying-pig.webp" alt="" loading="lazy">
         </div>
         <div>
           <h3>Visit</h3>
@@ -148,8 +154,11 @@ function buildFooter() {
     </div>`;
 }
 
+// Build the header right away (this script is loaded just after <header id="site-header">)
+// so it appears with the page instead of popping in at the end.
+if (document.getElementById("site-header")) buildHeader(document.body.dataset.page);
 document.addEventListener("DOMContentLoaded", () => {
-  buildHeader(document.body.dataset.page);
+  if (!document.querySelector("header.site")) buildHeader(document.body.dataset.page);
   buildFooter();
   document.querySelectorAll("[data-tail]").forEach(h => h.insertAdjacentHTML("afterend", ORNAMENT));
 });

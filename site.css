@@ -189,12 +189,56 @@ nav.main a.call:hover { background: var(--pink); color: #000; }
   display: block;
   margin-top: 12px;
   font: 500 1.22rem/1.25 var(--serif);
-  text-transform: capitalize;
 }
 .tile:hover .cap { color: var(--brass-soft); }
 
 @media (max-width: 900px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .gallery { grid-template-columns: repeat(2, 1fr); gap: 24px 14px; } .tile .cap { font-size: 1.05rem; } }
+
+/* ---------- Lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 56px 64px;
+  background: rgba(10, 8, 9, 0.94);
+}
+.lightbox[hidden] { display: none; }
+.lightbox figure { margin: 0; text-align: center; }
+.lightbox img {
+  display: block;
+  max-width: min(1200px, 100%);
+  max-height: calc(100vh - 150px);
+  margin: 0 auto;
+  border: 6px solid #f7f1e6;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.lightbox figcaption { margin-top: 14px; font: 500 1.3rem var(--serif); color: var(--cream); }
+.lightbox button {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--pink);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--pink);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lightbox button:hover { background: var(--pink); color: #000; }
+.lb-close { top: 14px; right: 14px; }
+.lb-prev, .lb-next { top: 50%; margin-top: -23px; }
+.lb-prev { left: 10px; }
+.lb-next { right: 10px; }
+@media (max-width: 640px) {
+  .lightbox { padding: 64px 12px 80px; }
+  .lb-prev, .lb-next { top: auto; bottom: 16px; margin: 0; }
+  .lb-prev { left: calc(50% - 56px); }
+  .lb-next { right: calc(50% - 56px); }
+}
 
 /* ---------- Pink page intro with a wavy bottom edge ---------- */
 .page-intro { position: relative; padding: 64px 0 110px; text-align: center; overflow: hidden; }

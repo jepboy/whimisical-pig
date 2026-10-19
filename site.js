@@ -1,32 +1,29 @@
 // Shared header, footer, product list, and helpers for every Whimsical Pig page.
 const SITE = "https://www.thewhimsicalpig.com/";
 
-// Product pages on the current site. [label, page, live image]
-const PRODUCTS = [
-  ["flag & shadow boxes", "flag---shadow-boxes.html", "button%202.jpg"],
-  ["battalion spreads", "battalion-spreads.html", "button%201.jpg"],
-  ["regulation guidons", "regulation-guidons.html", "button%205.jpg"],
-  ["non regulation guidons", "non-regulation-guidons.html", "button%2020.jpg"],
-  ["framed military artwork", "framed-military-artwork.html", "button%203.jpg"],
-  ["embroidery", "embroidery.html", "52565901_10161418329605076_7165628496394321920_o.jpg"],
-  ["vinyl applied custom apparel", "vinyl-applied-custom-apparel.html", "button%2006.png"],
-  ["non military framing", "non-military-framing.html", "button%204.jpg"],
-  ["10th mountain snowshoes", "10th-mountain-snowshoes.html", "button%2011.jpg"],
-  ["evident truths products", "evident-truths-products.html", "button%20013.png"],
-  ["customized gifts", "customized-gifts.html", "button%207.jpg"],
-  ["sublimated images on slate", "sublimated-images-on-slate.html", "button%2010.jpg"],
-  ["custom designed prints", "custom-designed-prints.html", "button%2012.jpg"],
-  ["custom printing", "custom-printing.html", "fb_img_1576654875481.jpg"],
-  ["sublimated plates on wooden plaques", "sublimated-plates-on-wooden-plaques.html", "button%2019.jpg"],
-  ["racing plaques, awards, etc.", "racing-plaques%2c-awards%2c-etc.html", "button%2018.jpg"],
-  ["path tracing", "path-tracing.html", "button%2016.jpg"],
-  ["masonic items", "masonic-items.html", "button%2015.png"],
-  ["firemen, emt, & leo items", "firemen%2c-emt%2c---leo-items.html", "button%20014.png"],
-  ["purple hearts reunited inc.", "purple-hearts-reunited-inc.html", "button%2017.jpg"],
+// Photos of our work, in images/work/ (each has a full size .webp and a small -sm.webp).
+// [file name, group, caption]. Groups become the filters on the Our Work page.
+const WORK = [
+  ...[
+    "Guidon shadow box", "Guidon shadow box", "Framed guidon", "Framed guidon", "10th Mountain Division display",
+    "Flags & photos shadow box", "Unit colors display", "Flag & medals shadow box", "Guidon & coin display",
+    "Battalion spread", "USMC guidon display", "Unit colors display", "Guidon shadow box", "Uniform shadow box",
+    "Flag case", "Medals & patches display", "10th Mountain snowshoe", "Helmet plaque",
+  ].map((c, i) => ["military-shadow-boxes_" + String(i + 1).padStart(2, "0"), "Military", c]),
+  ...["Framed print", "Set of three", "Framed watercolor", "Framed photo", "Framed print", "Framed print", "Signed poster"]
+    .map((c, i) => ["art-framing_0" + (i + 1), "Art Framing", c]),
+  ...["Framed jerseys", "Framed jacket", "Lacrosse jersey display"]
+    .map((c, i) => ["sports-memorabilia_0" + (i + 1), "Sports Memorabilia", c]),
+  ...["Embroidered tote", "Embroidered jacket", "Embroidered shirt", "Embroidered patch", "Embroidered shirt",
+      "Embroidered hat", "Embroidered hat", "Embroidered hat"]
+    .map((c, i) => ["embroidery_0" + (i + 1), "Embroidery", c]),
+  ...Array.from({ length: 6 }, (_, i) => ["apparel-printing_0" + (i + 1), "Printing", "Printed shirts"]),
+  ...Array.from({ length: 6 }, (_, i) => ["patches_0" + (i + 1), "Patches", "Custom patch"]),
 ];
+const workPhoto = (name, small = true) => "images/work/" + name + (small ? "-sm" : "") + ".webp";
+const workItem = name => WORK.find(w => w[0] === name);
 
 const liveImage = file => SITE + "images/" + file;
-const slugify = s => s.replace(/&/g, "and").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
 
 // Load a photo. Uses `local` (a file in this site's images/ folder) only when that
 // file is listed in SETTINGS.localPhotos, otherwise goes straight to `fallback`
@@ -44,21 +41,72 @@ function loadImg(img, local, fallback) {
   if (first) img.src = first; else img.remove();
 }
 
-// Gallery of framed work tiles, linking to each product's page.
-// `items` defaults to every product; returns the tiles it added.
-function renderGallery(container, items = PRODUCTS) {
-  return items.map(([label, page, live]) => {
+// Gallery of photo tiles. Each opens the big photo in a lightbox
+// (or on its own if scripts are off). `items` defaults to every photo.
+function renderGallery(container, items = WORK) {
+  return items.map(([name, group, cap]) => {
     const a = document.createElement("a");
     a.className = "tile";
-    a.href = SITE + page;
-    a.innerHTML = '<div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div><span class="cap"></span>';
-    a.querySelector(".cap").textContent = label;
+    a.href = workPhoto(name, false);
+    a.dataset.group = group;
+    a.innerHTML = '<div class="pic"><img alt="" loading="lazy" decoding="async"></div><span class="cap"></span>';
+    a.querySelector(".cap").textContent = cap;
     const im = a.querySelector("img");
-    im.alt = label;
-    loadImg(im, "images/" + slugify(label) + ".jpg", liveImage(live));
+    im.alt = cap;
+    im.src = workPhoto(name);
+    a.onclick = e => { e.preventDefault(); openLightbox(a); };
     container.appendChild(a);
     return a;
   });
+}
+
+// Lightbox: shows a tile's big photo, with previous / next through the tiles
+// currently showing in the same gallery.
+function openLightbox(tile) {
+  let box = document.getElementById("lightbox");
+  if (!box) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo" hidden>
+        <figure><img alt=""><figcaption></figcaption></figure>
+        <button type="button" class="lb-close" aria-label="Close">×</button>
+        <button type="button" class="lb-prev" aria-label="Previous photo">‹</button>
+        <button type="button" class="lb-next" aria-label="Next photo">›</button>
+      </div>`);
+    box = document.getElementById("lightbox");
+    box.querySelector(".lb-close").onclick = () => closeLightbox();
+    box.querySelector(".lb-prev").onclick = () => stepLightbox(-1);
+    box.querySelector(".lb-next").onclick = () => stepLightbox(1);
+    box.onclick = e => { if (e.target === box) closeLightbox(); };
+    document.addEventListener("keydown", e => {
+      if (box.hidden) return;
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowLeft") stepLightbox(-1);
+      else if (e.key === "ArrowRight") stepLightbox(1);
+    });
+  }
+  box.current = tile;
+  const img = box.querySelector("img");
+  img.src = tile.querySelector("img").src;   // small photo shows instantly...
+  img.src = tile.href;                        // ...then the big one replaces it
+  img.alt = tile.querySelector(".cap").textContent;
+  box.querySelector("figcaption").textContent = img.alt;
+  if (box.hidden) {
+    box.hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    box.querySelector(".lb-close").focus();
+  }
+}
+function stepLightbox(dir) {
+  const box = document.getElementById("lightbox");
+  const tiles = [...box.current.parentNode.querySelectorAll(".tile:not([hidden])")];
+  const i = tiles.indexOf(box.current);
+  openLightbox(tiles[(i + dir + tiles.length) % tiles.length]);
+}
+function closeLightbox() {
+  const box = document.getElementById("lightbox");
+  box.hidden = true;
+  document.documentElement.style.overflow = "";
+  box.current.focus();
 }
 
 // Small brass ornament placed under section headings marked with data-tail

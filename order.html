@@ -481,7 +481,16 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   // ---------- Step 1: order types ----------
-  function choiceCard({ name, value, title, text, img, live, plain }) {
+  // A card's photo: its own work photo or live-site photo, else the order type's
+  const photoOf = (...items) => {
+    for (const it of items) {
+      if (it && it.photo) return workPhoto(it.photo);
+      if (it && it.live) return liveImage(it.live);
+    }
+    return "";
+  };
+
+  function choiceCard({ name, value, title, text, src, plain }) {
     const label = document.createElement("label");
     label.className = "choice" + (plain ? " plain" : "");
     label.innerHTML = `
@@ -492,13 +501,13 @@
         <div class="txt"><h3>${esc(title)}</h3>${text ? `<p>${esc(text)}</p>` : ""}</div>
       </div>`;
     const im = label.querySelector("img");
-    if (im) loadImg(im, img, live ? liveImage(live) : "");
+    if (im) loadImg(im, "", src);
     return label;
   }
 
   const typeBox = document.getElementById("type-choices");
   for (const t of CFG.types) {
-    typeBox.appendChild(choiceCard({ name: "type", value: t.id, title: t.title, text: t.blurb, img: "images/examples/" + t.id + ".jpg", live: t.live }));
+    typeBox.appendChild(choiceCard({ name: "type", value: t.id, title: t.title, text: t.blurb, src: photoOf(t) }));
   }
   typeBox.addEventListener("change", () => {
     buildExamples();
@@ -514,7 +523,7 @@
     box.innerHTML = "";
     if (!t) return;
     for (const ex of t.examples) {
-      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, img: "images/examples/" + ex.id + ".jpg", live: ex.live || t.live }));
+      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, src: photoOf(ex, t) }));
     }
     box.appendChild(choiceCard({ name: "example", value: "Something different", title: "Something different", text: "Describe it in the next step", plain: true }));
     box.onchange = () => { saveDraft(); setTimeout(() => go(2), 180); };

@@ -14,10 +14,10 @@
 //            email app opens with everything filled in)
 //
 //  Each order type has:
-//    examples   pictures of the most common versions. Put photos in
-//               images/examples/ named after the example id
-//               (e.g. images/examples/farewell-plaque.jpg) and list them in
-//               settings.js → localPhotos as "examples/farewell-plaque.jpg".
+//    photo      a photo from images/work/ (name without -sm.webp)
+//    examples   pictures of the most common versions. `photo` picks one from
+//               images/work/; examples without one use `live` (a photo on the
+//               current website) or a plain placeholder.
 //    bring      a short "have these ready" checklist (also on the Help page)
 //    questions  the details we need. type can be:
 //               text, textarea, number, date, select, radio, checks, note
@@ -35,11 +35,11 @@ window.ORDER = {
       id: "military",
       title: "Military Framing",
       blurb: "Farewell, retirement & promotion plaques, shadow boxes and guidon displays",
-      live: "button%203.jpg",
+      photo: "military-shadow-boxes_09",
       examples: [
-        { id: "farewell-plaque", title: "Farewell / Leadership Plaque", live: "button%203.jpg", text: "Rank, unit crest, coins & an engraved plate" },
-        { id: "retirement-shadow-box", title: "Retirement Shadow Box", live: "button%202.jpg", text: "Flag, medals, ribbons, rank & photos" },
-        { id: "guidon-display", title: "Framed Guidon Display", live: "button%201.jpg", text: "Your guidon with a dedication plate" },
+        { id: "farewell-plaque", title: "Farewell / Leadership Plaque", photo: "military-shadow-boxes_13", text: "Rank, unit crest, coins & an engraved plate" },
+        { id: "retirement-shadow-box", title: "Retirement Shadow Box", photo: "military-shadow-boxes_08", text: "Flag, medals, ribbons, rank & photos" },
+        { id: "guidon-display", title: "Framed Guidon Display", photo: "military-shadow-boxes_03", text: "Your guidon with a dedication plate" },
       ],
       bring: [
         "Rank and name exactly as they should appear",
@@ -69,11 +69,12 @@ window.ORDER = {
       id: "apparel",
       title: "Embroidery & Apparel",
       blurb: "Shirts, polos, hats, hoodies, scrubs, bags & more",
-      live: "52565901_10161418329605076_7165628496394321920_o.jpg",
+      photo: "embroidery_07",
       examples: [
-        { id: "unit-shirts", title: "Unit & Team Shirts", live: "button%2006.png", text: "Matching shirts for the whole group" },
-        { id: "embroidered-polos-hats", title: "Embroidered Polos & Hats", live: "52565901_10161418329605076_7165628496394321920_o.jpg", text: "Your logo on the chest or hat front" },
-        { id: "custom-printing", title: "Custom Printing", live: "fb_img_1576654875481.jpg", text: "Your design, printed" },
+        { id: "unit-shirts", title: "Unit & Team Shirts", photo: "apparel-printing_02", text: "Matching shirts for the whole group" },
+        { id: "embroidered-polos-hats", title: "Embroidered Polos & Hats", photo: "embroidery_06", text: "Your logo on the chest or hat front" },
+        { id: "custom-printing", title: "Custom Printing", photo: "apparel-printing_05", text: "Your design, printed" },
+        { id: "custom-patches", title: "Custom Patches", photo: "patches_02", text: "Embroidered patches for units, clubs & teams" },
       ],
       bring: [
         "Your logo (PDF, AI, EPS, SVG or a clear photo) or the exact words",
@@ -150,10 +151,10 @@ window.ORDER = {
       id: "framing",
       title: "Custom Framing",
       blurb: "Art, photos, jerseys, diplomas & keepsakes",
-      live: "button%204.jpg",
+      photo: "art-framing_06",
       examples: [
-        { id: "art-print", title: "Art or Photo", text: "Matted & framed" },
-        { id: "jersey", title: "Jersey or Shirt", text: "Framed in a deep case" },
+        { id: "art-print", title: "Art or Photo", photo: "art-framing_03", text: "Matted & framed" },
+        { id: "jersey", title: "Jersey or Shirt", photo: "sports-memorabilia_03", text: "Framed in a deep case" },
         { id: "diploma-certificate", title: "Diploma or Certificate", text: "Clean & classic" },
       ],
       bring: [

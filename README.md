@@ -34,7 +34,7 @@ Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
 | `reviewsUrl` | Adds a "Leave us a review" link in the footer. Send it to customers at pickup too |
 | `giftCardUrl` | Adds a Gift Cards panel to the Shop |
 | `faq` | The questions and answers on the Help page |
-| `localPhotos` | File names of photos you've added to `images/` (see "Photos" below) |
+| `localPhotos` | File names of extra photos you've added to `images/` for cards that still use the current website's pictures |
 
 **Please read through the FAQ answers.** They're written to be safe and general
 (no promised turnaround times or deposit amounts). Once the shop decides on a
@@ -102,31 +102,23 @@ and `checks` (pick several). Add `required: true` to make one mandatory.
 The questions and options there are a sensible starting point; adjust them to
 how the shop actually works (for example, your real background and frame choices).
 
-**Example photos:** each order type shows examples of the most common versions.
-Save a photo for each in `images/examples/`, named after its `id`:
+**Example photos:** each order type and example can name a photo from
+`images/work/` with `photo: "<name>"` (the file name without `-sm.webp`).
+Plaques & Engraving, Guidons and Something Else don't have shop photos yet, so
+they still use pictures from the current website (`live:`). Once you have
+photos of those, add them to `images/work/` and set `photo:` instead.
 
-| Order type | Example photo files |
-| --- | --- |
-| Military Framing | `farewell-plaque.jpg`, `retirement-shadow-box.jpg`, `guidon-display.jpg` |
-| Embroidery & Apparel | `unit-shirts.jpg`, `embroidered-polos-hats.jpg`, `custom-printing.jpg` |
-| Plaques & Engraving | `engraved-plates.jpg`, `award-plaque.jpg`, `league-awards.jpg` |
-| Guidons | `regulation-guidon.jpg`, `non-regulation-guidon.jpg` |
-| Custom Framing | `art-print.jpg`, `jersey.jpg`, `diploma-certificate.jpg` |
+## Photos of our work
 
-The order-type cards themselves use `images/examples/<type id>.jpg`
-(`military.jpg`, `apparel.jpg`, `award.jpg`, `guidon.jpg`, `framing.jpg`, `other.jpg`). List each one in `settings.js` → `localPhotos` as `examples/<file>`.
-Until those exist, photos from the current website are used where one fits.
+All shop photos live in `images/work/`. Each one has two files: a full size
+`<name>.webp` (shown in the pop-up viewer) and a small `<name>-sm.webp` (shown on
+the page). The list of photos, their groups and captions is `WORK` at the top of
+`site.js`. The groups become the filter buttons on the Our Work page.
 
-## Photos on the home page
-
-Pictures load straight from thewhimsicalpig.com. To host one here instead, save it
-in `images/` with the name below **and add the file name to `localPhotos` in
-`settings.js`** (the site only looks for photos that are listed there, so pages
-don't waste time asking for files that don't exist):
-
-- Slideshow: `slide-military-framing.jpg`, `slide-custom-apparel.jpg`, `slide-graphic-design.jpg`
-- Collage: the product name in lowercase with dashes, `&` written as `and`, and `.jpg`, for example
-  `flag-and-shadow-boxes.jpg`, `10th-mountain-snowshoes.jpg`, `firemen-emt-and-leo-items.jpg`
+To add a photo: save both sizes in `images/work/` (about 1400px and 640px wide
+WebP), then add a line to `WORK` with the file name, group and caption. The home
+page slideshow, specialties and preview pick their photos by name in
+`index.html`; Our Story and Visit pick shop photos the same way.
 
 Pig cursors: `images/cursor-hoof.png` (a hoof print for the normal pointer) and `images/cursor-tail.png` (a curly tail over links and buttons), with `@2x` versions for sharp screens.
 

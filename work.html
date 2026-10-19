@@ -52,7 +52,7 @@
       <span class="eyebrow">From the shop</span>
       <h1>Our <em>Work</em></h1>
       <div class="rule-orn" aria-hidden="true"><span></span></div>
-      <p>Tap any piece to see more of what we make.</p>
+      <p>Tap any photo to see it up close.</p>
     </div>
     <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
   </section>
@@ -79,32 +79,25 @@
 <footer id="site-footer"></footer>
 
 <script>
-  // Which filter each piece belongs to
-  const GROUPS = {
-    "Military": ["flag & shadow boxes", "battalion spreads", "regulation guidons", "non regulation guidons",
-                 "framed military artwork", "10th mountain snowshoes", "purple hearts reunited inc."],
-    "Framing": ["non military framing", "custom designed prints", "path tracing"],
-    "Apparel": ["embroidery", "vinyl applied custom apparel", "custom printing"],
-    "Awards & Gifts": ["customized gifts", "sublimated images on slate", "sublimated plates on wooden plaques",
-                       "racing plaques, awards, etc.", "firemen, emt, & leo items", "masonic items", "evident truths products"],
-  };
-  const groupOf = label => Object.keys(GROUPS).find(g => GROUPS[g].includes(label)) || "";
-
   const tiles = renderGallery(document.getElementById("gallery"));
-  tiles.forEach((t, i) => { t.dataset.group = groupOf(PRODUCTS[i][0]); });
-
+  const groups = [...new Set(WORK.map(w => w[1]))];
   const filters = document.getElementById("filters");
-  for (const g of ["All", ...Object.keys(GROUPS)]) {
+  const pick = g => {
+    for (const o of filters.children) o.setAttribute("aria-pressed", o.textContent === g);
+    for (const t of tiles) t.hidden = g !== "All" && t.dataset.group !== g;
+  };
+  for (const g of ["All", ...groups]) {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = g;
-    b.setAttribute("aria-pressed", g === "All");
     b.onclick = () => {
-      for (const o of filters.children) o.setAttribute("aria-pressed", o === b);
-      for (const t of tiles) t.hidden = g !== "All" && t.dataset.group !== g;
+      pick(g);
+      history.replaceState(null, "", g === "All" ? "work.html" : "?group=" + encodeURIComponent(g));
     };
     filters.appendChild(b);
   }
+  const start = new URLSearchParams(location.search).get("group");
+  pick(groups.includes(start) ? start : "All");
 </script>
 </body>
 </html>

@@ -34,6 +34,9 @@
 
   .visit { border-radius: 18px; overflow: hidden; }
 
+  .gallery.spot { grid-template-columns: repeat(3, 1fr); margin-top: 40px; }
+  .gallery.spot .pic { aspect-ratio: 4 / 3; }
+
   .ways {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -56,6 +59,7 @@
     .visit { grid-template-columns: 1fr; }
     .ways { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
   }
+  @media (max-width: 640px) { .gallery.spot { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; } }
   @media (max-width: 640px) { .visit .info { padding: 32px 24px; } }
 </style>
 </head>
@@ -95,6 +99,7 @@
             src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&amp;output=embed"></iframe>
         </div>
       </div>
+      <div class="gallery spot" id="spot"></div>
     </div>
   </section>
 
@@ -126,6 +131,14 @@
 </main>
 
 <footer id="site-footer"></footer>
+
+<script>
+  renderGallery(document.getElementById("spot"), [
+    ["shop_06", "Shop", "Look for our storefront"],
+    ["shop_07", "Shop", "Step inside"],
+    ["shop_09", "Shop", "Say hi at the counter"],
+  ]);
+</script>
 
 </body>
 </html>

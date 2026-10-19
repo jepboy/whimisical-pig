@@ -87,7 +87,7 @@
     max-width: 900px;
     margin: 0 auto;
   }
-  .feature .pic { aspect-ratio: 807 / 256; }
+  .feature .pic { aspect-ratio: 16 / 9; }
   .slide {
     position: absolute;
     inset: 0;
@@ -296,20 +296,26 @@
 <footer id="site-footer"></footer>
 
 <script>
-  // ---- Featured banners (the three from the current site), crossfading in a frame ----
+  // ---- Featured work, crossfading in a frame ----
   const banners = [
-    ["Military Framing", "slide-military-framing.jpg", "1.png"],
-    ["Custom Apparel", "slide-custom-apparel.jpg", "3.jpg"],
-    ["Graphic Design", "slide-graphic-design.jpg", "4.png"],
+    ["Battalion Spreads", "military-shadow-boxes_10"],
+    ["Guidon Displays", "military-shadow-boxes_11"],
+    ["Custom Framing", "art-framing_06"],
+    ["Sports Memorabilia", "sports-memorabilia_03"],
+    ["Embroidery", "embroidery_07"],
+    ["Our Shop", "shop_04"],
   ];
   const slidesBox = document.getElementById("slides");
   const plaqueName = document.getElementById("plaque-name");
-  const slideEls = banners.map(([name, local, live], i) => {
+  const slideEls = banners.map(([name, file], i) => {
     const d = document.createElement("div");
     d.className = "slide" + (i === 0 ? " on" : "");
-    d.innerHTML = '<img alt="">';
-    d.firstChild.alt = name;
-    loadImg(d.firstChild, "images/" + local, liveImage(live));
+    d.innerHTML = '<img alt="" sizes="(max-width: 940px) 100vw, 900px">';
+    const im = d.firstChild;
+    im.alt = name;
+    if (i) im.loading = "lazy";
+    im.srcset = workPhoto(file) + " 640w, " + workPhoto(file, false) + " 1400w";
+    im.src = workPhoto(file, false);
     slidesBox.appendChild(d);
     return d;
   });
@@ -331,26 +337,28 @@
 
   // ---- Specialties ----
   const specs = [
-    ["Military Framing", "Shadow boxes, flag cases, guidons and battalion spreads.", "military-framing.html", "military-framing.jpg", "button%202.jpg"],
-    ["Custom Apparel", "Embroidery, vinyl and printing for units, teams and businesses.", "custom-apparel.html", "custom-apparel.jpg", "52565901_10161418329605076_7165628496394321920_o.jpg"],
-    ["Graphic Design", "Custom prints, plaques, slate and personalized gifts.", "graphic-design.html", "graphic-design.jpg", "button%2012.jpg"],
+    ["Military Framing", "Shadow boxes, flag cases, guidons and battalion spreads.", "Military", "military-shadow-boxes_09"],
+    ["Custom Framing", "Art, photos, jerseys and keepsakes, framed to last.", "Art Framing", "sports-memorabilia_01"],
+    ["Embroidery & Apparel", "Embroidery, printing and patches for units, teams and businesses.", "Embroidery", "embroidery_08"],
   ];
   const specsBox = document.getElementById("specs");
-  for (const [title, text, page, local, live] of specs) {
+  for (const [title, text, group, file] of specs) {
     const a = document.createElement("a");
     a.className = "spec";
-    a.href = SITE + page;
-    a.innerHTML = '<div class="frame"><div class="mat"><div class="pic"><span class="ph">photo</span><img alt="" loading="lazy"></div></div></div><h3></h3><p></p><span class="more">Explore →</span>';
+    a.href = "work.html?group=" + encodeURIComponent(group);
+    a.innerHTML = '<div class="frame"><div class="mat"><div class="pic"><img alt="" loading="lazy" decoding="async"></div></div></div><h3></h3><p></p><span class="more">See our work →</span>';
     a.querySelector("h3").textContent = title;
     a.querySelector("p").textContent = text;
     const im = a.querySelector("img");
     im.alt = title;
-    loadImg(im, "images/" + local, liveImage(live));
+    im.src = workPhoto(file);
     specsBox.appendChild(a);
   }
 
   // ---- A peek at our work (the full gallery is on work.html) ----
-  renderGallery(document.getElementById("gallery"), PRODUCTS.slice(0, 8));
+  const peek = ["military-shadow-boxes_05", "military-shadow-boxes_08", "sports-memorabilia_03", "embroidery_06",
+                "military-shadow-boxes_17", "art-framing_01", "patches_01", "military-shadow-boxes_14"];
+  renderGallery(document.getElementById("gallery"), peek.map(workItem));
 </script>
 </body>
 </html>

@@ -142,6 +142,16 @@
   <section class="block">
     <div class="wrap">
       <div class="head">
+        <span class="eyebrow">Come on in</span>
+        <h2 data-tail>Around the Shop</h2>
+      </div>
+      <div class="gallery" id="shop-photos"></div>
+    </div>
+  </section>
+
+  <section class="block alt">
+    <div class="wrap">
+      <div class="head">
         <span class="eyebrow">What we make</span>
         <h2 data-tail>From Our Shop to Your Wall</h2>
       </div>
@@ -179,6 +189,15 @@
 </main>
 
 <footer id="site-footer"></footer>
+
+<script>
+  renderGallery(document.getElementById("shop-photos"), [
+    ["shop_06", "Shop", "Our storefront"],
+    ["shop_07", "Shop", "Inside the shop"],
+    ["shop_08", "Shop", "Our hand-painted sign"],
+    ["shop_03", "Shop", "Out at local events"],
+  ]);
+</script>
 
 </body>
 </html>

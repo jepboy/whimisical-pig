@@ -6,7 +6,10 @@ open `index.html` in a browser to preview.
 ## Hosting (Cloudflare, free)
 
 The site runs on Cloudflare Workers at https://whimisical-pig.wwagner.workers.dev.
-Every push to `main` deploys automatically (settings in `wrangler.jsonc`).
+Every push to `main` deploys automatically (settings in `wrangler.jsonc`), as long as the
+`whimisical-pig` Worker is connected to this repo in Cloudflare (Worker → Settings → Build,
+branch `main`, deploy command `npx wrangler deploy`). Cloudflare's drag-and-drop uploader
+can't take this repo as-is because of the shop back end; use the Git connection instead.
 
 ## Pages
 

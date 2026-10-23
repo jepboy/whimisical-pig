@@ -319,6 +319,14 @@
     .review dd { margin-bottom: 10px; }
     .nav-row .btn { padding: 13px 18px; }
   }
+  /* Tally mode */
+  .tally-head { margin-top: 8px; }
+  .tally-examples { margin-bottom: 48px; }
+  .tally-card { padding: 28px 26px 10px; background: #fff7fa; border: 2px solid #000; border-radius: 18px; }
+  .tally-card iframe { display: block; border: 0; min-height: 600px; }
+  .tally-alt { margin-top: 16px; text-align: center; color: var(--muted); font-size: 0.95rem; }
+  .tally-alt a { color: var(--pink); }
+  @media (max-width: 640px) { .tally-card { padding: 18px 12px 6px; } }
 </style>
 </head>
 <body data-page="order">
@@ -465,6 +473,32 @@
 
 <script src="order-config.js"></script>
 <script>
+  // ---------- Tally mode: when order-config.js has a tally link, show that form instead ----------
+  if (window.ORDER.tally) {
+    const id = (window.ORDER.tally.match(/tally\.so\/(?:r|embed)\/([\w-]+)/) || [])[1];
+    document.getElementById("progress").remove();
+    document.getElementById("order").remove();
+    const shell = document.querySelector(".shell");
+    shell.insertAdjacentHTML("beforeend", `
+      <div class="head tally-head"><span class="eyebrow">For ideas</span><h2>Some of Our Most Common Orders</h2></div>
+      <div class="gallery tally-examples" id="tally-examples"></div>
+      <div class="tally-card"><iframe title="Order form" loading="lazy" width="100%" height="900" frameborder="0"></iframe></div>
+      <p class="tally-alt">Trouble with the form? <a href="${window.ORDER.tally}" target="_blank" rel="noopener">Open it in a new tab</a>,
+        email <a href="mailto:${window.ORDER.email}">${window.ORDER.email}</a> or call <a href="tel:315-773-3758">315-773-3758</a>.</p>`);
+    const picks = [];
+    for (const t of window.ORDER.types) for (const ex of t.examples) if (ex.photo) picks.push([ex.photo, t.title, ex.title]);
+    renderGallery(document.getElementById("tally-examples"), picks.slice(0, 8));
+    const frame = shell.querySelector("iframe");
+    const src = id
+      ? `https://tally.so/embed/${id}?hideTitle=1&transparentBackground=1&dynamicHeight=1`
+      : window.ORDER.tally;
+    frame.dataset.tallySrc = src;
+    const js = document.createElement("script");
+    js.src = "https://tally.so/widgets/embed.js";
+    js.onload = () => window.Tally.loadEmbeds();
+    js.onerror = () => { frame.src = src; };
+    document.head.appendChild(js);
+  } else {
   const CFG = window.ORDER;
   const DRAFT_KEY = "whimsicalpig-order-draft";
   const form = document.getElementById("order");
@@ -914,6 +948,7 @@
     go(1);
   } else {
     go(0);
+  }
   }
 </script>
 </body>

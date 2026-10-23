@@ -80,6 +80,11 @@ create it in Square and paste it into `shop-items.js` as `quickPay.buyUrl`.
 
 ## Setting up "Start an Order"
 
+**Using Tally instead:** build the form in Tally with the steps in
+`TALLY-FORM.md`, then paste its link on the `tally:` line in `order-config.js`.
+The page then shows the Tally form under photos of common orders. Everything
+below is about the built-in form, which is used while `tally` is `""`.
+
 Customers pick what they want, choose a starting example, answer that order type's
 questions, add photos and contact info, review, and send. You get one tidy message
 with everything, plus an order reference like `WP-261015-K3QZ`.

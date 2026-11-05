@@ -5,7 +5,7 @@ open `index.html` in a browser to preview.
 
 ## Hosting (Cloudflare, free)
 
-The site runs on Cloudflare Workers at https://whimisical-pig.wwagner.workers.dev.
+The site runs on Cloudflare Workers at https://whimisical-pig.jeepboy9478.workers.dev.
 Every push to `main` deploys automatically (settings in `wrangler.jsonc`), as long as the
 `whimisical-pig` Worker is connected to this repo in Cloudflare (Worker → Settings → Build,
 branch `main`, deploy command `npx wrangler deploy`). Cloudflare's drag-and-drop uploader
@@ -87,7 +87,7 @@ come out of the same stock count, and Square adds sales tax at checkout.
    copy the shop's **Location ID**. Add both in Cloudflare as Secrets:
    `SQUARE_ACCESS_TOKEN` and `SQUARE_LOCATION_ID`.
 3. **Square notices.** In the Square app, open **Webhooks → Subscriptions → Add subscription** (Production):
-   - URL: `https://whimisical-pig.wwagner.workers.dev/api/square-webhook` (use the shop's own domain later if it moves)
+   - URL: `https://whimisical-pig.jeepboy9478.workers.dev/api/square-webhook` (use the shop's own domain later if it moves)
    - Events: `payment.created`, `payment.updated`, `inventory.count.updated`, `catalog.version.updated`
 
    Save, copy the subscription's **Signature key**, and add it in Cloudflare as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`.

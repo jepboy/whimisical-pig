@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Must match the Worker's name in Cloudflare (whimisical-pig.wwagner.workers.dev)
+  // Must match the Worker's name in Cloudflare (whimisical-pig.jeepboy9478.workers.dev)
   "name": "whimisical-pig",
   // Shop back end: product list, Square checkout, admin API (see src/worker.js)
   "main": "src/worker.js",

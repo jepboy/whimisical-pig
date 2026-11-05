@@ -27,7 +27,8 @@
 //               text, textarea, number, date, select, radio, checks, note
 //               required: true     makes one mandatory
 //               showIf: { q: "id", is: "answer" }   only asks when another
-//                                  question has that answer
+//                                  question has that answer (or is: ["a", "b"]
+//                                  for any of several answers)
 // =====================================================================
 
 window.ORDER = {
@@ -39,33 +40,47 @@ window.ORDER = {
     {
       id: "military",
       title: "Military Framing",
-      blurb: "Farewell, retirement & promotion plaques, shadow boxes and guidon displays",
+      blurb: "Framed guidons & flags, snowshoes, plaques, slate awards & shadow boxes",
       photo: "military-shadow-boxes_09",
       examples: [
-        { id: "farewell-plaque", title: "Farewell / Leadership Plaque", photo: "military-shadow-boxes_13", text: "Rank, unit crest, coins & an engraved plate" },
-        { id: "retirement-shadow-box", title: "Retirement Shadow Box", photo: "military-shadow-boxes_08", text: "Flag, medals, ribbons, rank & photos" },
-        { id: "guidon-display", title: "Framed Guidon Display", photo: "military-shadow-boxes_03", text: "Your guidon with a dedication plate" },
+        { id: "framed-guidon-flag", title: "Framed Guidon or Flag", photo: "military-shadow-boxes_03", text: "Guidon or flag with rank, crest, coins & a plate" },
+        { id: "snowshoe", title: "Snowshoe", photo: "military-shadow-boxes_17", text: "The 10th Mountain classic" },
+        { id: "wooden-plaque", title: "Wooden Plaque", photo: "military-shadow-boxes_18", text: "Engraved plate on wood, with your items" },
+        { id: "slate-award", title: "Slate Award", live: "button%2010.jpg", text: "Your image printed on slate" },
+        { id: "shadow-box", title: "Shadow Box", photo: "military-shadow-boxes_08", text: "Flag, medals, ribbons, rank & photos" },
       ],
       bring: [
-        "Rank and name exactly as they should appear",
-        "The unit / company, and dates in the position",
-        "The plate wording or dedication",
-        "Coins, patches, pins, rank, crest, ribbons or other items to include",
-        "Your unit's logo or a photo of the guidon, if you want it in the background",
+        "The date you need it (we prefer at least 2 weeks)",
+        "Your company / unit, and Battalion Colors or Company Guidon",
+        "Rank and name exactly as they should appear, and the plate wording",
+        "Ranks, badges, crests, branch, patches, coins or photos to include",
+        "Company-specific coins or patches: you'll need to supply these",
       ],
       questions: [
-        { id: "unit", label: "What company / unit are you with?", type: "text", required: true, placeholder: "e.g. B Co, 2-14 IN, 10th Mountain Division" },
-        { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "text", required: true, placeholder: "e.g. SFC John A. Smith" },
+        { id: "unit", label: "What company or unit is this for?", type: "text", required: true,
+          placeholder: "e.g. B Co, 4-31 IN, 10th Mountain Division", help: "This sets the mat colors." },
+        { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "text", placeholder: "e.g. SFC John A. Smith" },
         { id: "position", label: "Position or callsign", type: "text", placeholder: "Optional, e.g. Company Commander, Hydra 6" },
         { id: "dates", label: "Dates of service", type: "text", placeholder: "e.g. October 2023 – June 2026" },
         { id: "inscription", label: "Plate wording / dedication", type: "textarea",
           placeholder: "e.g. From the Officers, NCOs and Soldiers of B Company. Thank you for your leadership." },
+        { id: "flag_kind", label: "Are you looking for the Battalion Colors or a Company Guidon?", type: "radio", required: true,
+          options: ["Battalion Colors", "Company Guidon", "Neither", "Not sure"],
+          help: "Battalion Colors are usually the eagle or the large rectangular flag on display at command. Company Guidons are the swallowtail flags." },
+        { id: "guidon_kind", label: "Which kind of company?", type: "radio", showIf: { q: "flag_kind", is: "Company Guidon" },
+          options: ["Company of a Battalion (e.g. 4-31/B INF)", "Separate Company, not part of a Battalion (e.g. 152 ENG)",
+                    "Letter Company of a Separate Company (e.g. 152/A ENG)", "Not sure"] },
+        { id: "guidon_text", label: "Unit designation exactly as it goes on the guidon", type: "text",
+          placeholder: "e.g. 4-31/B INF", showIf: { q: "flag_kind", is: "Company Guidon" } },
+        { id: "guidon_size", label: "What size guidon?", type: "select", showIf: { q: "flag_kind", is: ["Battalion Colors", "Company Guidon"] },
+          options: ["Regulation (20 × 28 in)", "Non-regulation 5 × 7 in", "Non-regulation 8 × 11 in", "Non-regulation 10 × 14 in",
+                    "Non-regulation 13 × 17 in", "Non-regulation 15 × 20 in", "Not sure"] },
         { id: "items", label: "What items do you want to include?", type: "checks",
-          options: ["Rank", "Unit crest", "Coins", "Patches", "Pins", "Ribbons / medals", "Wings / badges", "Folded flag", "Photos", "Other"] },
+          options: ["Ranks", "Badges", "Crests", "Branch", "Patches", "Coins", "Photos", "Ribbons / medals", "Folded flag", "Other"] },
+        { id: "items_note", type: "note",
+          text: "Company-specific coins or patches come from your unit and aren't available from our suppliers, so you'll need to supply those." },
         { id: "items_source", label: "Where are the items coming from?", type: "radio",
-          options: ["I'll bring or ship them", "Please get the rank / crest for us", "A mix of both"] },
-        { id: "colors", label: "What guidon or battalion colors would you like to include?", type: "text", required: true,
-          placeholder: "e.g. infantry blue background, red and white guidon colors" },
+          options: ["I'll bring or ship them", "Please get the ranks / crests for us", "A mix of both"] },
         { id: "frame", label: "Mat and frame colors", type: "text", placeholder: "Optional, e.g. black mat over gray, black frame" },
         { id: "reorder", label: "Same as a past order?", type: "text", placeholder: "Order # or name on the earlier piece (optional)" },
       ],
@@ -145,8 +160,14 @@ window.ORDER = {
         "Colors, quantity and the date you need them",
       ],
       questions: [
-        { id: "unit", label: "What company / unit are you with?", type: "text", required: true, placeholder: "e.g. B Co, 2-14 IN" },
+        { id: "unit", label: "Unit designation exactly as it goes on the guidon", type: "text", required: true, placeholder: "e.g. 4-31/B INF" },
         { id: "quantity", label: "How many?", type: "number", required: true, min: 1 },
+        { id: "guidon_kind", label: "Which kind of company?", type: "radio",
+          options: ["Company of a Battalion (e.g. 4-31/B INF)", "Separate Company, not part of a Battalion (e.g. 152 ENG)",
+                    "Letter Company of a Separate Company (e.g. 152/A ENG)", "Not a company guidon"] },
+        { id: "size", label: "What size?", type: "select",
+          options: ["Regulation (20 × 28 in)", "Non-regulation 5 × 7 in", "Non-regulation 8 × 11 in", "Non-regulation 10 × 14 in",
+                    "Non-regulation 13 × 17 in", "Non-regulation 15 × 20 in", "Not sure"] },
         { id: "colors", label: "Guidon colors", type: "text", required: true, placeholder: "e.g. red with white lettering" },
         { id: "design", label: "Symbols, lettering or design notes", type: "textarea", placeholder: "Upload a photo or artwork in the next step if you have it" },
         { id: "framed", label: "Framed for display?", type: "radio", options: ["Just the guidon", "Framed with a dedication plate"] },
@@ -222,7 +243,7 @@ window.ORDER = {
       ],
       questions: [
         { id: "partner_note", type: "note",
-          text: "Merch partners get exclusive, year-round merch from us: we design it, you approve every design, and you get 10% off every order of your merch. We'll send you the partner agreement to look over." },
+          text: "Merch partners get exclusive, year-round merch from us: we design it (no design fee with a signed agreement), you approve every design, and you get 10% off every order of your merch. We'll send you the partner agreement to look over." },
         { id: "partner_type", label: "What kind of partner are you?", type: "radio", required: true,
           options: ["Business", "Event / festival", "Team / club", "School", "Other"] },
         { id: "partner_name", label: "Business or event name", type: "text", required: true },

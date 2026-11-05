@@ -415,7 +415,7 @@
             <div class="field" data-req>
               <label for="c_date">When do you need it in your hands? <span class="req">*</span></label>
               <input type="date" id="c_date" name="c_date">
-              <p class="help">Ceremony or event date. Most orders are scheduled about two weeks out.</p>
+              <p class="help">Ceremony or event date. We prefer at least 2 weeks so we have time to get your items and supplies together.</p>
               <p class="err">Please pick a date.</p>
             </div>
           </div>
@@ -427,6 +427,7 @@
           <div class="field" data-req data-show-if='{"name":"c_fulfill","is":"Ship it to me"}'>
             <label for="c_address">Shipping address <span class="req">*</span></label>
             <textarea id="c_address" name="c_address" autocomplete="shipping street-address" placeholder="Name, street, city, state, ZIP"></textarea>
+            <p class="help">So we can get you a shipping quote.</p>
             <p class="err">Please add the address to ship to.</p>
           </div>
           <fieldset class="field">
@@ -613,7 +614,8 @@
   function applyConditions() {
     form.querySelectorAll("[data-show-if]").forEach(f => {
       const c = JSON.parse(f.dataset.showIf);
-      f.hidden = !valueOf(c.name).split(", ").includes(c.is);
+      const picked = valueOf(c.name).split(", ");
+      f.hidden = ![].concat(c.is).some(v => picked.includes(v));
     });
   }
   const isShown = el => !el.closest("[hidden]");

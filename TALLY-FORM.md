@@ -66,17 +66,30 @@ Page title: **Military Framing**
 
 | Question | Type | Options / placeholder |
 | --- | --- | --- |
-| Which style is closest? | Multiple choice | Farewell / Leadership Plaque · Retirement Shadow Box · Framed Guidon Display · Something different |
-| What company / unit are you with? ★ | Short answer | "e.g. B Co, 2-14 IN, 10th Mountain Division" |
-| Who is it for? Rank and name as it should appear ★ | Short answer | "e.g. SFC John A. Smith" |
+| What type of award? | Multiple choice | Framed Guidon or Flag · Snowshoe · Wooden Plaque · Slate Award · Shadow Box · Something else |
+| What company or unit is this for? ★ | Short answer | "e.g. B Co, 4-31 IN, 10th Mountain Division". Description: "This sets the mat colors." |
+| Who is it for? Rank and name as it should appear | Short answer | "e.g. SFC John A. Smith" |
 | Position or callsign | Short answer | "Optional, e.g. Company Commander, Hydra 6" |
 | Dates of service | Short answer | "e.g. October 2023 – June 2026" |
 | Plate wording / dedication | Long answer | "e.g. From the Officers, NCOs and Soldiers of B Company. Thank you for your leadership." |
-| What items do you want to include? | Checkboxes | Rank · Unit crest · Coins · Patches · Pins · Ribbons / medals · Wings / badges · Folded flag · Photos · Other |
-| Where are the items coming from? | Multiple choice | I'll bring or ship them · Please get the rank / crest for us · A mix of both |
-| What guidon or battalion colors would you like to include? ★ | Short answer | "e.g. infantry blue background, red and white guidon colors" |
+| Are you looking for the Battalion Colors or a Company Guidon? ★ | Multiple choice | Battalion Colors · Company Guidon · Neither · Not sure. Description: "Battalion Colors are usually the eagle or the large rectangular flag on display at command. Company Guidons are the swallowtail flags." |
+| Which kind of company? | Multiple choice | Company of a Battalion (e.g. 4-31/B INF) · Separate Company, not part of a Battalion (e.g. 152 ENG) · Letter Company of a Separate Company (e.g. 152/A ENG) · Not sure |
+| Unit designation exactly as it goes on the guidon | Short answer | "e.g. 4-31/B INF" |
+| What size guidon? | Dropdown | Regulation (20 × 28 in) · Non-regulation 5 × 7 in · 8 × 11 in · 10 × 14 in · 13 × 17 in · 15 × 20 in · Not sure |
+| What items do you want to include? | Checkboxes | Ranks · Badges · Crests · Branch · Patches · Coins · Photos · Ribbons / medals · Folded flag · Other |
+| *(Text block)* | Text | "Company-specific coins or patches come from your unit and aren't available from our suppliers, so you'll need to supply those." |
+| Where are the items coming from? | Multiple choice | I'll bring or ship them · Please get the ranks / crests for us · A mix of both |
 | Mat and frame colors | Short answer | "Optional, e.g. black mat over gray, black frame" |
 | Same as a past order? | Short answer | "Order # or name on the earlier piece (optional)" |
+
+To add a **Description** under a question, click the question and use the
+description line under the title (or add a small **/text** block right under it).
+
+**Logic, guidon questions only when they apply:** right under the "Battalion Colors or
+Company Guidon" question, type **/logic** and add two rules:
+- If it is "Company Guidon" → **Show blocks** → "Which kind of company?" and
+  "Unit designation exactly as it goes on the guidon".
+- If it is "Battalion Colors" **or** "Company Guidon" → **Show blocks** → "What size guidon?"
 
 **Logic at the bottom of this page:** If "What are you ordering?" is
 Military Framing → jump to page **Your Details**.
@@ -143,7 +156,9 @@ Page title: **Guidons**
 | Question | Type | Options / placeholder |
 | --- | --- | --- |
 | Which kind? | Multiple choice | Regulation Guidon · Non-Regulation Guidon · Not sure |
-| What company / unit are you with? ★ | Short answer | "e.g. B Co, 2-14 IN" |
+| Unit designation exactly as it goes on the guidon ★ | Short answer | "e.g. 4-31/B INF" |
+| Which kind of company? | Multiple choice | Company of a Battalion (e.g. 4-31/B INF) · Separate Company, not part of a Battalion (e.g. 152 ENG) · Letter Company of a Separate Company (e.g. 152/A ENG) · Not a company guidon |
+| What size? | Dropdown | Regulation (20 × 28 in) · Non-regulation 5 × 7 in · 8 × 11 in · 10 × 14 in · 13 × 17 in · 15 × 20 in · Not sure |
 | How many? ★ | Number | Minimum 1 |
 | Guidon colors ★ | Short answer | "e.g. red with white lettering" |
 | Symbols, lettering or design notes | Long answer | "Upload a photo or artwork on the next page if you have it" |
@@ -195,8 +210,9 @@ jump to page **Your Details**. Then **/page break**.
 Page title: **Merch Partnership**
 
 Text block first:
-> Merch partners get exclusive, year-round merch from us: we design it, you approve
-> every design, and you get **10% off** every order of your merch. We'll send you
+> Merch partners get exclusive, year-round merch from us: we design it (**no design
+> fee** with a signed agreement), you approve every design, and you get **10% off**
+> every order of your merch. We'll send you
 > the partner agreement to look over.
 
 | Question | Type | Options / placeholder |
@@ -236,9 +252,9 @@ Page title: **Your Details**
 | Your name ★ | Short answer | |
 | Phone ★ | Phone number | |
 | Email ★ | Email | |
-| When do you need it in your hands? ★ | Date | |
+| When do you need it in your hands? ★ | Date | Description: "We prefer at least 2 weeks so we have time to get your items and supplies together." |
 | Will this be picked up or shipped? ★ | Multiple choice | I'll pick it up at the shop · Ship it to me |
-| Shipping address | Long answer | "Street, city, state, ZIP" (turn on ★ Required) |
+| Shipping address | Long answer | "Street, city, state, ZIP" (turn on ★ Required). Description: "So we can get you a shipping quote." |
 | Getting your items to us | Multiple choice | I'll drop them off at the shop · I'll mail them · No items to send |
 | Best way to reach you | Multiple choice | Call · Text · Email |
 | Photos of your logo, items or ideas | File upload | Allow multiple files if the setting is there (10 MB per file on the free plan) |

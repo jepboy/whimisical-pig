@@ -117,6 +117,9 @@ const MIGRATIONS = [
   `UPDATE requests SET status = 'in production' WHERE status = 'in progress'`,
   `ALTER TABLE requests ADD COLUMN notified TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE shop_orders ADD COLUMN notified TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN shopvox_id TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN shopvox_error TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE request_files ADD COLUMN share_key TEXT NOT NULL DEFAULT ''`,
 ];
 
 let schemaReady = false;
@@ -162,7 +165,9 @@ async function route(request, env, url, path, ctx) {
   if (pm && m === "GET") return servePhoto(env, +pm[1], url.searchParams.get("s") === "sm");
   if (path === "/api/checkout" && m === "POST") return checkout(request, env, url);
   if (path === "/api/square-webhook" && m === "POST") return squareWebhook(request, env);
-  if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env);
+  if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env, ctx);
+  const sf = path.match(/^\/api\/files\/(\d+)\/([a-f0-9]{32})$/);
+  if (sf && m === "GET") return serveSharedFile(env, +sf[1], sf[2]);
 
   if (path === "/api/admin/login" && m === "POST") return login(request, env);
   if (path === "/api/admin/logout" && m === "POST") return logout();
@@ -194,6 +199,9 @@ async function route(request, env, url, path, ctx) {
     const rm = path.match(/^\/api\/admin\/requests\/(\d+)$/);
     if (rm && m === "PUT") return updateRequest(request, env, +rm[1]);
     if (rm && m === "DELETE") return deleteRequest(env, +rm[1]);
+    const rsv = path.match(/^\/api\/admin\/requests\/(\d+)\/shopvox$/);
+    if (rsv && m === "POST") return sendRequestToShopvox(env, +rsv[1], url.origin);
+    if (path === "/api/admin/shopvox-test" && m === "POST") return shopvoxTest(env);
     const fm = path.match(/^\/api\/admin\/request-files\/(\d+)$/);
     if (fm && m === "GET") return serveRequestFile(env, +fm[1]);
   }
@@ -682,7 +690,7 @@ async function squareOk(env, method, path, payload) {
 
 // ---------------------------------------------------------------- order requests
 
-async function saveOrderRequest(request, env) {
+async function saveOrderRequest(request, env, ctx) {
   let form;
   try { form = await request.formData(); } catch { return json({ error: "Couldn't read the form." }, 400); }
   if (form.get("website")) return json({ ok: true });          // hidden field only bots fill in
@@ -706,9 +714,11 @@ async function saveOrderRequest(request, env) {
   ).bind(ref, field("type", 80), field("name"), field("email"), field("phone", 40),
          field("needed_by", 40), field("fulfill", 80), summary).first();
   for (const f of files) {
-    await env.DB.prepare(`INSERT INTO request_files (request_id, name, mime, data) VALUES (?, ?, ?, ?)`)
-      .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer()).run();
+    await env.DB.prepare(`INSERT INTO request_files (request_id, name, mime, data, share_key) VALUES (?, ?, ?, ?, ?)`)
+      .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer(), randomKey()).run();
   }
+  // Copy it into shopVOX as a sales lead (after the customer gets their reply)
+  if (shopvoxReady(env) && ctx) ctx.waitUntil(pushRequestToShopvox(env, row.id, new URL(request.url).origin).catch(e => console.error("shopVOX failed", e)));
   return json({ ok: true, id: row.id });
 }
 
@@ -844,6 +854,15 @@ async function setupStatus(request, env, url) {
       ? `Last notice from Square: ${new Date(last.value.at).toISOString().slice(0, 16).replace("T", " ")} UTC (${last.value.type}).`
       : `No notices from Square yet. Webhook URL: ${env.SQUARE_WEBHOOK_URL || url.origin + "/api/square-webhook"}`);
   }
+  if (shopvoxReady(env)) {
+    const last = await kvGet(env, "shopvox_last");
+    add("shopvox", !last || last.value.ok, !last
+      ? "shopVOX is connected: new website orders become Sales Leads there. Press Test shopVOX to check it."
+      : last.value.ok ? "shopVOX is connected: new website orders become Sales Leads there."
+                      : `shopVOX didn't accept the Account ID or token (${last.value.status}). Check both in Cloudflare.`);
+  } else {
+    add("shopvox", false, "shopVOX isn't connected. Add SHOPVOX_ACCOUNT_ID and SHOPVOX_API_TOKEN in Cloudflare (see README) to send website orders there.");
+  }
   add("email", mailReady(env), !mailReady(env)
     ? "Emails are off. Add a Resend API key (RESEND_API_KEY) to get low-stock emails (see README)."
     : canMailCustomers(env)
@@ -857,6 +876,7 @@ async function setupStatus(request, env, url) {
     dashboard: sandbox ? "https://squareupsandbox.com/dashboard" : "https://app.squareup.com/dashboard",
     category: shopCategory(env),
     mail: { alerts: mailReady(env), customers: canMailCustomers(env) },
+    shopvox: shopvoxReady(env),
   }, 200, { "Cache-Control": "no-store" });
 }
 
@@ -1441,6 +1461,122 @@ async function deletePhoto(env, id) {
   for (const b of site.banners) if (b.photo === id) b.photo = null;
   await kvPut(env, "site", site, 0);
   return json({ ok: true });
+}
+
+
+// ---------------------------------------------------------------- shopVOX
+// Each "Start an Order" request is copied into shopVOX as a Sales Lead, so the
+// shop tracks everything in one place. Needs (Cloudflare → Variables and Secrets):
+//   SHOPVOX_ACCOUNT_ID   the Account ID from shopVOX → your profile → API Access
+//   SHOPVOX_API_TOKEN    the API Token from the same place (a Secret)
+//   SHOPVOX_PIPELINE     optional: the sales-lead pipeline name to file them in
+// API reference: https://shopvoxapi.docs.apiary.io
+
+const shopvoxReady = env => !!(env.SHOPVOX_ACCOUNT_ID && env.SHOPVOX_API_TOKEN);
+const randomKey = () => [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+
+async function shopvoxCall(env, method, path, body) {
+  const url = new URL((env.SHOPVOX_API_BASE || "https://api.shopvox.com/v1") + path);
+  url.searchParams.set("account_id", env.SHOPVOX_ACCOUNT_ID);
+  url.searchParams.set("authToken", env.SHOPVOX_API_TOKEN);
+  const r = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  const text = await r.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch (e) { data = { raw: text.slice(0, 300) }; }
+  return { ok: r.ok, status: r.status, data };
+}
+const shopvoxError = r => {
+  const d = r.data || {};
+  const msg = d.error || d.message || (Array.isArray(d.errors) ? d.errors.join(", ") : d.errors && JSON.stringify(d.errors)) || d.raw || "";
+  return `shopVOX said ${r.status}${msg ? ": " + String(msg).slice(0, 200) : ""}`;
+};
+
+// The lead: title, every answer, and links to the customer's photos
+async function pushRequestToShopvox(env, id, origin) {
+  const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
+  if (!r) return { error: "Request not found." };
+  if (r.shopvox_id) return { ok: true, id: r.shopvox_id };
+  const { results: files } = await env.DB.prepare(`SELECT id, name, share_key FROM request_files WHERE request_id = ?`).bind(id).all();
+  for (const f of files) {
+    if (!f.share_key) {
+      f.share_key = randomKey();
+      await env.DB.prepare(`UPDATE request_files SET share_key = ? WHERE id = ?`).bind(f.share_key, f.id).run();
+    }
+  }
+  const base = env.SITE_URL || origin;
+  const details = [
+    `Website order ${r.ref}`,
+    r.needed_by && `Needed by: ${r.needed_by}`,
+    r.fulfill && `Pick up / ship: ${r.fulfill}`,
+    "",
+    r.summary,
+    files.length ? "\nPhotos and files from the customer:" : "",
+    ...files.map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
+  ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000);
+
+  // Use the customer's existing shopVOX record when the name matches exactly
+  let companyId = null;
+  if (r.name) {
+    const found = await shopvoxCall(env, "GET", `/companies?name=${encodeURIComponent(r.name)}&active=true`);
+    const list = Array.isArray(found.data) ? found.data : (found.data && (found.data.companies || found.data.data)) || [];
+    const hit = found.ok && list.find(c => String(c.name || "").trim().toLowerCase() === r.name.trim().toLowerCase());
+    if (hit) companyId = hit.id;
+  }
+  const lead = {
+    title: `${r.ref} · ${r.type || "Website order"} · ${r.name || "Customer"}`.slice(0, 200),
+    details,
+    workflowState: "new",
+    nextContactDate: todayNY(),
+    ...(companyId ? { companyId } : { companyName: r.name || "Website customer" }),
+    primaryContactName: r.name || "",
+    email: r.email || "",
+    phoneNumber: r.phone || "",
+    leadSourceName: "Website",
+    ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
+  };
+  const res = await shopvoxCall(env, "POST", "/sales_leads", lead);
+  const leadId = res.ok && res.data && (res.data.id || (res.data.salesLead || {}).id);
+  if (!leadId) {
+    const err = shopvoxError(res);
+    console.error("shopVOX lead failed", err);
+    await env.DB.prepare(`UPDATE requests SET shopvox_error = ? WHERE id = ?`).bind(err, id).run();
+    return { error: err };
+  }
+  await env.DB.prepare(`UPDATE requests SET shopvox_id = ?, shopvox_error = '' WHERE id = ?`).bind(String(leadId), id).run();
+  return { ok: true, id: String(leadId) };
+}
+
+async function sendRequestToShopvox(env, id, origin) {
+  if (!shopvoxReady(env)) return json({ error: "Add the shopVOX Account ID and API Token in Cloudflare first (see Setup)." }, 503);
+  const r = await pushRequestToShopvox(env, id, origin);
+  return r.ok ? json(r) : json({ error: r.error }, r.error === "Request not found." ? 404 : 502);
+}
+
+// Read-only check that the Account ID and token work
+async function shopvoxTest(env) {
+  if (!shopvoxReady(env)) return json({ error: "Add SHOPVOX_ACCOUNT_ID and SHOPVOX_API_TOKEN in Cloudflare first." }, 503);
+  const r = await shopvoxCall(env, "GET", "/companies?name=zzz-connection-test&active=true");
+  await kvPut(env, "shopvox_last", { at: Date.now(), ok: r.ok, status: r.status }, 0);
+  return r.ok ? json({ ok: true }) : json({ error: shopvoxError(r) }, 502);
+}
+
+// Photo links in shopVOX leads: long random keys, so only someone with the link can open them
+async function serveSharedFile(env, id, key) {
+  const f = await env.DB.prepare(`SELECT name, mime, data, share_key FROM request_files WHERE id = ?`).bind(id).first();
+  if (!f || !f.share_key || !timingSafeEqual(f.share_key, key)) return new Response("Not found", { status: 404 });
+  return new Response(new Uint8Array(f.data), {
+    headers: {
+      "Content-Type": f.mime,
+      "Content-Disposition": `inline; filename="${f.name.replace(/["\\\r\n]/g, "")}"`,
+      "Cache-Control": "private, max-age=3600",
+      "X-Content-Type-Options": "nosniff",
+      "X-Robots-Tag": "noindex",
+    },
+  });
 }
 
 // ---------------------------------------------------------------- helpers

@@ -405,6 +405,7 @@
           <p class="hint">What's connected. Anything red needs a step from the README.</p>
         </div>
         <div class="tools">
+          <button class="btn ghost sm" id="test-shopvox" type="button">Test shopVOX</button>
           <button class="btn ghost sm" id="test-email" type="button">Send a Test Email</button>
           <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
         </div>
@@ -422,6 +423,7 @@
   const when = t => t ? new Date(t.replace(" ", "T") + "Z").toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   let dashboard = "https://app.squareup.com/dashboard";
   let mail = { alerts: false, customers: false };
+  let shopvoxOn = false;
   // The shop's pages keep a copy of banners and photos for a minute; drop it so changes show here right away
   const freshSite = () => { try { sessionStorage.removeItem("wp-site"); } catch (e) {} };
   // Close buttons inside any dialog
@@ -525,7 +527,8 @@
           <div>
             <span class="tag ${r.status === "new" ? "new" : r.status === "done" ? "done" : ""}">${esc(r.status)}</span>
             <h3>${esc(r.type || "Order")} · ${esc(r.name || "No name")}</h3>
-            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
+            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}${r.shopvox_id ? ' · <span class="told">In shopVOX ✓</span>'
+              : shopvoxOn ? ` · <span class="low" title="${esc(r.shopvox_error)}">Not in shopVOX yet</span> <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button>` : ""}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
           </div>
           <div class="facts">
             <div><span class="k">Needed by</span><span class="due ${r.status === "done" ? "" : due.cls}">${due.text}</span></div>
@@ -566,6 +569,13 @@
     } catch (err) { alert(err.message); }
   };
   $("requests").onclick = async e => {
+    if (e.target.dataset.act === "shopvox") {
+      const id = +e.target.closest(".card").dataset.id;
+      e.target.disabled = true; e.target.textContent = "Sending…";
+      try { await send(`/api/admin/requests/${id}/shopvox`, "POST", {}); loadRequests(); }
+      catch (err) { alert(err.message); e.target.disabled = false; e.target.textContent = "Send to shopVOX"; }
+      return;
+    }
     if (e.target.dataset.act !== "delete") return;
     const card = e.target.closest(".card");
     const r = requests.find(x => x.id === +card.dataset.id);
@@ -932,6 +942,8 @@
     catch (err) { $("checks").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
     dashboard = data.dashboard;
     mail = data.mail || mail;
+    shopvoxOn = !!data.shopvox;
+    if (requests.length) drawRequests();
     const bad = data.checks.filter(c => !c.ok).length;
     $("n-setup").textContent = bad ? "●" : "";
     if (countOnly) return;
@@ -939,6 +951,14 @@
       <div class="check ${c.ok ? "ok" : "no"}"><span class="dot">${c.ok ? "✓" : "!"}</span><p>${esc(c.text)}</p></div>`).join("");
   }
   $("setup-refresh").onclick = () => loadSetup();
+  $("test-shopvox").onclick = async e => {
+    const b = e.target;
+    b.disabled = true;
+    try { await send("/api/admin/shopvox-test", "POST", {}); alert("shopVOX accepted the connection. New website orders will show up there as Sales Leads."); }
+    catch (err) { alert(err.message); }
+    b.disabled = false;
+    loadSetup();
+  };
   $("test-email").onclick = async e => {
     const b = e.target;
     b.disabled = true;

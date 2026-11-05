@@ -112,6 +112,23 @@ to Square's own checkout page instead, which needs a webhook (`payment.updated`,
 
 Optional: `SQUARE_SHOP_CATEGORY` to use a category name other than "Website".
 
+**shopVOX (one place to track custom orders)**
+
+Every "Start an Order" request is copied into shopVOX as a **Sales Lead**: customer, phone,
+email, needed-by date, every answer, and links to their photos. The admin page shows
+"In shopVOX ✓" on each one, or a **Send to shopVOX** button if it didn't go through.
+
+1. In shopVOX: your name (top right) → **My Profile → API Access → Show**.
+   Use **Regenerate** if the token was ever shared anywhere.
+2. In Cloudflare (*Workers & Pages → whimisical-pig → Settings → Variables and Secrets*), add:
+   - `SHOPVOX_ACCOUNT_ID` (the Account ID)
+   - `SHOPVOX_API_TOKEN` as a **Secret** (the API Token)
+   - optional `SHOPVOX_PIPELINE`: the sales-lead pipeline name to put them in
+3. `/admin` → **Setup → Test shopVOX**.
+
+To see customer emails on each order, connect the shop's inbox inside shopVOX (its email
+integration links emails to quotes and orders), and send order updates from shopVOX.
+
 **Email (low-stock alerts and customer updates)** uses [Resend](https://resend.com), free for 3,000 emails a month.
 
 1. Sign up at resend.com **with WhimsicalPig@hotmail.com** (alerts can go to that address right away).

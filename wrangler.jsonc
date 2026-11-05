@@ -17,6 +17,14 @@
     // These addresses go to the back end instead of the static files
     "run_worker_first": ["/api/*"]
   },
+  // Shop settings that aren't secret. Secrets (ADMIN_PASSWORD, SQUARE_ACCESS_TOKEN)
+  // are added in the Cloudflare dashboard: Settings -> Variables and Secrets.
+  "vars": {
+    "SQUARE_LOCATION_ID": "6875TE29BSGD6",
+    "SHIPPING_FEE": "5",
+    // The Square app's Application ID (public). Turns on paying by card on our own page.
+    "SQUARE_APPLICATION_ID": ""
+  },
   // Shop database. Cloudflare creates it automatically on the first deploy.
   "d1_databases": [
     {

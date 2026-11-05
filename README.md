@@ -80,24 +80,23 @@ come out of the same stock count, and Square adds sales tax at checkout.
 
 **One-time setup**
 
-1. **Admin password.** In Cloudflare: *Workers & Pages → whimisical-pig → Settings → Variables and Secrets → Add*.
-   Type **Secret**, name `ADMIN_PASSWORD`, value: a strong password. Then open `/admin` and log in.
-2. **Square app.** Go to https://developer.squareup.com, sign in with the shop's Square account, and create an app
-   (any name, e.g. "Whimsical Pig website"). Under **Production**, copy the **Access token**, and under **Locations**
-   copy the shop's **Location ID**. Add both in Cloudflare as Secrets:
-   `SQUARE_ACCESS_TOKEN` and `SQUARE_LOCATION_ID`.
-3. **Square notices.** In the Square app, open **Webhooks → Subscriptions → Add subscription** (Production):
-   - URL: `https://whimisical-pig.jeepboy9478.workers.dev/api/square-webhook` (use the shop's own domain later if it moves)
-   - Events: `payment.created`, `payment.updated`, `inventory.count.updated`, `catalog.version.updated`
+Already in the code (`wrangler.jsonc` → `vars`): the Square location ID
+(`6875TE29BSGD6`, Downtown Watertown Location) and $5 shipping (`SHIPPING_FEE`).
 
-   Save, copy the subscription's **Signature key**, and add it in Cloudflare as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`.
-4. **Shipping (optional).** To offer shipping, add a variable `SHIPPING_FEE` with the flat charge in dollars, e.g. `12.95`.
-   Without it, online orders are pick up only.
-5. **Check it.** Open `/admin` → **Setup**. Everything should be green.
-6. **Test first (recommended).** Use the Square app's **Sandbox** token, location and webhook instead, and add
-   `SQUARE_ENVIRONMENT` = `sandbox`. Make a test item in the sandbox's Website category with stock tracking on, buy one
-   with Square's test card, and check that: it shows as **Paid** under Online Orders, and the stock went down by one.
-   Then switch the secrets to Production and delete `SQUARE_ENVIRONMENT`.
+1. **Square app.** At https://developer.squareup.com, sign in with the shop's Square account
+   and create an app (any name, e.g. "Whimsical Pig website"). Switch to **Production** and copy:
+   - the **Application ID** (starts with `sq0idp-`, not secret): put it in `wrangler.jsonc` as
+     `SQUARE_APPLICATION_ID`, or send it to whoever maintains the site.
+   - the **Access token** (secret): add it in Cloudflare as a **Secret** named `SQUARE_ACCESS_TOKEN`
+     (*Workers & Pages → whimisical-pig → Settings → Variables and Secrets → Add*).
+2. **Admin password.** Same place: Secret `ADMIN_PASSWORD`. Then open `/admin` and log in.
+3. **Check it.** `/admin` → **Setup**: everything should be green. Then buy one item yourself.
+
+With the Application ID set, customers pay by card **right on the shop page** (Square's secure
+card box; card numbers go straight to Square, never to this site). Payments are recorded the
+moment they go through, so no webhook is needed. Without it, Buy and Quick Pay send customers
+to Square's own checkout page instead, which needs a webhook (`payment.updated`, URL
+`/api/square-webhook`, signature key as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`) to record payments.
 
 Optional: `SQUARE_SHOP_CATEGORY` to use a category name other than "Website".
 

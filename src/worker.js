@@ -4,8 +4,12 @@
 // by Cloudflare's asset hosting. This Worker handles:
 //
 //   GET  /api/products                  shop items from Square, with stock left
-//   POST /api/checkout                  cart -> Square checkout page
-//   POST /api/quickpay                  amount -> Square checkout page (invoices, deposits)
+//   POST /api/quote                     cart -> subtotal, shipping, tax and total from Square
+//   POST /api/pay                       cart + card token -> Square order and payment, on our page
+//   POST /api/quickpay/pay              amount + card token -> Square payment, on our page
+//   POST /api/checkout                  cart -> Square's own checkout page (used if there's
+//                                       no SQUARE_APPLICATION_ID for the on-page card form)
+//   POST /api/quickpay                  amount -> Square's own checkout page (same)
 //   POST /api/square-webhook            Square notices: payments, stock and item changes
 //   POST /api/order-request             "Start an Order" form -> saved for the admin page
 //   POST /api/admin/login | logout      admin password login
@@ -19,8 +23,13 @@
 //   ADMIN_PASSWORD                 password for /admin
 //   SQUARE_ACCESS_TOKEN            from the Square Developer app
 //   SQUARE_LOCATION_ID             the shop's Square location
-//   SQUARE_WEBHOOK_SIGNATURE_KEY   from the Square webhook subscription
+// Settings (wrangler.jsonc "vars", not secret):
+//   SQUARE_APPLICATION_ID          the Square app's Application ID; turns on the card
+//                                  form on our own page
+//   SQUARE_LOCATION_ID, SHIPPING_FEE  see below
 // Optional:
+//   SQUARE_WEBHOOK_SIGNATURE_KEY   from a Square webhook subscription; only needed to
+//                                  record payments made on Square's own checkout page
 //   SQUARE_ENVIRONMENT             "sandbox" while testing (default: production)
 //   SQUARE_SHOP_CATEGORY           Square category shown online (default "Website")
 //   SHIPPING_FEE                   flat shipping charge in dollars, e.g. "12.95".
@@ -129,6 +138,9 @@ async function route(request, env, url, path) {
   const m = request.method;
 
   if (path === "/api/products" && m === "GET") return publicProducts(env);
+  if (path === "/api/quote" && m === "POST") return quote(request, env);
+  if (path === "/api/pay" && m === "POST") return pay(request, env);
+  if (path === "/api/quickpay/pay" && m === "POST") return quickPayCard(request, env);
   if (path === "/api/checkout" && m === "POST") return checkout(request, env, url);
   if (path === "/api/quickpay" && m === "POST") return quickPay(request, env, url);
   if (path === "/api/square-webhook" && m === "POST") return squareWebhook(request, env);
@@ -297,7 +309,7 @@ function available(v, held) {
 // ---------------------------------------------------------------- public shop
 
 async function publicProducts(env) {
-  const base = { configured: squareReady(env), shipping_fee_cents: shippingCents(env) };
+  const base = { configured: squareReady(env), shipping_fee_cents: shippingCents(env), card: cardForm(env) };
   if (!base.configured) return json({ ...base, products: [] }, 200, { "Cache-Control": "no-store" });
   let catalog;
   try { catalog = await loadCatalog(env); }
@@ -310,11 +322,9 @@ async function publicProducts(env) {
   return json({ ...base, products }, 200, { "Cache-Control": "no-store" });
 }
 
-async function checkout(request, env, url) {
-  if (!squareReady(env)) {
-    return json({ error: "Online checkout isn't set up yet. Please call 315-773-3758 to order." }, 503);
-  }
-  const body = await readJson(request);
+// Checks a cart against Square's latest prices and stock.
+// Returns { items, subtotal, ship, fee }, or { error } with the response to send.
+async function readCart(env, body) {
   const wanted = new Map();
   for (const line of Array.isArray(body.items) ? body.items.slice(0, MAX_CART_LINES) : []) {
     const id = String(line && line.variation_id || "");
@@ -322,15 +332,15 @@ async function checkout(request, env, url) {
     if (!id || !(qty > 0)) continue;
     wanted.set(id, Math.min((wanted.get(id) || 0) + qty, MAX_QTY));
   }
-  if (!wanted.size) return json({ error: "Your cart is empty." }, 400);
+  if (!wanted.size) return { error: json({ error: "Your cart is empty." }, 400) };
   const ship = body.fulfillment === "ship";
   const fee = shippingCents(env);
-  if (ship && fee === null) return json({ error: "Shipping isn't available online. Please choose pickup or call us." }, 400);
+  if (ship && fee === null) return { error: json({ error: "Shipping isn't available online. Please choose pickup or call us." }, 400) };
 
   // Check against Square's latest stock, not the cached list
   let catalog;
   try { catalog = await loadCatalog(env, true); }
-  catch { return json({ error: "Checkout couldn't start. Please try again or call 315-773-3758." }, 502); }
+  catch { return { error: json({ error: "Checkout couldn't start. Please try again or call 315-773-3758." }, 502) }; }
   const byId = new Map();
   for (const it of catalog.items) for (const v of it.variations) byId.set(v.id, { item: it, v });
   const held = await heldByVariation(env);
@@ -338,15 +348,25 @@ async function checkout(request, env, url) {
   const items = [];
   for (const [id, qty] of wanted) {
     const hit = byId.get(id);
-    if (!hit) return json({ error: "Something in your cart isn't available anymore. Please remove it and try again." }, 409);
+    if (!hit) return { error: json({ error: "Something in your cart isn't available anymore. Please remove it and try again." }, 409) };
     const label = hit.item.name + (hit.item.variations.length > 1 && hit.v.name ? ` (${hit.v.name})` : "");
     const left = available(hit.v, held);
     if (left !== null && left < qty) {
-      return json({ error: left > 0 ? `Only ${left} left of ${label}.` : `Sorry, ${label} just sold out.` }, 409);
+      return { error: json({ error: left > 0 ? `Only ${left} left of ${label}.` : `Sorry, ${label} just sold out.` }, 409) };
     }
     items.push({ variation_id: id, name: label, qty, price_cents: hit.v.price_cents });
   }
   const subtotal = items.reduce((s, l) => s + l.price_cents * l.qty, 0);
+  return { items, subtotal, ship, fee };
+}
+
+async function checkout(request, env, url) {
+  if (!squareReady(env)) {
+    return json({ error: "Online checkout isn't set up yet. Please call 315-773-3758 to order." }, 503);
+  }
+  const cart = await readCart(env, await readJson(request));
+  if (cart.error) return cart.error;
+  const { items, subtotal, ship, fee } = cart;
 
   const pending = await env.DB.prepare(
     `INSERT INTO shop_orders (kind, items, subtotal_cents, fulfillment) VALUES ('shop', ?, ?, ?) RETURNING id`
@@ -393,6 +413,205 @@ async function quickPay(request, env, url) {
     checkout_options: { redirect_url: `${url.origin}/shop.html?paid=WP-${pending.id}` },
   });
   return finishPaymentLink(env, res, pending.id);
+}
+
+// ---------------------------------------------------------------- paying on our page
+
+// What the shop page needs to show Square's card form (all public values)
+function cardForm(env) {
+  if (!squareReady(env) || !env.SQUARE_APPLICATION_ID) return null;
+  return {
+    application_id: env.SQUARE_APPLICATION_ID,
+    location_id: env.SQUARE_LOCATION_ID,
+    sdk: env.SQUARE_ENVIRONMENT === "sandbox"
+      ? "https://sandbox.web.squarecdn.com/v1/square.js" : "https://web.squarecdn.com/v1/square.js",
+  };
+}
+
+// A Square order for a cart: items by catalog id (so Square lowers its stock),
+// shipping as a service charge, taxes from the items' settings in Square, and,
+// when we know the buyer, a pickup or shipment so it shows in Square's Orders.
+function squareOrder(env, ref, cart, buyer) {
+  const order = {
+    location_id: env.SQUARE_LOCATION_ID,
+    reference_id: ref,
+    line_items: cart.items.map(l => ({ catalog_object_id: l.variation_id, quantity: String(l.qty) })),
+    pricing_options: { auto_apply_taxes: true, auto_apply_discounts: true },
+  };
+  if (cart.ship) {
+    order.service_charges = [{
+      name: "Shipping", amount_money: { amount: cart.fee, currency: "USD" },
+      calculation_phase: "SUBTOTAL_PHASE", taxable: false,
+    }];
+  }
+  if (buyer) {
+    const recipient = { display_name: buyer.name, email_address: buyer.email, ...(buyer.phone ? { phone_number: buyer.phone } : {}) };
+    order.fulfillments = [cart.ship
+      ? { type: "SHIPMENT", state: "PROPOSED", shipment_details: { recipient: { ...recipient, address: buyer.address } } }
+      : { type: "PICKUP", state: "PROPOSED", pickup_details: { recipient, schedule_type: "ASAP", note: `Website order ${ref}` } }];
+  }
+  return order;
+}
+
+// Subtotal, shipping, tax and total for the cart, worked out by Square
+async function quote(request, env) {
+  if (!squareReady(env)) return json({ error: "Online checkout isn't set up yet." }, 503);
+  const cart = await readCart(env, await readJson(request));
+  if (cart.error) return cart.error;
+  const r = await squareCall(env, "POST", "/v2/orders/calculate", { order: squareOrder(env, "quote", cart) });
+  if (!r.ok || !r.data.order) {
+    console.error("Square calculate failed", r.status, JSON.stringify(r.data));
+    return json({ error: "We couldn't total your order. Please try again." }, 502);
+  }
+  const o = r.data.order;
+  return json({
+    subtotal_cents: cart.subtotal,
+    shipping_cents: Number(o.total_service_charge_money?.amount) || 0,
+    tax_cents: Number(o.total_tax_money?.amount) || 0,
+    total_cents: Number(o.total_money?.amount) || 0,
+  }, 200, { "Cache-Control": "no-store" });
+}
+
+// The buyer's details from the checkout form, or an error message
+function readBuyer(b, ship) {
+  const t = (v, n = 120) => String(v || "").trim().slice(0, n);
+  const buyer = { name: t(b.name), email: t(b.email), phone: t(b.phone, 30) };
+  if (!buyer.name) return { error: "Please add your name." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer.email)) return { error: "Please add a valid email for your receipt." };
+  if (ship) {
+    const a = b.address || {};
+    buyer.address = {
+      address_line_1: t(a.line1), address_line_2: t(a.line2), locality: t(a.city, 60),
+      administrative_district_level_1: t(a.state, 30), postal_code: t(a.zip, 12), country: "US",
+    };
+    if (!buyer.address.address_line_1 || !buyer.address.locality || !buyer.address.administrative_district_level_1 || !buyer.address.postal_code) {
+      return { error: "Please fill in the whole shipping address." };
+    }
+    if (!buyer.address.address_line_2) delete buyer.address.address_line_2;
+  }
+  return { buyer };
+}
+
+const shipText = (name, a) => a ? [name, a.address_line_1, a.address_line_2,
+  [a.locality, a.administrative_district_level_1, a.postal_code].filter(Boolean).join(" ")].filter(Boolean).join("\n") : null;
+
+// Plain words for Square's card errors
+function cardError(data) {
+  const code = ((data && data.errors) || [])[0]?.code || "";
+  const words = {
+    CARD_DECLINED: "Your card was declined. Please try another card.",
+    GENERIC_DECLINE: "Your card was declined. Please try another card.",
+    INSUFFICIENT_FUNDS: "Your card was declined for insufficient funds.",
+    CVV_FAILURE: "The security code (CVV) didn't match. Please check it and try again.",
+    ADDRESS_VERIFICATION_FAILURE: "The ZIP code didn't match your card. Please check it and try again.",
+    INVALID_EXPIRATION: "The card's expiration date isn't right. Please check it.",
+    INVALID_CARD: "That card number isn't valid. Please check it.",
+    CARD_EXPIRED: "That card has expired. Please use another card.",
+    TRANSACTION_LIMIT: "Your card's limit was reached. Please try another card.",
+    CARD_DECLINED_VERIFICATION_REQUIRED: "Your bank needs to verify this payment. Please try again.",
+  };
+  return words[code] || "The payment didn't go through. Please check your card and try again, or call 315-773-3758.";
+}
+
+// Pay for a cart with the card the customer typed into Square's form on our page
+async function pay(request, env) {
+  if (!cardForm(env)) return json({ error: "Card payments aren't set up yet. Please call 315-773-3758." }, 503);
+  const b = await readJson(request);
+  const sourceId = String(b.source_id || "");
+  if (!sourceId) return json({ error: "Please enter your card details." }, 400);
+  const { buyer, error } = readBuyer(b, b.fulfillment === "ship");
+  if (error) return json({ error }, 400);
+  const cart = await readCart(env, b);
+  if (cart.error) return cart.error;
+
+  const pending = await env.DB.prepare(
+    `INSERT INTO shop_orders (kind, items, subtotal_cents, fulfillment, buyer_name, buyer_email, buyer_phone, ship_to)
+       VALUES ('shop', ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(JSON.stringify(cart.items), cart.subtotal, cart.ship ? "ship" : "pickup", buyer.name, buyer.email,
+         buyer.phone || null, cart.ship ? shipText(buyer.name, buyer.address) : null).first();
+  const ref = `WP-${pending.id}`;
+  const fail = async (status, message) => {
+    await env.DB.prepare(`UPDATE shop_orders SET status = 'failed' WHERE id = ?`).bind(pending.id).run();
+    return json({ error: message }, status);
+  };
+
+  const made = await squareCall(env, "POST", "/v2/orders", {
+    idempotency_key: `wp-order-${pending.id}`, order: squareOrder(env, ref, cart, buyer),
+  });
+  if (!made.ok || !made.data.order) {
+    console.error("Square order failed", made.status, JSON.stringify(made.data));
+    return fail(502, "Checkout couldn't start. Please try again or call 315-773-3758.");
+  }
+  const order = made.data.order;
+  await env.DB.prepare(`UPDATE shop_orders SET square_order_id = ? WHERE id = ?`).bind(order.id, pending.id).run();
+
+  const paid = await squareCall(env, "POST", "/v2/payments", {
+    source_id: sourceId,
+    idempotency_key: `wp-pay-${pending.id}`,
+    amount_money: order.total_money,
+    order_id: order.id,
+    location_id: env.SQUARE_LOCATION_ID,
+    autocomplete: true,
+    reference_id: ref,
+    note: `Website order ${ref} · ${cart.ship ? "Ship" : "Pick up at shop"}`,
+    buyer_email_address: buyer.email,
+    ...(cart.ship ? { shipping_address: buyer.address } : {}),
+    ...(b.verification_token ? { verification_token: String(b.verification_token) } : {}),
+  });
+  const payment = paid.data && paid.data.payment;
+  if (!paid.ok || !payment || !["COMPLETED", "APPROVED"].includes(payment.status)) {
+    console.error("Square payment failed", paid.status, JSON.stringify(paid.data));
+    return fail(402, cardError(paid.data));
+  }
+  await env.DB.prepare(
+    `UPDATE shop_orders SET status = 'paid', paid_at = datetime('now'), square_payment_id = ?, paid_cents = ? WHERE id = ?`
+  ).bind(payment.id, Number(payment.total_money?.amount) || Number(order.total_money?.amount) || null, pending.id).run();
+  await forgetCatalog(env);
+  return json({ ok: true, ref, total_cents: Number(order.total_money?.amount) || 0, receipt_url: payment.receipt_url || null });
+}
+
+// Quick Pay with the card form on our page (invoices, deposits, balances)
+async function quickPayCard(request, env) {
+  if (!cardForm(env)) return json({ error: "Card payments aren't set up yet. Please call 315-773-3758." }, 503);
+  const b = await readJson(request);
+  const cents = Math.round(Number(String(b.amount || "").replace(/[$,\s]/g, "")) * 100);
+  if (!Number.isFinite(cents) || cents < 100) return json({ error: "Enter an amount of at least $1.00." }, 400);
+  if (cents > QUICKPAY_MAX * 100) return json({ error: `For payments over $${QUICKPAY_MAX.toLocaleString()}, please call us.` }, 400);
+  const sourceId = String(b.source_id || "");
+  if (!sourceId) return json({ error: "Please enter your card details." }, 400);
+  const who = String(b.name || "").trim().slice(0, 80);
+  const email = String(b.email || "").trim().slice(0, 120);
+  const forWhat = String(b.reference || "").trim().slice(0, 80);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Please add a valid email for your receipt." }, 400);
+  const title = ["Quick Pay", forWhat, who].filter(Boolean).join(" · ").slice(0, 255);
+
+  const pending = await env.DB.prepare(
+    `INSERT INTO shop_orders (kind, items, subtotal_cents, fulfillment, buyer_name, buyer_email, note)
+       VALUES ('quickpay', ?, ?, 'none', ?, ?, ?) RETURNING id`
+  ).bind(JSON.stringify([{ name: title, qty: 1, price_cents: cents }]), cents, who || null, email || null, forWhat).first();
+  const ref = `WP-${pending.id}`;
+
+  const paid = await squareCall(env, "POST", "/v2/payments", {
+    source_id: sourceId,
+    idempotency_key: `wp-quickpay-${pending.id}`,
+    amount_money: { amount: cents, currency: "USD" },
+    location_id: env.SQUARE_LOCATION_ID,
+    autocomplete: true,
+    reference_id: ref,
+    note: `${title} (${ref})`.slice(0, 500),
+    ...(email ? { buyer_email_address: email } : {}),
+    ...(b.verification_token ? { verification_token: String(b.verification_token) } : {}),
+  });
+  const payment = paid.data && paid.data.payment;
+  if (!paid.ok || !payment || !["COMPLETED", "APPROVED"].includes(payment.status)) {
+    console.error("Square quick pay failed", paid.status, JSON.stringify(paid.data));
+    await env.DB.prepare(`UPDATE shop_orders SET status = 'failed' WHERE id = ?`).bind(pending.id).run();
+    return json({ error: cardError(paid.data) }, 402);
+  }
+  await env.DB.prepare(
+    `UPDATE shop_orders SET status = 'paid', paid_at = datetime('now'), square_payment_id = ?, paid_cents = ? WHERE id = ?`
+  ).bind(payment.id, cents, pending.id).run();
+  return json({ ok: true, ref, receipt_url: payment.receipt_url || null });
 }
 
 async function finishPaymentLink(env, res, id) {
@@ -631,13 +850,22 @@ async function setupStatus(request, env, url) {
       add("category", false, `Couldn't read items from Square: ${e.message}`);
     }
   }
-  add("webhook_key", !!env.SQUARE_WEBHOOK_SIGNATURE_KEY, env.SQUARE_WEBHOOK_SIGNATURE_KEY
-    ? "Square webhook signature key is set."
-    : "Add the webhook signature key (SQUARE_WEBHOOK_SIGNATURE_KEY) so paid orders show up here.");
-  const last = await kvGet(env, "last_webhook");
-  add("webhook_seen", !!last, last
-    ? `Last notice from Square: ${new Date(last.value.at).toISOString().slice(0, 16).replace("T", " ")} UTC (${last.value.type}).`
-    : `No notices from Square yet. Webhook URL: ${env.SQUARE_WEBHOOK_URL || url.origin + "/api/square-webhook"}`);
+  add("card_form", !!env.SQUARE_APPLICATION_ID, env.SQUARE_APPLICATION_ID
+    ? "Customers pay by card right on the shop page."
+    : "Add the Square Application ID (SQUARE_APPLICATION_ID) so customers can pay on the shop page instead of on Square's.");
+  if (env.SQUARE_APPLICATION_ID) {
+    add("webhook_key", true, env.SQUARE_WEBHOOK_SIGNATURE_KEY
+      ? "Square webhook is set (optional with on-page payments)."
+      : "Square webhook: not needed. Payments on the shop page are recorded right away.");
+  } else {
+    add("webhook_key", !!env.SQUARE_WEBHOOK_SIGNATURE_KEY, env.SQUARE_WEBHOOK_SIGNATURE_KEY
+      ? "Square webhook signature key is set."
+      : "Add the webhook signature key (SQUARE_WEBHOOK_SIGNATURE_KEY) so paid orders show up here.");
+    const last = await kvGet(env, "last_webhook");
+    add("webhook_seen", !!last, last
+      ? `Last notice from Square: ${new Date(last.value.at).toISOString().slice(0, 16).replace("T", " ")} UTC (${last.value.type}).`
+      : `No notices from Square yet. Webhook URL: ${env.SQUARE_WEBHOOK_URL || url.origin + "/api/square-webhook"}`);
+  }
   const fee = shippingCents(env);
   add("shipping", true, fee === null ? "Shop orders are pick up only (set SHIPPING_FEE to offer shipping)."
                                      : `Shipping is offered for $${(fee / 100).toFixed(2)}.`);

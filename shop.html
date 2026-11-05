@@ -168,6 +168,31 @@
   .cart-foot .btn { width: 100%; margin-top: 14px; }
   .cart-err { min-height: 1.2em; margin-top: 8px; color: #e59a90; font-size: 0.88rem; }
   .cart-empty { color: var(--muted); padding: 30px 0; text-align: center; }
+  .cart-in[hidden] { display: none; }
+  .cart-head .back { border: 0; background: none; color: var(--pink); font-weight: 700; white-space: nowrap; }
+  .pay-view .cart-head h2 { font-size: 1.6rem; }
+  .cart-head .x { width: 40px; height: 40px; border: 2px solid var(--pink); border-radius: 50%; background: none; color: var(--pink); font-size: 1.3rem; }
+  .pay-scroll { flex: 1; overflow: auto; padding-right: 2px; }
+  .pay-view h3 { margin: 18px 0 10px; font-size: 1.25rem; }
+  .pay-view h3:first-child { margin-top: 0; }
+  .pf { margin-bottom: 10px; }
+  .pf.two { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
+  .pf.three { display: grid; grid-template-columns: 1.4fr 0.7fr 0.9fr; gap: 10px; }
+  .pf label { display: block; margin-bottom: 4px; font: 700 0.62rem var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .pf input { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
+  .pf input:focus { outline: none; border-color: var(--pink); }
+  .pf input.bad { border-color: #e59a90; }
+  .sum { margin-top: 16px; padding: 12px 14px; border: 1px solid var(--hair); border-radius: 12px; background: var(--panel); }
+  .sum div { display: flex; justify-content: space-between; padding: 3px 0; font-size: 0.95rem; }
+  .sum .grand { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--hair); font: 600 1.3rem var(--serif); }
+  .card-box { min-height: 90px; }
+  .secure { margin-top: 6px; color: var(--muted); font-size: 0.8rem; }
+  .done-view p { margin-top: 12px; }
+  .done-view .ref { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 8px; background: var(--pink); color: #000; font-weight: 700; letter-spacing: 0.1em; }
+  .done-view a { color: var(--pink); }
+  .qp-card { grid-column: 1 / -1; margin-top: 8px; padding: 14px; border: 1px solid var(--hair); border-radius: 12px; background: var(--bg-2); }
+  .qp-card[hidden] { display: none; }
+  .qp-card .row { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
 
   .custom {
     max-width: 900px;
@@ -188,6 +213,7 @@
     .quickpay .btn { margin: 4px 0 0; }
     .qp-form { grid-template-columns: 1fr; width: 100%; margin: 4px 0 0; text-align: left; }
     .cart-btn { right: 12px; bottom: 12px; }
+    .pf.two, .pf.three { grid-template-columns: 1fr; }
     .item .frame { padding: 6px; }
     .item .mat { padding: 7px; }
     .info h3 { font-size: 1.2rem; }
@@ -248,7 +274,7 @@
 
 <button class="cart-btn" id="cart-btn" type="button" hidden>Cart <span class="n" id="cart-n">0</span></button>
 <dialog class="cart" id="cart" aria-label="Your cart">
-  <div class="cart-in">
+  <div class="cart-in" id="cart-view">
     <div class="cart-head"><h2>Your Cart</h2><button type="button" id="cart-close" aria-label="Close cart">×</button></div>
     <div class="lines" id="lines"></div>
     <div class="cart-foot" id="cart-foot">
@@ -257,6 +283,46 @@
       <button class="btn" type="button" id="checkout">Check Out Securely</button>
       <p class="cart-err" id="cart-err" role="alert"></p>
     </div>
+  </div>
+
+  <!-- Paying on our page with Square's card form -->
+  <form class="cart-in pay-view" id="pay-view" hidden novalidate>
+    <div class="cart-head">
+      <button type="button" class="back" id="pay-back">← Cart</button>
+      <h2>Checkout</h2>
+      <button type="button" class="x" id="pay-close" aria-label="Close">×</button>
+    </div>
+    <div class="pay-scroll">
+      <h3>Your details</h3>
+      <div class="pf"><label for="p-name">Name</label><input id="p-name" autocomplete="name" required></div>
+      <div class="pf two">
+        <div><label for="p-email">Email (for your receipt)</label><input id="p-email" type="email" autocomplete="email" required></div>
+        <div><label for="p-phone">Phone</label><input id="p-phone" type="tel" autocomplete="tel"></div>
+      </div>
+      <div id="p-ship" hidden>
+        <h3>Ship to</h3>
+        <div class="pf"><label for="p-line1">Street address</label><input id="p-line1" autocomplete="shipping address-line1"></div>
+        <div class="pf"><label for="p-line2">Apt, suite (optional)</label><input id="p-line2" autocomplete="shipping address-line2"></div>
+        <div class="pf three">
+          <div><label for="p-city">City</label><input id="p-city" autocomplete="shipping address-level2"></div>
+          <div><label for="p-state">State</label><input id="p-state" autocomplete="shipping address-level1" maxlength="20"></div>
+          <div><label for="p-zip">ZIP</label><input id="p-zip" autocomplete="shipping postal-code" inputmode="numeric" maxlength="10"></div>
+        </div>
+      </div>
+      <div class="sum" id="p-sum"><p class="hint">Working out your total…</p></div>
+      <h3>Card</h3>
+      <div id="p-card" class="card-box"><p class="hint">Loading secure card form…</p></div>
+      <p class="secure">Secure payment by Square. Your card number goes straight to Square, never to our website.</p>
+    </div>
+    <div class="cart-foot">
+      <button class="btn" type="submit" id="p-pay">Pay</button>
+      <p class="cart-err" id="p-err" role="alert"></p>
+    </div>
+  </form>
+
+  <div class="cart-in done-view" id="done-view" hidden>
+    <div class="cart-head"><h2>Thank you!</h2><button type="button" class="x" id="done-close" aria-label="Close">×</button></div>
+    <div id="done-body"></div>
   </div>
 </dialog>
 
@@ -307,12 +373,30 @@
         <div><label for="qp-ref">Invoice or order #</label><input id="qp-ref" maxlength="80" placeholder="Optional"></div>
         <div><label for="qp-name">Your name</label><input id="qp-name" maxlength="80" autocomplete="name"></div>
         <button class="btn" type="submit">Pay Now</button>
+        <div class="qp-card" id="qp-card" hidden>
+          <div class="pf"><label for="qp-email">Email (for your receipt)</label><input id="qp-email" type="email" autocomplete="email"></div>
+          <div id="qp-card-box" class="card-box"></div>
+          <div class="row"><span class="secure">Secure payment by Square.</span><button class="btn" type="button" id="qp-pay">Pay</button></div>
+        </div>
         <p class="qp-msg" id="qp-msg" role="alert"></p>
       </form>`);
+    let qpCard = null;
+    const amountCents = () => Math.round(Number($("qp-amount").value.replace(/[$,\s]/g, "")) * 100);
     $("qp-form").onsubmit = async e => {
       e.preventDefault();
-      const b = e.target.querySelector("button");
+      const b = e.target.querySelector('button[type="submit"]');
       $("qp-msg").textContent = "";
+      if (!(amountCents() >= 100)) { $("qp-msg").textContent = "Enter an amount of at least $1.00."; return; }
+      if (cardCfg) {
+        // Pay right here: show Square's card form under the amount
+        $("qp-card").hidden = false;
+        $("qp-pay").textContent = "Pay " + money(amountCents());
+        if (!qpCard) {
+          try { qpCard = await makeCard("#qp-card-box"); }
+          catch (err) { $("qp-msg").textContent = err.message; }
+        }
+        return;
+      }
       b.disabled = true; b.textContent = "One moment…";
       try {
         location.href = await post("/api/quickpay", { amount: $("qp-amount").value, reference: $("qp-ref").value, name: $("qp-name").value });
@@ -321,6 +405,71 @@
         b.disabled = false; b.textContent = "Pay Now";
       }
     };
+    $("qp-amount").oninput = () => { if (!$("qp-card").hidden) $("qp-pay").textContent = "Pay " + money(amountCents() || 0); };
+    if (cardCfg) $("qp-pay").onclick = async () => {
+      const b = $("qp-pay");
+      $("qp-msg").textContent = "";
+      b.disabled = true; b.textContent = "Paying…";
+      try {
+        const source_id = await tokenize(qpCard);
+        const r = await postJson("/api/quickpay/pay", {
+          amount: $("qp-amount").value, reference: $("qp-ref").value, name: $("qp-name").value,
+          email: $("qp-email").value, source_id,
+        });
+        $("qp-form").innerHTML = `<p class="qp-done"><strong>Thank you, your payment went through!</strong> Reference ${esc(r.ref)}.
+          ${r.receipt_url ? `<a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">View your receipt</a>` : ""}</p>`;
+      } catch (err) {
+        $("qp-msg").textContent = err.message;
+        b.disabled = false; b.textContent = "Pay " + money(amountCents() || 0);
+      }
+    };
+  }
+
+  // ---------- Square's card form (loads only when someone checks out) ----------
+  let cardCfg = null;          // from /api/products when on-page card payments are set up
+  let sqPayments = null;
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src; s.onload = resolve;
+      s.onerror = () => reject(new Error("The secure card form couldn't load. Please refresh and try again."));
+      document.head.appendChild(s);
+    });
+  }
+  async function makeCard(selector) {
+    if (!sqPayments) {
+      if (!window.Square) await loadScript(cardCfg.sdk);
+      sqPayments = window.Square.payments(cardCfg.application_id, cardCfg.location_id);
+    }
+    const box = document.querySelector(selector);
+    box.innerHTML = "";
+    let card;
+    try {
+      card = await sqPayments.card({ style: {
+        input: { backgroundColor: "#141112", color: "#f6eef0", fontSize: "16px" },
+        "input::placeholder": { color: "#bba7ae" },
+        ".input-container": { borderColor: "rgba(231, 163, 184, 0.35)", borderRadius: "10px" },
+        ".input-container.is-focus": { borderColor: "#e7a3b8" },
+        ".message-text": { color: "#bba7ae" },
+        ".message-icon": { color: "#bba7ae" },
+      } });
+    } catch (e) {
+      card = await sqPayments.card();      // Square's own look if the styling isn't accepted
+    }
+    await card.attach(selector);
+    return card;
+  }
+  async function tokenize(card) {
+    if (!card) throw new Error("The card form isn't ready yet. Please wait a moment.");
+    const r = await card.tokenize();
+    if (r.status === "OK") return r.token;
+    throw new Error((r.errors && r.errors[0] && r.errors[0].message) || "Please check your card details.");
+  }
+  async function postJson(path, body) {
+    const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+    return data;
   }
 
   async function post(path, body) {
@@ -465,7 +614,7 @@
     cart = cart.filter(l => l.variation_id !== id);
     renderCart();
   };
-  $("cart-btn").onclick = () => { renderCart(); $("cart").showModal(); };
+  $("cart-btn").onclick = () => { showView("cart-view"); renderCart(); $("cart").showModal(); };
   $("cart-close").onclick = () => { $("cart").close(); renderCart(); };
   $("cart").onclick = e => { if (e.target === $("cart")) { $("cart").close(); renderCart(); } };
 
@@ -475,16 +624,88 @@
       ${shippingFee !== null ? `<label><input type="radio" name="ful" value="ship"> Ship it to me (+${money(shippingFee)})</label>` : ""}`;
   }
 
+  const fulfillment = () => { const f = document.querySelector('input[name="ful"]:checked'); return f ? f.value : "pickup"; };
+  const showView = id => ["cart-view", "pay-view", "done-view"].forEach(v => { $(v).hidden = v !== id; });
+
   $("checkout").onclick = async () => {
     const b = $("checkout");
     $("cart-err").textContent = "";
+    if (cardCfg) { openPay(); return; }
     b.disabled = true; b.textContent = "One moment…";
     try {
-      const ful = document.querySelector('input[name="ful"]:checked');
-      location.href = await post("/api/checkout", { items: cart, fulfillment: ful ? ful.value : "pickup" });
+      location.href = await post("/api/checkout", { items: cart, fulfillment: fulfillment() });
     } catch (err) {
       $("cart-err").textContent = err.message;
       b.disabled = false; b.textContent = "Check Out Securely";
+    }
+  };
+
+  // ---------- Paying on our page ----------
+  let payCard = null, quoteTotal = 0;
+  async function openPay() {
+    showView("pay-view");
+    $("p-err").textContent = "";
+    $("p-ship").hidden = fulfillment() !== "ship";
+    $("p-pay").disabled = true;
+    $("p-pay").textContent = "Pay";
+    $("p-sum").innerHTML = '<p class="hint">Working out your total…</p>';
+    try {
+      const q = await postJson("/api/quote", { items: cart, fulfillment: fulfillment() });
+      quoteTotal = q.total_cents;
+      $("p-sum").innerHTML = `
+        <div><span>Subtotal</span><span>${money(q.subtotal_cents)}</span></div>
+        ${q.shipping_cents ? `<div><span>Shipping</span><span>${money(q.shipping_cents)}</span></div>` : `<div><span>Pick up at our shop</span><span>Free</span></div>`}
+        <div><span>Sales tax</span><span>${money(q.tax_cents)}</span></div>
+        <div class="grand"><span>Total</span><span>${money(q.total_cents)}</span></div>`;
+      $("p-pay").textContent = "Pay " + money(q.total_cents);
+      $("p-pay").disabled = false;
+    } catch (err) {
+      $("p-sum").innerHTML = "";
+      $("p-err").textContent = err.message;
+    }
+    if (!payCard) {
+      try { payCard = await makeCard("#p-card"); }
+      catch (err) { $("p-card").innerHTML = ""; $("p-err").textContent = err.message; $("p-pay").disabled = true; }
+    }
+  }
+  $("pay-back").onclick = () => { showView("cart-view"); renderCart(); };
+  $("pay-close").onclick = () => { $("cart").close(); showView("cart-view"); renderCart(); };
+  $("done-close").onclick = () => { $("cart").close(); showView("cart-view"); renderCart(); };
+
+  $("pay-view").onsubmit = async e => {
+    e.preventDefault();
+    const ship = fulfillment() === "ship";
+    const need = ["p-name", "p-email", ...(ship ? ["p-line1", "p-city", "p-state", "p-zip"] : [])];
+    let missing = false;
+    for (const id of need) {
+      const el = $(id), bad = !el.value.trim() || (el.type === "email" && !el.checkValidity());
+      el.classList.toggle("bad", bad);
+      if (bad && !missing) { el.focus(); missing = true; }
+    }
+    if (missing) { $("p-err").textContent = "Please fill in the highlighted boxes."; return; }
+    const b = $("p-pay");
+    $("p-err").textContent = "";
+    b.disabled = true; b.textContent = "Paying…";
+    try {
+      const source_id = await tokenize(payCard);
+      const r = await postJson("/api/pay", {
+        items: cart, fulfillment: fulfillment(), source_id,
+        name: $("p-name").value, email: $("p-email").value, phone: $("p-phone").value,
+        address: ship ? { line1: $("p-line1").value, line2: $("p-line2").value, city: $("p-city").value, state: $("p-state").value, zip: $("p-zip").value } : null,
+      });
+      saveCart([]); cart = [];
+      $("done-body").innerHTML = `
+        <span class="ref">${esc(r.ref)}</span>
+        <p>Your order is paid. Keep your order number handy.</p>
+        <p>${ship ? "We'll ship it out and email you when it's on the way." : "We'll let you know when it's ready to pick up at 50 Public Square, Suite E1."}</p>
+        ${r.receipt_url ? `<p><a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">View and save your receipt</a></p>` : ""}`;
+      showView("done-view");
+      renderCart();
+    } catch (err) {
+      $("p-err").textContent = err.message;
+      b.disabled = false; b.textContent = "Pay " + money(quoteTotal);
+      // A changed cart (sold out, price change) needs a fresh total
+      if (/left of|sold out|isn't available/.test(err.message)) openPay();
     }
   };
 
@@ -544,6 +765,7 @@
       } catch (e) {}
     }
     const live = !!(data && data.configured);
+    cardCfg = live && data.card ? data.card : null;
     setupQuickPay(live);
     if (live && data.products.length) {
       shippingFee = data.shipping_fee_cents;

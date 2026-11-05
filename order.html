@@ -7,9 +7,8 @@
 <meta name="description" content="Start a custom order with The Whimsical Pig: shadow boxes, flag cases, guidons, embroidery, framing and awards.">
 <meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.css">
 <style>
   .shell { padding-top: 56px; padding-bottom: 96px; }
@@ -55,7 +54,7 @@
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 22px;
   }
-  .choice { position: relative; display: block; cursor: pointer; }
+  .choice { position: relative; display: block; }
   .choice input { position: absolute; opacity: 0; pointer-events: none; }
   .choice .card {
     height: 100%;
@@ -133,7 +132,6 @@
     padding: 8px 14px;
     border: 1px solid rgba(242, 236, 226, 0.18);
     font-size: 0.92rem;
-    cursor: pointer;
     transition: background .15s ease, border-color .15s ease, color .15s ease;
   }
   .opt span:hover { border-color: var(--brass); }
@@ -149,7 +147,6 @@
     border: 1px dashed var(--rule);
     background: rgba(198, 161, 91, 0.04);
     text-align: center;
-    cursor: pointer;
     transition: background .15s ease, border-color .15s ease;
   }
   .drop:hover, .drop.over { background: rgba(198, 161, 91, 0.09); border-color: var(--brass); }
@@ -178,7 +175,6 @@
     color: var(--cream);
     font-size: 0.9rem;
     line-height: 22px;
-    cursor: pointer;
   }
 
   /* Review: an order slip on cream paper */
@@ -203,7 +199,6 @@
     font: 700 0.68rem var(--sans);
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    cursor: pointer;
   }
   .review .edit:hover { text-decoration: underline; }
 
@@ -536,7 +531,8 @@
         <div class="txt"><h3>${esc(title)}</h3>${text ? `<p>${esc(text)}</p>` : ""}</div>
       </div>`;
     const im = label.querySelector("img");
-    if (im) loadImg(im, "", src);
+    if (im && src.endsWith("-sm.webp")) useThumbs(im, src.slice(12, -8), "(max-width: 640px) 45vw, 260px");
+    else if (im) loadImg(im, "", src);
     return label;
   }
 
@@ -558,7 +554,7 @@
     box.innerHTML = "";
     if (!t) return;
     for (const ex of t.examples) {
-      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, src: photoOf(ex, t) }));
+      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, src: photoOf(ex) }));
     }
     box.appendChild(choiceCard({ name: "example", value: "Something different", title: "Something different", text: "Describe it in the next step", plain: true }));
     box.onchange = () => { saveDraft(); setTimeout(() => go(2), 180); };

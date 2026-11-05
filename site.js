@@ -21,6 +21,12 @@ const WORK = [
   ...Array.from({ length: 6 }, (_, i) => ["patches_0" + (i + 1), "Patches", "Custom patch"]),
 ];
 const workPhoto = (name, small = true) => "images/work/" + name + (small ? "-sm" : "") + ".webp";
+// Lets the browser pick the 480px or 640px copy to suit the tile and the screen
+function useThumbs(img, name, sizes) {
+  img.sizes = sizes;
+  img.srcset = `images/work/${name}-xs.webp 480w, images/work/${name}-sm.webp 640w`;
+  img.src = workPhoto(name);
+}
 const workItem = name => WORK.find(w => w[0] === name);
 
 const liveImage = file => SITE + "images/" + file;
@@ -53,7 +59,7 @@ function renderGallery(container, items = WORK) {
     a.querySelector(".cap").textContent = cap;
     const im = a.querySelector("img");
     im.alt = cap;
-    im.src = workPhoto(name);
+    useThumbs(im, name, "(max-width: 640px) 50vw, (max-width: 900px) 33vw, 280px");
     a.onclick = e => { e.preventDefault(); openLightbox(a); };
     container.appendChild(a);
     return a;
@@ -86,7 +92,8 @@ function openLightbox(tile) {
   }
   box.current = tile;
   const img = box.querySelector("img");
-  img.src = tile.querySelector("img").src;   // small photo shows instantly...
+  img.removeAttribute("srcset");
+  img.src = tile.querySelector("img").currentSrc;   // small photo shows instantly...
   img.src = tile.href;                        // ...then the big one replaces it
   img.alt = tile.querySelector(".cap").textContent;
   box.querySelector("figcaption").textContent = img.alt;
@@ -128,7 +135,7 @@ function buildHeader(current) {
     <div class="utility">
       <div class="wrap">
         <span><a href="${SITE}location.html">50 Public Square, Suite E1 · Watertown, NY</a></span>
-        <span><span class="hours">Mon – Fri 9:30am – 5:30pm<span class="sep">|</span></span><a href="tel:315-773-3758">315-773-3758</a></span>
+        <span><span class="hours">Mon – Fri 9am – 5pm<span class="sep">|</span></span><a href="tel:315-773-3758">315-773-3758</a></span>
       </div>
     </div>`);
   el.className = "site";
@@ -141,7 +148,10 @@ function buildHeader(current) {
           <span class="brand-tag">Military &amp; Custom Framing</span>
         </span>
       </a>
-      <nav class="main" aria-label="Main">
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="main-nav">
+        <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>Menu
+      </button>
+      <nav class="main" id="main-nav" aria-label="Main">
         <ul>
           ${link("index.html", "Home", "home")}
           ${link("story.html", "Our Story", "story")}
@@ -155,6 +165,13 @@ function buildHeader(current) {
         </ul>
       </nav>
     </div>`;
+
+  // Phones: the links fold into a Menu button
+  const btn = el.querySelector(".menu-btn");
+  const setOpen = open => { el.classList.toggle("open", open); btn.setAttribute("aria-expanded", open); };
+  btn.onclick = () => setOpen(!el.classList.contains("open"));
+  el.querySelector("nav").addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && el.classList.contains("open")) { setOpen(false); btn.focus(); } });
 
 }
 
@@ -184,7 +201,7 @@ function buildFooter() {
         </div>
         <div>
           <h3>Hours</h3>
-          <p>Monday – Friday<br>9:30am – 5:30pm<br>Saturday &amp; Sunday closed</p>
+          <p>Monday – Friday<br>9am – 5pm<br>Saturday &amp; Sunday closed</p>
         </div>
         <div>
           <h3>Contact</h3>

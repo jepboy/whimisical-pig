@@ -46,7 +46,7 @@ window.ORDER = {
         { id: "framed-guidon-flag", title: "Framed Guidon or Flag", photo: "military-shadow-boxes_03", text: "Guidon or flag with rank, crest, coins & a plate" },
         { id: "snowshoe", title: "Snowshoe", photo: "military-shadow-boxes_17", text: "The 10th Mountain classic" },
         { id: "wooden-plaque", title: "Wooden Plaque", photo: "military-shadow-boxes_18", text: "Engraved plate on wood, with your items" },
-        { id: "slate-award", title: "Slate Award", live: "button%2010.jpg", text: "Your image printed on slate" },
+        { id: "slate-award", title: "Slate Award", text: "Your image printed on slate" },
         { id: "shadow-box", title: "Shadow Box", photo: "military-shadow-boxes_08", text: "Flag, medals, ribbons, rank & photos" },
       ],
       bring: [
@@ -125,11 +125,11 @@ window.ORDER = {
       id: "award",
       title: "Plaques & Engraving",
       blurb: "Engraved plates, award plaques, league & race awards",
-      live: "button%2018.jpg",
+      photo: "military-shadow-boxes_18",
       examples: [
-        { id: "engraved-plates", title: "Engraved Plates", live: "button%2019.jpg", text: "Name plates and data plates" },
-        { id: "award-plaque", title: "Award Plaque", live: "button%2018.jpg", text: "Appreciation, retirement & recognition" },
-        { id: "league-awards", title: "League & Race Awards", live: "button%2018.jpg", text: "A set for your event or season" },
+        { id: "engraved-plates", title: "Engraved Plates", text: "Name plates and data plates" },
+        { id: "award-plaque", title: "Award Plaque", text: "Appreciation, retirement & recognition" },
+        { id: "league-awards", title: "League & Race Awards", text: "A set for your event or season" },
       ],
       bring: [
         "The exact wording for each plate or award",
@@ -149,10 +149,10 @@ window.ORDER = {
       id: "guidon",
       title: "Guidons",
       blurb: "Regulation & non-regulation guidons",
-      live: "button%205.jpg",
+      photo: "military-shadow-boxes_13",
       examples: [
-        { id: "regulation-guidon", title: "Regulation Guidon", live: "button%205.jpg", text: "Made to regulation spec" },
-        { id: "non-regulation-guidon", title: "Non-Regulation Guidon", live: "button%2020.jpg", text: "Your custom design & colors" },
+        { id: "regulation-guidon", title: "Regulation Guidon", photo: "military-shadow-boxes_13", text: "Made to regulation spec" },
+        { id: "non-regulation-guidon", title: "Non-Regulation Guidon", photo: "military-shadow-boxes_09", text: "Your custom design & colors" },
       ],
       bring: [
         "Unit designation spelled exactly as it should appear",
@@ -261,7 +261,7 @@ window.ORDER = {
       id: "other",
       title: "Something Else",
       blurb: "Gifts, slate, tumblers, prints & ideas",
-      live: "button%207.jpg",
+      photo: "shop_04",
       examples: [],
       bring: ["Photos or examples of what you have in mind"],
       questions: [

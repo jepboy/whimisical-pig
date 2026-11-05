@@ -7,9 +7,8 @@
 <meta name="description" content="The Whimsical Pig is a family owned and operated shop on Public Square in Watertown, New York, since 2003.">
 <meta name="theme-color" content="#141112">
 <link rel="icon" href="images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.css">
 <style>
   .intro { position: relative; padding: 64px 0 110px; text-align: center; overflow: hidden; }
@@ -52,8 +51,6 @@
   .facts {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    border-top: 2px solid #000;
-    border-bottom: 2px solid #000;
   }
   .facts div { padding: 34px 24px; text-align: center; }
   .facts div + div { border-left: 1px solid rgba(0, 0, 0, 0.15); }
@@ -122,7 +119,7 @@
       <div>
         <span class="eyebrow">Family owned &amp; operated</span>
         <h2>Downtown on Public Square</h2>
-        <p><strong>The Whimsical Pig</strong> is a family owned and operated shop on Public Square in downtown Watertown, New York. We've been here since 2003, and four generations of our family have been part of the story.</p>
+        <p><strong>The Whimsical Pig</strong> is a family owned and operated shop on Public Square in downtown Watertown, New York. We've been here since 2003, and three generations of our family have been part of the story.</p>
         <p>Our specialty is <strong>military framing</strong>: shadow boxes, flag cases, guidons and battalion spreads that honor service members, retirees and the families who love them. We also do custom framing for art and keepsakes, embroidery and printing, awards and plaques, and personalized gifts.</p>
         <p>And yes, there's a pig. A little whimsy goes a long way, even alongside the most meaningful pieces we make. Our goal is simple: make every order feel <em>“too easy.”</em></p>
       </div>
@@ -133,7 +130,7 @@
     <div class="wrap">
       <div class="facts">
         <div><strong>2003</strong><span>Family owned since</span></div>
-        <div><strong>4</strong><span>Generations of family</span></div>
+        <div><strong>3</strong><span>Generations of family</span></div>
         <div><strong>1</strong><span>Shop on Public Square</span></div>
       </div>
     </div>
@@ -179,7 +176,7 @@
     <div class="wrap">
       <img class="flying-pig" src="images/flying-pig.webp" alt="">
       <h2>Come Say Hello</h2>
-      <p>50 Public Square, Suite E1, Watertown, New York. Open Monday – Friday, 9:30am – 5:30pm.</p>
+      <p>50 Public Square, Suite E1, Watertown, New York. Open Monday – Friday, 9am – 5pm.</p>
       <div class="row">
         <a class="btn" href="order.html">Start an Order</a>
         <a class="btn ghost" href="https://www.thewhimsicalpig.com/location.html">Get Directions</a>

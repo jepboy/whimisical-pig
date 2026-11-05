@@ -1,0 +1,13 @@
+# Browser caching for the website (Cloudflare reads this file; it isn't served).
+# Pages, CSS and JS are checked for changes on every visit, so updates show right away.
+# Photos are kept for a week; fonts never change.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/images/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

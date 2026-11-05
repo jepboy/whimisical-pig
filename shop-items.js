@@ -7,8 +7,8 @@
 //  For each item:
 //    name     what the customer sees
 //    price    e.g. "$45.00" (leave "" to hide the price)
-//    image    a photo in the images/shop/ folder, e.g. "images/shop/snowshoes.jpg"
-//             (leave "" to use the photo from the current website)
+//    image    a photo on this site, e.g. "images/work/military-shadow-boxes_17-sm.webp"
+//             (leave "" for a plain placeholder)
 //    note     one short line, e.g. "Ready to ship" or "Choose your unit"
 //    buyUrl   the checkout link from Square or Stripe (see README).
 //             Leave "" and the button becomes "Call to order".
@@ -27,8 +27,7 @@ window.SHOP = {
     {
       name: "10th Mountain Snowshoes",
       price: "",
-      image: "",
-      live: "button%2011.jpg",
+      image: "images/work/military-shadow-boxes_17-sm.webp",
       note: "Ready-made",
       buyUrl: "",
       category: "Military",
@@ -37,7 +36,6 @@ window.SHOP = {
       name: "Evident Truths Products",
       price: "",
       image: "",
-      live: "button%20013.png",
       note: "Ready-made",
       buyUrl: "",
       category: "Gifts",
@@ -46,7 +44,6 @@ window.SHOP = {
       name: "Sublimated Image on Slate",
       price: "",
       image: "",
-      live: "button%2010.jpg",
       note: "Send us your photo after checkout",
       buyUrl: "",
       category: "Gifts",
@@ -55,7 +52,6 @@ window.SHOP = {
       name: "Sublimated Plate on Wooden Plaque",
       price: "",
       image: "",
-      live: "button%2019.jpg",
       note: "Send us your photo after checkout",
       buyUrl: "",
       category: "Gifts",
@@ -64,7 +60,6 @@ window.SHOP = {
       name: "Masonic Items",
       price: "",
       image: "",
-      live: "button%2015.png",
       note: "Ready-made",
       buyUrl: "",
       category: "Gifts",
@@ -73,7 +68,6 @@ window.SHOP = {
       name: "Firemen, EMT & LEO Items",
       price: "",
       image: "",
-      live: "button%20014.png",
       note: "Ready-made",
       buyUrl: "",
       category: "First Responders",

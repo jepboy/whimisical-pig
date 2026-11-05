@@ -144,13 +144,14 @@ photos of those, add them to `images/work/` and set `photo:` instead.
 
 ## Photos of our work
 
-All shop photos live in `images/work/`. Each one has two files: a full size
-`<name>.webp` (shown in the pop-up viewer) and a small `<name>-sm.webp` (shown on
-the page). The list of photos, their groups and captions is `WORK` at the top of
+All shop photos live in `images/work/`. Each one has three files: a full size
+`<name>.webp` (shown in the pop-up viewer), and two small copies, `<name>-sm.webp`
+(640px) and `<name>-xs.webp` (480px). The browser picks whichever small copy suits
+the screen. The list of photos, their groups and captions is `WORK` at the top of
 `site.js`. The groups become the filter buttons on the Our Work page.
 
-To add a photo: save both sizes in `images/work/` (about 1400px and 640px wide
-WebP), then add a line to `WORK` with the file name, group and caption. The home
+To add a photo: save all three sizes in `images/work/` (about 1400px, 640px and
+480px on the long side, WebP), then add a line to `WORK` with the file name, group and caption. The home
 page slideshow, specialties and preview pick their photos by name in
 `index.html`; Our Story and Visit pick shop photos the same way.
 
@@ -162,6 +163,14 @@ painting on Our Story). White backgrounds were made transparent.
 
 `images/logo-original.png` is the original logo file. `images/logo.png` is the same
 logo with the black background around it made transparent; the site uses that one.
+
+## Speed
+
+- Fonts are hosted in `fonts/` (no trip to Google), and the two main ones are preloaded.
+- `_headers` tells browsers to keep photos for a week and fonts for a year. Pages, CSS
+  and JS are checked on every visit, so changes show up right away.
+- Photos below the first screen load only when scrolled to, and the home slideshow
+  loads each photo just before it's shown.
 
 ## Downloading the current site into `original/`
 

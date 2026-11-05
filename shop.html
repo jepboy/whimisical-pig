@@ -7,9 +7,8 @@
 <meta name="description" content="Shop ready-made pieces from The Whimsical Pig, or pay an invoice or deposit online.">
 <meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.css">
 <style>
   .shop-body { padding: 56px 24px 96px; }
@@ -58,7 +57,6 @@
     font: 700 0.74rem var(--sans);
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    cursor: pointer;
   }
   .filters button:hover { color: var(--cream); }
   .filters button[aria-pressed="true"] { color: var(--brass); border-bottom-color: var(--brass); }
@@ -106,7 +104,7 @@
   .info .left.few { color: var(--pink); font-weight: 700; }
   .buy { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
   .buy select {
-    padding: 0 10px; border: 1px solid var(--rule); background: var(--bg); color: var(--cream); cursor: pointer;
+    padding: 0 10px; border: 1px solid var(--rule); background: var(--bg); color: var(--cream);
   }
   .info .err { min-height: 1.2em; margin-top: 8px; color: #e59a90; font-size: 0.88rem; }
   .thanks {
@@ -127,7 +125,7 @@
 
   .opt-select {
     margin-top: 12px; padding: 9px 12px; min-width: 160px; border: 1px solid var(--rule); border-radius: 10px;
-    background: var(--bg); color: var(--cream); cursor: pointer;
+    background: var(--bg); color: var(--cream);
   }
 
   /* Cart */
@@ -135,7 +133,7 @@
     position: fixed; right: 20px; bottom: 20px; z-index: 40;
     display: flex; align-items: center; gap: 10px; padding: 13px 20px;
     border: 2px solid #000; border-radius: 999px; background: var(--pink); color: #000;
-    font: 700 0.78rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+    font: 700 0.78rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   }
   .cart-btn[hidden] { display: none; }
@@ -150,7 +148,7 @@
   .cart-in { display: flex; flex-direction: column; height: 100%; padding: 26px 24px; }
   .cart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
   .cart-head h2 { font-size: 1.9rem; }
-  .cart-head button { width: 40px; height: 40px; border: 2px solid var(--pink); border-radius: 50%; background: none; color: var(--pink); font-size: 1.3rem; cursor: pointer; }
+  .cart-head button { width: 40px; height: 40px; border: 2px solid var(--pink); border-radius: 50%; background: none; color: var(--pink); font-size: 1.3rem; }
   .lines { flex: 1; overflow: auto; display: grid; align-content: start; gap: 12px; }
   .line { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--hair); }
   .line .thumb { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; background: #2a2420; }
@@ -159,11 +157,11 @@
   .line .sub { color: var(--muted); font-size: 0.85rem; }
   .line .ctl { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
   .line select { padding: 4px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); }
-  .line .rm { border: 0; background: none; color: var(--pink); font-size: 0.82rem; text-decoration: underline; cursor: pointer; }
+  .line .rm { border: 0; background: none; color: var(--pink); font-size: 0.82rem; text-decoration: underline; }
   .line .amt { font: 600 1.15rem var(--serif); color: var(--brass-soft); }
   .cart-foot { padding-top: 16px; border-top: 1px solid var(--rule); }
   .ful { display: grid; gap: 8px; margin-bottom: 14px; }
-  .ful label { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; cursor: pointer; }
+  .ful label { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; }
   .ful input { accent-color: #e7a3b8; }
   .total { display: flex; justify-content: space-between; font: 600 1.35rem var(--serif); }
   .total small { display: block; font: 400 0.8rem var(--sans); color: var(--muted); }

@@ -7,9 +7,8 @@
 <meta name="description" content="Military framing, shadow boxes, guidons, custom framing, embroidery, printing, awards and gifts from The Whimsical Pig in Watertown, NY.">
 <meta name="theme-color" content="#141112">
 <link rel="icon" href="images/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="site.css">
 <style>
   .filters {
@@ -28,7 +27,6 @@
     font: 700 0.72rem var(--sans);
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    cursor: pointer;
   }
   .filters button:hover { background: rgba(231, 163, 184, 0.12); }
   .filters button[aria-pressed="true"] { background: var(--pink); color: #000; border-color: var(--pink); }

@@ -28,6 +28,10 @@ window.SETTINGS = {
       a: "Fill out our Start an Order form. It walks you through everything we need, including photos of your items. Have a question first? Email us at {email}.",
     },
     {
+      q: "Do you design logos and merch?",
+      a: "Yes. We design logos, shirt and event designs in-house, and businesses and events can become year-round merch partners with 10% off their merch. See our Design & Merch page or email us at {email}.",
+    },
+    {
       q: "How long will my order take?",
       a: "Every piece is different. We'll give you an estimated completion date with your quote. If you have a ceremony or event date, add it to your order so we can plan around it.",
     },

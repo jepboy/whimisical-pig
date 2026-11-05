@@ -139,6 +139,9 @@
   .plaque button:hover { background: var(--brass); color: var(--ink); }
 
   /* ---------- Specialties ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; max-width: 900px; margin: 0 auto; }
+  .duo-band .spec p { color: #3a2a30; }
+  .duo-band .spec .more { color: #1a0f13; border-color: #000; }
   .specs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -193,7 +196,7 @@
   .how-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
 
   @media (max-width: 900px) {
-    .specs { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+    .specs, .duo { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
     .how { grid-template-columns: 1fr; }
     .how li + li { border-left: 0; border-top: 1px solid var(--hair); }
   }
@@ -258,6 +261,29 @@
         <h2 data-tail>Our Specialties</h2>
       </div>
       <div class="specs" id="specs"></div>
+    </div>
+  </section>
+
+  <section class="block blush duo-band">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">For businesses, teams &amp; events</span>
+        <h2 data-tail>Design &amp; Merch</h2>
+      </div>
+      <div class="duo">
+        <a class="spec" href="design.html#design">
+          <div class="frame"><div class="mat"><div class="pic"><img alt="A custom designed shirt" loading="lazy" decoding="async" src="images/work/apparel-printing_05-sm.webp"></div></div></div>
+          <h3>Logo &amp; Graphic Design</h3>
+          <p>Logos, shirt designs and event graphics, designed in-house.</p>
+          <span class="more">Learn more →</span>
+        </a>
+        <a class="spec" href="design.html#partners">
+          <div class="frame"><div class="mat"><div class="pic"><img alt="Our merch booth at a local event" loading="lazy" decoding="async" src="images/work/shop_02-sm.webp"></div></div></div>
+          <h3>Become a Merch Partner</h3>
+          <p>Year-round merch for your business or event, with 10% off for partners.</p>
+          <span class="more">Learn more →</span>
+        </a>
+      </div>
     </div>
   </section>
 

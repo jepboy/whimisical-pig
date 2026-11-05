@@ -383,15 +383,14 @@ footer.site {
 .foot-pig { width: 96px; margin-top: 14px; }
 @media (max-width: 640px) { .foot-pig { margin: 14px auto 0; } }
 
-@media (max-width: 1180px) {
-  .brand-name { font-size: 1.35rem; }
-  nav.main a, nav.main button { padding: 10px 7px; letter-spacing: 0.1em; }
-  nav.main a.call { margin-left: 4px; padding: 10px 12px; }
-}
+/* Header sizing that fits all nine nav links beside the logo */
+.brand-name { font-size: 1.35rem; }
+nav.main a, nav.main button { padding: 10px 7px; letter-spacing: 0.1em; }
+nav.main a.call { margin-left: 4px; padding: 10px 12px; }
 @media (max-width: 1000px) {
   .foot { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 1040px) {
+@media (max-width: 1220px) {
   .top { flex-direction: column; justify-content: center; gap: 4px; padding: 12px 0 6px; }
   nav.main ul { flex-wrap: wrap; justify-content: center; }
   header.site { position: relative; }

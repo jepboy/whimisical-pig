@@ -146,6 +146,7 @@ function buildHeader(current) {
           ${link("index.html", "Home", "home")}
           ${link("story.html", "Our Story", "story")}
           ${link("work.html", "Our Work", "work")}
+          ${link("design.html", "Design &amp; Merch", "design")}
           ${link("shop.html", "Shop", "shop")}
           ${link("order.html", "Start an Order", "order")}
           ${link("help.html", "Help", "help")}
@@ -197,7 +198,7 @@ function buildFooter() {
       </div>
       <div class="fine">
         <span>&copy; ${new Date().getFullYear()} The Whimsical Pig · Made with a little whimsy in Watertown, New York</span>
-        <span><a href="story.html">Our Story</a> · <a href="work.html">Our Work</a> · <a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a> · <a href="visit.html">Visit</a></span>
+        <span><a href="story.html">Our Story</a> · <a href="work.html">Our Work</a> · <a href="design.html">Design &amp; Merch</a> · <a href="shop.html">Shop</a> · <a href="order.html">Start an Order</a> · <a href="help.html">Help &amp; FAQ</a> · <a href="visit.html">Visit</a></span>
       </div>
     </div>`;
 }

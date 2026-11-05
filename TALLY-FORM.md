@@ -38,7 +38,7 @@ Text block (**/text**) under the title:
 
 | Question | Type | Options |
 | --- | --- | --- |
-| What are you ordering? ★ | Multiple choice | Military Framing · Embroidery & Apparel · Plaques & Engraving · Guidons · Custom Framing · Something Else |
+| What are you ordering? ★ | Multiple choice | Military Framing · Embroidery & Apparel · Plaques & Engraving · Guidons · Custom Framing · Logo & Graphic Design · Merch Partnership · Something Else |
 
 Then add **/page break**.
 
@@ -52,6 +52,8 @@ type **/logic** and add one rule per answer:
 | Plaques & Engraving | Plaques & Engraving |
 | Guidons | Guidons |
 | Custom Framing | Custom Framing |
+| Logo & Graphic Design | Logo & Graphic Design |
+| Merch Partnership | Merch Partnership |
 | Something Else | Something Else |
 
 (Name each page with the page title at the top of it, so they're easy to pick here.)
@@ -169,7 +171,50 @@ page **Your Details**. Then **/page break**.
 
 ---
 
-## Page 7: Something Else
+## Page 7: Logo & Graphic Design
+
+Page title: **Logo & Graphic Design**
+
+| Question | Type | Options / placeholder |
+| --- | --- | --- |
+| What do you need designed? ★ | Checkboxes | Logo · Shirt / apparel design · Event or festival design · Unit / company design · Sign or print · Other |
+| Business, team or event name ★ | Short answer | |
+| Tell us about it | Long answer | "What you do, who it's for, and the feel you want (fun, classic, bold...)" |
+| Do you have a logo now? | Multiple choice | Yes, use it in the design · Yes, but refresh it · No, start fresh |
+| Colors | Short answer | "e.g. navy and gold, or help me choose" |
+| Where will it be used? | Checkboxes | Shirts & apparel · Embroidery · Signs · Website & social media · Plaques & engraving · Print |
+| Designs or styles you like | Long answer | "Describe them, and upload examples on the next page" |
+
+**Logic at the bottom:** If "What are you ordering?" is Logo & Graphic Design →
+jump to page **Your Details**. Then **/page break**.
+
+---
+
+## Page 8: Merch Partnership
+
+Page title: **Merch Partnership**
+
+Text block first:
+> Merch partners get exclusive, year-round merch from us: we design it, you approve
+> every design, and you get **10% off** every order of your merch. We'll send you
+> the partner agreement to look over.
+
+| Question | Type | Options / placeholder |
+| --- | --- | --- |
+| What kind of partner are you? ★ | Multiple choice | Business · Event / festival · Team / club · School · Other |
+| Business or event name ★ | Short answer | |
+| Event dates (if it's an event) | Short answer | "e.g. every July, 3rd weekend" |
+| What merch are you interested in? | Checkboxes | T-shirts · Sweatpants · Hoodies / sweatshirts · Hats · Bags · Patches · Other |
+| Rough quantity | Short answer | "e.g. 200 shirts a year, or 100 per event" |
+| Where will it be sold? | Checkboxes | At our business / event · Online · Through The Whimsical Pig · Not sure yet |
+| Do you have a logo? ★ | Multiple choice | Yes, we have a logo · No, design one for us |
+
+**Logic at the bottom:** If "What are you ordering?" is Merch Partnership → jump
+to page **Your Details**. Then **/page break**.
+
+---
+
+## Page 9: Something Else
 
 Page title: **Something Else**
 
@@ -182,7 +227,7 @@ No logic needed; the next page is Your Details. Add **/page break**.
 
 ---
 
-## Page 8: Your Details (everyone ends here)
+## Page 10: Your Details (everyone ends here)
 
 Page title: **Your Details**
 

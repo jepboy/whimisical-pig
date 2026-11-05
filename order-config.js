@@ -7,10 +7,13 @@
 //  orders (military plaques & framing, then embroidery & apparel, then
 //  plaques & engraving).
 //
-//  tally     the link to the Tally order form (https://tally.so/r/xxxxxx).
-//            When set, the Start an Order page shows that form instead of the
-//            built-in one. See TALLY-FORM.md for how to build it. Leave "" to
-//            use the built-in form.
+//  tally     the short Tally "send" form (https://tally.so/r/gbeGGM). When set,
+//            customers answer the questions here on the website, and the last
+//            step is that Tally form, already filled in with every answer
+//            (as hidden fields), where they add photos and press Send. Tally
+//            then emails the order to the shop. Leave "" to skip Tally.
+//            (The full stand-alone Tally form, https://tally.so/r/OQDqLA, is
+//            for sharing as a link on Facebook and the like.)
 //  endpoint  optional email copy of each order. Paste a Formspree form URL
 //            (https://formspree.io/f/xxxxxxx), see README. Orders are always
 //            saved to the admin page (/admin → Order Requests) on the live site.
@@ -32,7 +35,7 @@
 // =====================================================================
 
 window.ORDER = {
-  tally: "https://tally.so/r/OQDqLA",
+  tally: "https://tally.so/r/gbeGGM",
   endpoint: "",
   email: "WhimsicalPig@hotmail.com",
 

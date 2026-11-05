@@ -106,12 +106,12 @@ Until Square is connected, the shop shows the items in `shop-items.js` with "Cal
 
 ## Setting up "Start an Order"
 
-**Tally (in use now):** the order form lives in Tally
-(https://tally.so/forms/OQDqLA/edit) and its link is on the `tally:` line in
-`order-config.js`. New orders are emailed to the Tally account and listed under
-Submissions in Tally. `TALLY-FORM.md` describes how it's set up.
-The page then shows the Tally form under photos of common orders. Everything
-below is about the built-in form, which is used while `tally` is `""`.
+**Tally (in use now):** customers answer the questions on the website. The last
+step is a short Tally form (https://tally.so/forms/gbeGGM/edit) that arrives already
+filled in with every answer (as hidden fields); they add photos and press Send, and
+Tally emails the order, with photos, to the Tally account. Each order is also saved
+to the admin page's Order Requests (without photos). The full stand-alone Tally form
+(https://tally.so/r/OQDqLA) is for sharing as a link; `TALLY-FORM.md` describes it.
 
 Customers pick what they want, choose a starting example, answer that order type's
 questions, add photos and contact info, review, and send. You get one tidy message

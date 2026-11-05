@@ -3,7 +3,11 @@
 > **Already built.** This form is live in the shop's Tally account as
 > **"Start an Order — The Whimsical Pig"** (https://tally.so/r/OQDqLA, edit at
 > https://tally.so/forms/OQDqLA/edit) and is on the website's Start an Order page.
-> The steps below describe how it's set up, for reference or to rebuild it.
+> The website itself uses a second, short Tally form ("Website Order",
+> https://tally.so/r/gbeGGM) as its last step: it receives the website's answers
+> as hidden fields and takes the photos. The full form below is for sharing as a
+> link (Facebook, texts, email signatures).
+> The steps below describe how the full form is set up, for reference or to rebuild it.
 
 A step-by-step list of everything to type into Tally so the order form asks the
 same questions as the website's own form. Takes about 30–45 minutes.

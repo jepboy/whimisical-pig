@@ -214,7 +214,7 @@ async function fetchCatalog(env) {
     if (d.is_archived || !atLocation(it)) continue;
     const variations = [];
     for (const v of d.variations || []) {
-      const vd = v.variation_data || {};
+      const vd = v.item_variation_data || {};
       if (!atLocation(v) || vd.pricing_type === "VARIABLE_PRICING" || !vd.price_money) continue;
       const over = (vd.location_overrides || []).find(o => o.location_id === loc) || {};
       variations.push({

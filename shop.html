@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shop — The Whimsical Pig</title>
-<meta name="description" content="Shop ready-made pieces from The Whimsical Pig, or pay an invoice or deposit online.">
+<meta name="description" content="Shop event shirts, gifts and ready-made pieces from The Whimsical Pig in Watertown, NY.">
 <meta name="theme-color" content="#1a1816">
 <link rel="icon" href="images/favicon.png">
 <link rel="preload" href="fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,8 +13,8 @@
 <style>
   .shop-body { padding: 56px 24px 96px; }
 
-  /* Quick pay */
-  .quickpay {
+  /* Gift card panel */
+  .promo {
     display: flex;
     align-items: center;
     gap: 26px;
@@ -24,7 +24,7 @@
     background: var(--panel);
     border: 1px solid var(--rule);
   }
-  .quickpay .icon {
+  .promo .icon {
     flex: none;
     display: grid;
     place-items: center;
@@ -33,11 +33,11 @@
     border: 1px solid var(--rule);
     color: var(--brass);
   }
-  .quickpay .icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  .quickpay h2 { font-size: 1.8rem; }
-  .quickpay p { color: var(--muted); }
-  .quickpay .btn { margin-left: auto; white-space: nowrap; }
-  .quickpay[hidden] { display: none; }
+  .promo .icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .promo h2 { font-size: 1.8rem; }
+  .promo p { color: var(--muted); }
+  .promo .btn { margin-left: auto; white-space: nowrap; }
+  .promo[hidden] { display: none; }
   #giftcard { margin-top: -40px; }
 
   /* Filters */
@@ -60,6 +60,15 @@
   }
   .filters button:hover { color: var(--cream); }
   .filters button[aria-pressed="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+
+  .shop-tools { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 24px;
+    max-width: 1000px; margin: 0 auto 40px; padding-bottom: 14px; border-bottom: 1px solid var(--hair); }
+  .shop-tools[hidden] { display: none; }
+  .shop-tools .filters { margin: 0; justify-content: flex-start; }
+  .shop-tools .filters::before { content: "Shop by event"; align-self: center; margin-right: 6px; color: var(--muted); font-size: 0.85rem; }
+  .sort { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.85rem; }
+  .sort select { padding: 8px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
+  .opt-select.bad { border-color: #e59a90; box-shadow: 0 0 0 2px rgba(229, 154, 144, 0.35); }
 
   /* Items, each hung in a frame */
   .grid {
@@ -113,15 +122,6 @@
   }
   .thanks strong { font: 600 1.35rem var(--serif); color: var(--brass-soft); display: block; }
   .thanks[hidden] { display: none; }
-
-  /* Quick pay form (when Square is connected) */
-  .qp-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 10px; margin-left: auto; align-items: end; }
-  .qp-form label { display: block; font: 700 0.64rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .qp-form input { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
-  .qp-form input:focus { outline: none; border-color: var(--pink); }
-  .qp-form .btn { margin: 0; }
-  .qp-msg { grid-column: 1 / -1; min-height: 1.2em; color: #e59a90; font-size: 0.88rem; }
-  .quickpay.has-form { flex-wrap: wrap; }
 
   .opt-select {
     margin-top: 12px; padding: 9px 12px; min-width: 160px; border: 1px solid var(--rule); border-radius: 10px;
@@ -190,9 +190,6 @@
   .done-view p { margin-top: 12px; }
   .done-view .ref { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 8px; background: var(--pink); color: #000; font-weight: 700; letter-spacing: 0.1em; }
   .done-view a { color: var(--pink); }
-  .qp-card { grid-column: 1 / -1; margin-top: 8px; padding: 14px; border: 1px solid var(--hair); border-radius: 12px; background: var(--bg-2); }
-  .qp-card[hidden] { display: none; }
-  .qp-card .row { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
 
   .custom {
     max-width: 900px;
@@ -205,13 +202,11 @@
 
   @media (max-width: 860px) {
     .grid { grid-template-columns: repeat(2, 1fr); gap: 40px 20px; }
-    .qp-form { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 640px) {
     .shop-body { padding-top: 40px; }
-    .quickpay { flex-direction: column; text-align: center; padding: 26px 20px; }
-    .quickpay .btn { margin: 4px 0 0; }
-    .qp-form { grid-template-columns: 1fr; width: 100%; margin: 4px 0 0; text-align: left; }
+    .promo { flex-direction: column; text-align: center; padding: 26px 20px; }
+    .promo .btn { margin: 4px 0 0; }
     .cart-btn { right: 12px; bottom: 12px; }
     .pf.two, .pf.three { grid-template-columns: 1fr; }
     .item .frame { padding: 6px; }
@@ -231,10 +226,10 @@
   <section class="page-intro blush">
     <div class="wrap">
       <img class="flying-pig" src="images/flying-pig.webp" alt="">
-      <span class="eyebrow">Ready-made &amp; quick pay</span>
+      <span class="eyebrow">Ready-made &amp; event merch</span>
       <h1>The <em>Shop</em></h1>
       <div class="rule-orn" aria-hidden="true"><span></span></div>
-      <p>Finished pieces ready to take home, plus Quick Pay for invoices and deposits.</p>
+      <p>Shirts, gifts and ready-made pieces from our shop and the events we partner with.</p>
     </div>
     <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 120 60, 240 0, 360 30 S 600 60, 720 30 S 960 0, 1080 30 S 1320 60, 1440 30 V60 H0 Z" fill="#141112"/></svg>
   </section>
@@ -242,16 +237,7 @@
 
     <div class="thanks" id="thanks" hidden role="status"></div>
 
-    <div class="quickpay" id="quickpay">
-      <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg></span>
-      <div>
-        <h2>Quick Pay</h2>
-        <p>Pay an invoice, deposit, or balance.</p>
-      </div>
-      <a class="btn" id="quickpay-btn" href="tel:315-773-3758">Pay now</a>
-    </div>
-
-    <div class="quickpay" id="giftcard" hidden>
+    <div class="promo" id="giftcard" hidden>
       <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="1"/><path d="M12 8v12M3 12h18"/><path d="M12 8c-2-4-6-3-5 0M12 8c2-4 6-3 5 0"/></svg></span>
       <div>
         <h2>Gift Cards</h2>
@@ -260,7 +246,17 @@
       <a class="btn ghost" id="giftcard-btn" href="#">Buy a Gift Card</a>
     </div>
 
-    <div class="filters" id="filters" role="group" aria-label="Filter items"></div>
+    <div class="shop-tools" id="shop-tools" hidden>
+      <div class="filters" id="filters" role="group" aria-label="Shop by event"></div>
+      <label class="sort">Sort
+        <select id="sort">
+          <option value="featured">Featured</option>
+          <option value="low">Price: low to high</option>
+          <option value="high">Price: high to low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </label>
+    </div>
     <div class="grid" id="grid"></div>
 
     <div class="custom">
@@ -297,7 +293,7 @@
       <div class="pf"><label for="p-name">Name</label><input id="p-name" autocomplete="name" required></div>
       <div class="pf two">
         <div><label for="p-email">Email (for your receipt)</label><input id="p-email" type="email" autocomplete="email" required></div>
-        <div><label for="p-phone">Phone</label><input id="p-phone" type="tel" autocomplete="tel"></div>
+        <div><label for="p-phone">Phone</label><input id="p-phone" type="tel" autocomplete="tel" required></div>
       </div>
       <div id="p-ship" hidden>
         <h3>Ship to</h3>
@@ -356,75 +352,6 @@
     thanks.innerHTML = `<strong>Thank you, your payment went through!</strong> Square will email your receipt.`;
   }
 
-  // ---------- Quick Pay ----------
-  function setupQuickPay(live) {
-    const btn = $("quickpay-btn");
-    if (!live) {
-      if (shop.quickPay && shop.quickPay.buyUrl) btn.href = shop.quickPay.buyUrl;
-      else btn.textContent = "Call to pay";
-      return;
-    }
-    btn.remove();
-    const box = $("quickpay");
-    box.classList.add("has-form");
-    box.insertAdjacentHTML("beforeend", `
-      <form class="qp-form" id="qp-form" novalidate>
-        <div><label for="qp-amount">Amount ($)</label><input id="qp-amount" inputmode="decimal" placeholder="0.00" required></div>
-        <div><label for="qp-ref">Invoice or order #</label><input id="qp-ref" maxlength="80" placeholder="Optional"></div>
-        <div><label for="qp-name">Your name</label><input id="qp-name" maxlength="80" autocomplete="name"></div>
-        <button class="btn" type="submit">Pay Now</button>
-        <div class="qp-card" id="qp-card" hidden>
-          <div class="pf"><label for="qp-email">Email (for your receipt)</label><input id="qp-email" type="email" autocomplete="email"></div>
-          <div id="qp-card-box" class="card-box"></div>
-          <div class="row"><span class="secure">Secure payment by Square.</span><button class="btn" type="button" id="qp-pay">Pay</button></div>
-        </div>
-        <p class="qp-msg" id="qp-msg" role="alert"></p>
-      </form>`);
-    let qpCard = null;
-    const amountCents = () => Math.round(Number($("qp-amount").value.replace(/[$,\s]/g, "")) * 100);
-    $("qp-form").onsubmit = async e => {
-      e.preventDefault();
-      const b = e.target.querySelector('button[type="submit"]');
-      $("qp-msg").textContent = "";
-      if (!(amountCents() >= 100)) { $("qp-msg").textContent = "Enter an amount of at least $1.00."; return; }
-      if (cardCfg) {
-        // Pay right here: show Square's card form under the amount
-        $("qp-card").hidden = false;
-        $("qp-pay").textContent = "Pay " + money(amountCents());
-        if (!qpCard) {
-          try { qpCard = await makeCard("#qp-card-box"); }
-          catch (err) { $("qp-msg").textContent = err.message; }
-        }
-        return;
-      }
-      b.disabled = true; b.textContent = "One moment…";
-      try {
-        location.href = await post("/api/quickpay", { amount: $("qp-amount").value, reference: $("qp-ref").value, name: $("qp-name").value });
-      } catch (err) {
-        $("qp-msg").textContent = err.message;
-        b.disabled = false; b.textContent = "Pay Now";
-      }
-    };
-    $("qp-amount").oninput = () => { if (!$("qp-card").hidden) $("qp-pay").textContent = "Pay " + money(amountCents() || 0); };
-    if (cardCfg) $("qp-pay").onclick = async () => {
-      const b = $("qp-pay");
-      $("qp-msg").textContent = "";
-      b.disabled = true; b.textContent = "Paying…";
-      try {
-        const source_id = await tokenize(qpCard);
-        const r = await postJson("/api/quickpay/pay", {
-          amount: $("qp-amount").value, reference: $("qp-ref").value, name: $("qp-name").value,
-          email: $("qp-email").value, source_id,
-        });
-        $("qp-form").innerHTML = `<p class="qp-done"><strong>Thank you, your payment went through!</strong> Reference ${esc(r.ref)}.
-          ${r.receipt_url ? `<a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">View your receipt</a>` : ""}</p>`;
-      } catch (err) {
-        $("qp-msg").textContent = err.message;
-        b.disabled = false; b.textContent = "Pay " + money(amountCents() || 0);
-      }
-    };
-  }
-
   // ---------- Square's card form (loads only when someone checks out) ----------
   let cardCfg = null;          // from /api/products when on-page card payments are set up
   let sqPayments = null;
@@ -479,6 +406,8 @@
     return data.url;     // Square's secure checkout page
   }
 
+  const SIZE_NAMES = /^(x{0,3}s|s|m|l|x{0,4}l|\d?x{1,3}l|\dxl|youth .+|y?(xs|s|m|l|xl)|one size|small|medium|large|x-?large|\dx-?large)$/i;
+
   function card(category) {
     const el = document.createElement("article");
     el.className = "item";
@@ -505,14 +434,22 @@
       if (!inStock.length) {
         el.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">Sold out</span>');
         const low = Math.min(...p.variations.map(v => v.price_cents));
+        el.dataset.price = low;
+        el.dataset.name = p.name.toLowerCase();
+        el.dataset.soldout = "1";
         info.insertAdjacentHTML("beforeend", `<span class="price">${money(low)}</span><p class="left">Sold out. Check back soon</p>`);
         grid.appendChild(el);
         continue;
       }
       const many = p.variations.length > 1;
+      const sizes = p.variations.every(v => SIZE_NAMES.test(v.name || ""));
+      const prices = p.variations.map(v => v.price_cents);
+      const low = Math.min(...prices), high = Math.max(...prices);
+      el.dataset.price = low;
+      el.dataset.name = p.name.toLowerCase();
       info.insertAdjacentHTML("beforeend", `
-        ${many ? `<label class="sr-only" for="v-${p.id}">Option</label>
-          <select class="opt-select" id="v-${p.id}">${p.variations.map(v =>
+        ${many ? `<label class="sr-only" for="v-${p.id}">${sizes ? "Size" : "Option"}</label>
+          <select class="opt-select" id="v-${p.id}"><option value="">${sizes ? "Choose a size" : "Choose an option"}</option>${p.variations.map(v =>
             `<option value="${esc(v.id)}"${v.available === 0 ? " disabled" : ""}>${esc(v.name || "Option")}${v.available === 0 ? " (sold out)" : ""}</option>`).join("")}</select>` : ""}
         <span class="price"></span>
         <p class="left"></p>
@@ -522,10 +459,18 @@
           <button class="btn" type="button">Add to Cart</button>
         </div>`);
       const pick = info.querySelector(".opt-select");
-      if (pick) pick.value = inStock[0].id;
       const qty = info.querySelector(".buy select");
       const show = () => {
-        const v = variations.get(pick ? pick.value : p.variations[0].id).v;
+        const chosen = pick ? pick.value : p.variations[0].id;
+        if (!chosen) {
+          // Nothing picked yet: show the price range and wait for a size
+          info.querySelector(".price").textContent = low === high ? money(low) : `${money(low)} – ${money(high)}`;
+          info.querySelector(".left").textContent = "";
+          qty.innerHTML = Array.from({ length: 10 }, (_, i) => `<option>${i + 1}</option>`).join("");
+          return;
+        }
+        pick && pick.classList.remove("bad");
+        const v = variations.get(chosen).v;
         info.querySelector(".price").textContent = money(v.price_cents);
         const left = info.querySelector(".left");
         left.textContent = v.available === null ? "" : v.available <= 3 ? `Only ${v.available} left` : `${v.available} in stock`;
@@ -538,6 +483,13 @@
       show();
       const btn = info.querySelector(".buy .btn");
       btn.onclick = () => {
+        if (pick && !pick.value) {
+          pick.classList.add("bad");
+          pick.focus();
+          btn.textContent = sizes ? "Pick a size first" : "Pick an option first";
+          setTimeout(() => { btn.textContent = "Add to Cart"; }, 1600);
+          return;
+        }
         addToCart(pick ? pick.value : p.variations[0].id, +qty.value || 1);
         btn.textContent = "Added ✓";
         setTimeout(() => { btn.textContent = "Add to Cart"; }, 1400);
@@ -675,7 +627,7 @@
   $("pay-view").onsubmit = async e => {
     e.preventDefault();
     const ship = fulfillment() === "ship";
-    const need = ["p-name", "p-email", ...(ship ? ["p-line1", "p-city", "p-state", "p-zip"] : [])];
+    const need = ["p-name", "p-email", "p-phone", ...(ship ? ["p-line1", "p-city", "p-state", "p-zip"] : [])];
     let missing = false;
     for (const id of need) {
       const el = $(id), bad = !el.value.trim() || (el.type === "email" && !el.checkValidity());
@@ -736,9 +688,11 @@
 
   // Category filters (only shown when there's more than one category)
   function buildFilters(categories) {
+    $("shop-tools").hidden = !grid.children.length;
+    [...grid.children].forEach((el, i) => { el.dataset.order = i; });
     const cats = [...new Set(categories.filter(Boolean))];
-    if (cats.length < 2) { filters.remove(); return; }
-    for (const c of ["All", ...cats]) {
+    if (cats.length < 2) filters.innerHTML = "";
+    else for (const c of ["All", ...cats]) {
       const b = document.createElement("button");
       b.type = "button";
       b.textContent = c;
@@ -756,6 +710,20 @@
     if (hit) hit.click();
   }
 
+  // Sort the items; sold-out ones always go last
+  $("sort").onchange = () => {
+    const how = $("sort").value;
+    const key = el => how === "low" || how === "high" ? +el.dataset.price || 0 : how === "name" ? el.dataset.name || "" : +el.dataset.order;
+    const list = [...grid.children].sort((a, b) => {
+      const sold = (a.dataset.soldout ? 1 : 0) - (b.dataset.soldout ? 1 : 0);
+      if (sold && how !== "featured") return sold;
+      const x = key(a), y = key(b);
+      const d = typeof x === "string" ? x.localeCompare(y) : x - y;
+      return how === "high" ? -d : d;
+    });
+    list.forEach(el => grid.appendChild(el));
+  };
+
   (async () => {
     let data = null;
     if (location.protocol.startsWith("http")) {
@@ -766,7 +734,6 @@
     }
     const live = !!(data && data.configured);
     cardCfg = live && data.card ? data.card : null;
-    setupQuickPay(live);
     if (live && data.products.length) {
       shippingFee = data.shipping_fee_cents;
       buildFilters(renderLive(data.products));

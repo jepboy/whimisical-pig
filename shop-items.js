@@ -17,12 +17,6 @@
 // =====================================================================
 
 window.SHOP = {
-  // Quick Pay: one link where customers pay an invoice, deposit or balance.
-  // Make it a "customer chooses the amount" payment link in Square or Stripe.
-  quickPay: {
-    buyUrl: "",
-  },
-
   items: [
     {
       name: "10th Mountain Snowshoes",

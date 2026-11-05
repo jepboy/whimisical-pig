@@ -107,6 +107,37 @@
   .stock small { display: block; color: var(--muted); font-size: 0.72rem; text-align: center; }
   .low { color: #ff8f8a !important; }
 
+
+  /* add / edit item */
+  .item .row2 { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 4px; }
+  .switch { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+  .switch input { accent-color: var(--pink); width: 16px; height: 16px; }
+  .tag.off { background: #3a3236; color: var(--muted); }
+  .thumb { position: relative; cursor: pointer; border: 0; padding: 0; }
+  .thumb .add { position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--pink); text-align: center; }
+  .thumb img + .add { background: rgba(0,0,0,0.55); opacity: 0; transition: opacity 0.15s; }
+  .thumb:hover img + .add, .thumb:focus-visible img + .add { opacity: 1; }
+  .desc { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+  dialog#item-dlg { margin: auto; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--rule); border-radius: 18px; background: var(--panel); color: var(--cream); }
+  dialog#item-dlg::backdrop { background: rgba(0,0,0,0.7); }
+  #item-form { display: grid; gap: 14px; padding: 26px 24px; }
+  #item-form h2 { font-size: 1.8rem; }
+  .fld { display: grid; gap: 6px; font-weight: 700; font-size: 0.85rem; border: 0; padding: 0; margin: 0; }
+  .fld legend { margin-bottom: 6px; }
+  .fld .opt { font-weight: 400; color: var(--muted); }
+  .fld input:not([type=checkbox]):not([type=file]), .fld select, .fld textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); font: 1rem var(--sans);
+  }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { outline: none; border-color: var(--pink); }
+  .fld .bad { border-color: #d9534f !important; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; font-weight: 400; }
+  .chips label, .tick { display: inline-flex; align-items: center; gap: 6px; font-size: 0.92rem; }
+  .chips label { padding: 6px 10px; border: 1px solid var(--rule); border-radius: 999px; }
+  .chips input, .tick input { accent-color: var(--pink); }
+  .form-msg { min-height: 1.2em; color: #ff8f8a; font-size: 0.9rem; }
+  .dlg-btns { display: flex; justify-content: flex-end; gap: 10px; }
+
   /* setup */
   .checks { display: grid; gap: 10px; max-width: 760px; }
   .check { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--hair); border-radius: 12px; background: var(--panel); }
@@ -122,6 +153,7 @@
     .tools input { min-width: 0; width: 100%; }
   }
   @media (max-width: 560px) {
+    .two { grid-template-columns: 1fr; }
     .bar .brand > span { display: none; }
     .bar .btn.sm { padding: 8px 12px; letter-spacing: 0.1em; }
   }
@@ -175,19 +207,18 @@
       <div class="list" id="requests"></div>
     </section>
 
-    <!-- Paid online orders and Quick Pay payments -->
+    <!-- Paid online orders -->
     <section id="tab-orders" hidden>
       <div class="toolbar">
         <div>
           <h2>Online Orders</h2>
-          <p class="hint">Paid shop orders and Quick Pay payments. Receipts, refunds and full details are in Square.</p>
+          <p class="hint">Paid orders from the website shop. Receipts, refunds and full details are in Square.</p>
         </div>
         <div class="tools">
           <select id="ord-filter" aria-label="Show">
             <option value="open">To do (not done)</option>
             <option value="all">All</option>
             <option value="shop">Shop orders</option>
-            <option value="quickpay">Quick Pay</option>
           </select>
           <button class="btn ghost sm" id="ord-refresh" type="button">Refresh</button>
         </div>
@@ -195,21 +226,54 @@
       <div class="list" id="orders"></div>
     </section>
 
-    <!-- Items from Square -->
+    <!-- Items, saved in Square -->
     <section id="tab-items" hidden>
       <div class="toolbar">
         <div>
           <h2>Shop Items</h2>
-          <p class="hint">Everything in Square's <strong id="cat-name">Website</strong> category. Stock is shared with in-store sales.</p>
+          <p class="hint">Saved in Square, so the register and the website always match. Stock is shared with in-store sales.</p>
         </div>
         <div class="tools">
-          <a class="btn sm" id="sq-items" href="https://app.squareup.com/dashboard/items/library" target="_blank" rel="noopener">Add or Edit Items in Square</a>
-          <button class="btn ghost sm" id="items-refresh" type="button">Refresh from Square</button>
+          <select id="items-filter" aria-label="Show"></select>
+          <button class="btn sm" id="item-add" type="button">+ Add Item</button>
+          <button class="btn ghost sm" id="items-refresh" type="button">Refresh</button>
         </div>
       </div>
       <div id="items-note"></div>
       <div class="items" id="items"></div>
+      <input type="file" id="photo-pick" accept="image/*" hidden>
     </section>
+
+    <dialog id="item-dlg" aria-labelledby="item-dlg-title">
+      <form id="item-form" method="dialog" novalidate>
+        <h2 id="item-dlg-title">Add an Item</h2>
+        <label class="fld">Name <input name="name" maxlength="120" required placeholder="Ren Faire Shirt – Dragon"></label>
+        <label class="fld">Event or partner
+          <select name="category_id"></select>
+        </label>
+        <label class="fld" id="new-cat-row" hidden>New event or partner name <input name="new_category" maxlength="80" placeholder="Watertown Block Party"></label>
+        <label class="fld">Description <span class="opt">(optional, shows on the website)</span>
+          <textarea name="description" rows="3" maxlength="1000"></textarea></label>
+        <fieldset class="fld" id="sizes-row">
+          <legend>Sizes</legend>
+          <div class="chips" id="size-chips">
+            <label><input type="checkbox" name="one_size"> One size / no sizes</label></div>
+        </fieldset>
+        <div class="two">
+          <label class="fld">Price <input name="price" inputmode="decimal" placeholder="10.00"></label>
+          <label class="fld" id="big-row">2XL and up <span class="opt">(if more)</span> <input name="big_price" inputmode="decimal" placeholder="same"></label>
+        </div>
+        <label class="fld" id="tax-row">Tax <select name="tax_id"></select></label>
+        <label class="tick"><input type="checkbox" name="online" checked> Show it on the website shop</label>
+        <label class="tick"><input type="checkbox" name="track"> Count stock (sold out when it hits 0)</label>
+        <label class="fld" id="photo-row">Photo <span class="opt">(optional, you can add one later)</span> <input type="file" name="photo" accept="image/*"></label>
+        <p class="form-msg" id="item-msg" role="alert"></p>
+        <div class="dlg-btns">
+          <button class="btn ghost sm" type="button" value="cancel" id="item-cancel">Cancel</button>
+          <button class="btn sm" type="submit" id="item-save">Save Item</button>
+        </div>
+      </form>
+    </dialog>
 
     <!-- Setup checklist -->
     <section id="tab-setup" hidden>
@@ -402,7 +466,7 @@
         <header>
           <div>
             <span class="tag ${paid ? "paid" : ""}">${paid ? "Paid" : "Checking out now"}</span>
-            <h3>${qp ? "Quick Pay" : o.fulfillment === "ship" ? "Ship order" : "Pickup order"} · WP-${o.id}</h3>
+            <h3>${qp ? "Payment" : o.fulfillment === "ship" ? "Ship order" : "Pickup order"} · WP-${o.id}</h3>
             <p class="meta">${esc(when(o.paid_at || o.created_at))}${o.buyer_name ? " · " + esc(o.buyer_name) : ""}</p>
           </div>
           <div class="facts">
@@ -433,49 +497,71 @@
   $("ord-filter").onchange = drawOrders;
   $("ord-refresh").onclick = () => loadOrders();
 
-  // ---------- shop items (from Square) ----------
-  let items = [];
-  async function loadItems(fresh) {
+  // ---------- shop items (saved in Square) ----------
+  const SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
+  const BIG = /^(2|3|4|5)\s?X\s?L$|^X{2,5}L$/i;
+  $("size-chips").insertAdjacentHTML("afterbegin",
+    SIZES.map(z => `<label><input type="checkbox" name="size" value="${z}" checked> ${z}</label>`).join(""));
+  let cat = { items: [], categories: [], taxes: [] };
+
+  async function loadItems() {
     const box = $("items"), note = $("items-note");
-    box.innerHTML = '<div class="empty">Loading from Square…</div>';
+    if (!cat.items.length) box.innerHTML = '<div class="empty">Loading from Square…</div>';
     let data;
-    try { data = await api("/api/admin/products" + (fresh ? "?fresh=1" : "")); }
+    try { data = await api("/api/admin/catalog"); }
     catch (err) { box.innerHTML = ""; note.innerHTML = `<div class="banner bad">${esc(err.message)}</div>`; return; }
     if (!data.configured) {
       box.innerHTML = "";
       note.innerHTML = '<div class="banner bad"><strong>Square isn\'t connected yet.</strong> See the Setup tab.</div>';
       return;
     }
-    $("cat-name").textContent = data.category;
-    items = data.items;
-    note.innerHTML = !data.category_found
-      ? `<div class="banner bad"><strong>No "${esc(data.category)}" category in Square yet.</strong> In Square, go to Items → Categories, make one named "${esc(data.category)}", and add the items you want to sell online.</div>`
-      : `<div class="banner"><strong>To add, rename, re-price or change photos:</strong> do it in Square and put the item in the "${esc(data.category)}" category.
-         Changes show here within a minute. Use the stock box below for quick counts.${data.stale ? " <strong>Square didn't answer just now, so this is the last saved list.</strong>" : ""}</div>`;
-    if (!items.length) { box.innerHTML = data.category_found ? `<div class="empty">No items in "${esc(data.category)}" yet.</div>` : ""; return; }
-    box.innerHTML = items.map(it => `
-      <div class="item">
-        <div class="thumb">${it.image ? `<img src="${esc(it.image)}" alt="" loading="lazy">` : ""}</div>
+    cat = data;
+    note.innerHTML = "";
+    const filter = $("items-filter"), keep = filter.value || "all";
+    const online = cat.items.filter(i => i.online).length;
+    const used = cat.categories.filter(c => cat.items.some(i => i.categories.some(x => x.id === c.id)));
+    filter.innerHTML = [["all", `All items (${cat.items.length})`], ["online", `On the website (${online})`], ["offline", `Not on the website (${cat.items.length - online})`],
+      ...used.map(c => ["c:" + c.id, c.name])].map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+    filter.value = [...filter.options].some(o => o.value === keep) ? keep : "all";
+    drawItems();
+  }
+
+  function drawItems() {
+    const box = $("items"), want = $("items-filter").value;
+    const list = cat.items.filter(i => want === "all" ? true : want === "online" ? i.online : want === "offline" ? !i.online
+      : i.categories.some(c => "c:" + c.id === want));
+    if (!list.length) { box.innerHTML = '<div class="empty">No items here yet. Use “+ Add Item” to make one.</div>'; return; }
+    box.innerHTML = list.map(it => `
+      <div class="item" data-item="${esc(it.id)}">
+        <button class="thumb" type="button" data-act="photo" aria-label="${it.image ? "Change" : "Add a"} photo for ${esc(it.name)}">
+          ${it.image ? `<img src="${esc(it.image)}" alt="" loading="lazy">` : ""}<span class="add">${it.image ? "Change photo" : "+ Photo"}</span>
+        </button>
         <div>
           <div class="top">
             <h3>${esc(it.name)}</h3>
-            <a class="hint" href="${dashboard}/items/library/${encodeURIComponent(it.id)}" target="_blank" rel="noopener">Edit in Square →</a>
+            <button class="btn ghost sm" type="button" data-act="edit">Edit</button>
           </div>
-          <div class="meta hint">${esc(it.category || "No other category")}</div>
+          <div class="row2">
+            <span class="hint">${esc(it.categories.map(c => c.name).join(", ") || "No event or partner")}</span>
+            <label class="switch"><input type="checkbox" data-act="online"${it.online ? " checked" : ""}> On the website</label>
+            ${it.variations.some(v => v.price_cents === null) ? '<span class="tag off">Price set at register</span>' : ""}
+          </div>
+          ${it.description ? `<p class="desc">${esc(it.description.length > 160 ? it.description.slice(0, 157) + "…" : it.description)}</p>` : ""}
           <div class="vars">${it.variations.map(v => `
             <div class="var" data-id="${esc(v.id)}">
-              <span>${esc(it.variations.length > 1 ? v.name : "Price")}${v.sold_out ? ' · <span class="low">marked sold out in Square</span>' : ""}</span>
-              <span class="price">${money(v.price_cents)}</span>
+              <span>${esc(it.variations.length > 1 ? v.name : "Price")}</span>
+              <span class="price">${v.price_cents === null ? "—" : money(v.price_cents)}</span>
               ${v.tracked ? `<div class="stock">
                   <button type="button" data-d="-1" aria-label="One fewer">−</button>
                   <div><input type="number" min="0" value="${v.stock}" aria-label="In stock" class="${v.stock <= 1 ? "low" : ""}"><small>${v.held ? v.held + " in checkout" : "in stock"}</small></div>
                   <button type="button" data-d="1" aria-label="One more">+</button>
                 </div>`
-              : `<span class="hint">Stock not tracked in Square</span>`}
+              : `<span class="hint">Stock not counted</span>`}
             </div>`).join("")}</div>
         </div>
       </div>`).join("");
   }
+
   async function setCount(row, count) {
     const input = row.querySelector("input");
     input.disabled = true;
@@ -486,16 +572,169 @@
     } catch (err) { alert(err.message); }
     input.disabled = false;
   }
+
+  // Shrink a photo in the browser so phone pictures (even HEIC on iPhone) upload fast as JPG
+  async function photoBlob(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error("That file isn't a photo this browser can open. Try a JPG or PNG.")); i.src = url; });
+      const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      const g = c.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      return await new Promise(ok => c.toBlob(ok, "image/jpeg", 0.85));
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function uploadPhoto(id, file) {
+    const blob = await photoBlob(file);
+    return api(`/api/admin/items/${encodeURIComponent(id)}/image`, { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: blob });
+  }
+
+  let photoFor = null;
+  $("photo-pick").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file || !photoFor) return;
+    const thumb = document.querySelector(`[data-item="${photoFor}"] .thumb .add`);
+    if (thumb) thumb.textContent = "Uploading…";
+    try { await uploadPhoto(photoFor, file); await loadItems(); }
+    catch (err) { alert(err.message); if (thumb) thumb.textContent = "+ Photo"; }
+  };
+
   $("items").onclick = e => {
     const d = e.target.dataset.d;
-    if (!d) return;
-    const row = e.target.closest(".var");
-    setCount(row, Math.max(0, (+row.querySelector("input").value || 0) + +d));
+    if (d) {
+      const row = e.target.closest(".var");
+      setCount(row, Math.max(0, (+row.querySelector("input").value || 0) + +d));
+      return;
+    }
+    const act = e.target.closest("[data-act]");
+    if (!act) return;
+    const id = act.closest("[data-item]").dataset.item;
+    if (act.dataset.act === "photo") { photoFor = id; $("photo-pick").click(); }
+    if (act.dataset.act === "edit") openItem(cat.items.find(i => i.id === id));
   };
-  $("items").onchange = e => {
-    if (e.target.matches(".stock input")) setCount(e.target.closest(".var"), Math.max(0, parseInt(e.target.value, 10) || 0));
+  $("items").onchange = async e => {
+    if (e.target.matches(".stock input")) return setCount(e.target.closest(".var"), Math.max(0, parseInt(e.target.value, 10) || 0));
+    if (e.target.dataset.act === "online") {
+      const box = e.target, it = cat.items.find(i => i.id === box.closest("[data-item]").dataset.item);
+      box.disabled = true;
+      try { await send(`/api/admin/items/${encodeURIComponent(it.id)}`, "PUT", { online: box.checked }); it.online = box.checked; }
+      catch (err) { alert(err.message); box.checked = !box.checked; }
+      box.disabled = false;
+      loadItems();
+    }
   };
-  $("items-refresh").onclick = () => loadItems(true);
+  $("items-filter").onchange = drawItems;
+  $("items-refresh").onclick = () => loadItems();
+
+  // ----- add / edit dialog -----
+  const dlg = $("item-dlg"), form = $("item-form");
+  let editing = null;
+  const dollars = c => c === null || c === undefined ? "" : (c / 100).toFixed(2);
+
+  function openItem(it) {
+    editing = it || null;
+    form.reset();
+    $("item-msg").textContent = "";
+    form.querySelectorAll(".bad").forEach(x => x.classList.remove("bad"));
+    $("item-dlg-title").textContent = it ? "Edit Item" : "Add an Item";
+    const catSel = form.elements.category_id;
+    catSel.innerHTML = '<option value="">None</option>' +
+      cat.categories.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("") +
+      '<option value="__new">+ New event or partner…</option>';
+    const taxSel = form.elements.tax_id;
+    taxSel.innerHTML = '<option value="">No tax</option>' +
+      cat.taxes.map(t => `<option value="${esc(t.id)}">${esc(t.name)} (${esc(t.percentage)}%)</option>`).join("");
+    const apparel = cat.taxes.find(t => /apparel/i.test(t.name));
+    if (apparel) taxSel.value = apparel.id;
+    // Sizes, tax and photo are only set when adding; after that, Square handles them
+    $("sizes-row").hidden = $("tax-row").hidden = $("photo-row").hidden = !!it;
+    $("new-cat-row").hidden = true;
+    if (it) {
+      form.elements.name.value = it.name;
+      form.elements.description.value = it.description;
+      catSel.value = (it.categories[0] || {}).id || "";
+      form.elements.online.checked = it.online;
+      form.elements.track.checked = it.variations.some(v => v.tracked);
+      const small = it.variations.find(v => !BIG.test(v.name)) || it.variations[0] || {};
+      const big = it.variations.find(v => BIG.test(v.name));
+      form.elements.price.value = dollars(small.price_cents);
+      form.elements.big_price.value = big && big.price_cents !== small.price_cents ? dollars(big.price_cents) : "";
+      $("big-row").hidden = !big;
+    } else {
+      const want = $("items-filter").value;
+      if (want.startsWith("c:")) catSel.value = want.slice(2);
+      $("big-row").hidden = false;
+    }
+    dlg.showModal();
+    form.elements.name.focus();
+  }
+  $("item-add").onclick = () => openItem(null);
+  $("item-cancel").onclick = () => dlg.close();
+  form.elements.category_id.onchange = e => {
+    $("new-cat-row").hidden = e.target.value !== "__new";
+    if (e.target.value === "__new") form.elements.new_category.focus();
+  };
+  form.elements.one_size.onchange = e => {
+    form.querySelectorAll('[name=size]').forEach(b => { b.disabled = e.target.checked; });
+    $("big-row").hidden = e.target.checked;
+  };
+
+  function bad(el, msg) {
+    el.classList.add("bad"); el.focus();
+    $("item-msg").textContent = msg;
+    return false;
+  }
+  const priceOk = v => v === "" || (/^\$?\s*\d+(\.\d{1,2})?$/.test(v.trim()) && parseFloat(v.replace("$", "")) >= 0.5);
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    form.querySelectorAll(".bad").forEach(x => x.classList.remove("bad"));
+    const f = form.elements;
+    const name = f.name.value.trim(), price = f.price.value.trim(), big = f.big_price.value.trim();
+    if (!name) return bad(f.name, "Give the item a name.");
+    if (f.category_id.value === "__new" && !f.new_category.value.trim()) return bad(f.new_category, "Name the new event or partner.");
+    const sizes = f.one_size.checked ? [] : [...form.querySelectorAll('[name=size]:checked')].map(b => b.value);
+    if (!editing && !f.one_size.checked && !sizes.length) return bad(f.one_size, "Pick at least one size, or “One size”.");
+    if (!editing && !price) return bad(f.price, "Enter a price.");
+    if (!priceOk(price)) return bad(f.price, "Enter a price like 10 or 12.50.");
+    if (!priceOk(big)) return bad(f.big_price, "Enter a price like 12 or 14.50, or leave it blank.");
+    if (editing && !price && editing.variations.some(v => v.price_cents !== null)) return bad(f.price, "Enter a price.");
+
+    const body = {
+      name, description: f.description.value.trim(), online: f.online.checked, track: f.track.checked,
+      category_id: f.category_id.value === "__new" ? "" : f.category_id.value,
+      price: price || undefined, big_price: big || undefined,
+    };
+    if (f.category_id.value === "__new") body.new_category = f.new_category.value.trim();
+    $("item-save").disabled = true;
+    $("item-msg").textContent = "Saving to Square…";
+    try {
+      if (editing) {
+        if (body.new_category) {
+          // A new event or partner: make the Square category first, then file the item under it
+          body.category_id = (await send("/api/admin/categories", "POST", { name: body.new_category })).id;
+          delete body.new_category;
+        }
+        await send(`/api/admin/items/${encodeURIComponent(editing.id)}`, "PUT", body);
+      } else {
+        body.sizes = f.one_size.checked ? [] : sizes;
+        body.tax_id = f.tax_id.value || undefined;
+        const made = await send("/api/admin/items", "POST", body);
+        const file = f.photo.files[0];
+        if (file && made.id) {
+          $("item-msg").textContent = "Uploading the photo…";
+          try { await uploadPhoto(made.id, file); }
+          catch (err) { alert("The item was saved, but the photo didn't upload: " + err.message + " Click its picture box to try again."); }
+        }
+      }
+      dlg.close();
+      await loadItems();
+    } catch (err) { $("item-msg").textContent = err.message; }
+    $("item-save").disabled = false;
+  };
 
   // ---------- setup check ----------
   async function loadSetup(countOnly) {
@@ -503,7 +742,6 @@
     try { data = await api("/api/admin/status"); }
     catch (err) { $("checks").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
     dashboard = data.dashboard;
-    $("sq-items").href = dashboard + "/items/library";
     const bad = data.checks.filter(c => !c.ok).length;
     $("n-setup").textContent = bad ? "●" : "";
     if (countOnly) return;

@@ -28,7 +28,11 @@
   }
   .visit dd { margin-top: 2px; }
   .visit dd a:hover { color: var(--brass-soft); }
-  .visit .map { min-height: 380px; background: #2a2420; }
+  .visit .map { position: relative; min-height: 380px; background: #2a2420; overflow: hidden; }
+  .visit .map img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
+  .map-actions { position: absolute; inset: auto 0 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 22px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.75)); }
+  .map-actions .btn.light { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
   .visit .map iframe { width: 100%; height: 100%; min-height: 380px; border: 0; display: block; filter: grayscale(0.4) contrast(1.05); }
 
   .visit { border-radius: 18px; overflow: hidden; }
@@ -93,9 +97,12 @@
             <div><dt>Email</dt><dd><a href="mailto:WhimsicalPig@hotmail.com">WhimsicalPig@hotmail.com</a></dd></div>
           </dl>
         </div>
-        <div class="map">
-          <iframe title="Map to The Whimsical Pig" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&amp;output=embed"></iframe>
+        <div class="map" id="map">
+          <img src="images/work/shop_06-sm.webp" alt="Our storefront on Public Square" loading="lazy" decoding="async">
+          <div class="map-actions">
+            <button class="btn" type="button" id="show-map">Show the Map</button>
+            <a class="btn light" href="https://www.google.com/maps/dir/?api=1&amp;destination=50+Public+Square+Suite+E1+Watertown+NY+13601" target="_blank" rel="noopener">Get Directions</a>
+          </div>
         </div>
       </div>
       <div class="gallery spot" id="spot"></div>
@@ -130,6 +137,14 @@
 </main>
 
 <footer id="site-footer"></footer>
+
+<script>
+  // The Google map is heavy, so it only loads when someone asks for it
+  document.getElementById("show-map").onclick = () => {
+    document.getElementById("map").innerHTML = `<iframe title="Map to The Whimsical Pig" referrerpolicy="no-referrer-when-downgrade"
+      src="https://www.google.com/maps?q=50+Public+Square,+Watertown,+NY+13601&amp;output=embed"></iframe>`;
+  };
+</script>
 
 <script>
   renderGallery(document.getElementById("spot"), [

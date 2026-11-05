@@ -18,8 +18,8 @@ can't take this repo as-is because of the shop back end; use the Git connection 
 | `index.html` | Home: the full logo with the flying pig, featured banners, specialties, a peek at our work, and how ordering works |
 | `work.html` | **Our Work**: the full gallery with Military / Framing / Apparel / Awards & Gifts filters |
 | `visit.html` | **Visit**: address, hours, phone, email, map, and ways to reach us from out of town |
-| `shop.html` | Online shop: items from Square with options, prices and stock left, a cart, Square checkout, plus **Quick Pay** |
-| `admin.html` | **Shop admin** at `/admin`: order requests, online orders, stock counts and a setup check |
+| `shop.html` | Online shop: items from Square with options, prices and stock left, sort and "Shop by event" filters, a cart, and card payment right on the page |
+| `admin.html` | **Shop admin** at `/admin`: order requests, online orders, adding and editing shop items, stock counts and a setup check |
 | `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `story.html` | **Our Story**: the shop's story with the pig painting. Written from known facts only — add your own history (who started it, how, and why a pig) |
@@ -53,12 +53,11 @@ come out of the same stock count, and Square adds sales tax at checkout.
 **How it works**
 
 - **Shop page:** lists everything in Square's Website category, with options like
-  sizes, price and how many are left. Customers add items to a cart, choose pick up
-  (or shipping, if a shipping fee is set), and pay on Square's secure checkout page.
+  sizes, price and how many are left. Customers can sort, filter by event or partner,
+  add items to a cart, choose pick up or shipping, and pay by card right on the page.
+  A size and a phone number are required before checkout.
 - While a customer is paying, their items are held for 30 minutes so two people
   can't buy the last one.
-- **Quick Pay:** customers type the amount and an invoice or order number, then pay
-  through Square. No separate payment link is needed.
 - When Square reports a payment, it shows in the admin page under **Online Orders**.
 
 **The admin page** (`/admin`, password protected) has four tabs:
@@ -66,11 +65,13 @@ come out of the same stock count, and Square adds sales tax at checkout.
 | Tab | What it's for |
 | --- | --- |
 | Order Requests | Everything from the Start an Order form, with photos. Soonest due first: red = past due, amber = due within 3 days. Status (new → quoted → waiting on items → in production → ready → done), private notes, search, reply by email or call. |
-| Online Orders | Paid shop orders and Quick Pay payments: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
-| Shop Items | What's in the Website category, live from Square. Quick stock counts with + and −. Adding items, prices and photos is done in Square. |
+| Online Orders | Paid shop orders: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
+| Shop Items | Every item in Square. **+ Add Item** (name, event or partner, sizes, price, a higher 2XL-and-up price, tax, photo). Edit name, description, event and price; turn "On the website" on or off; click the picture box to add or change a photo; count stock with + and −. Everything is saved in Square, so the register matches. |
 | Setup | A checklist of what's connected, with anything missing in red. |
 
-**Adding things to the online shop (in Square)**
+**Adding things to the online shop**
+
+Easiest: `/admin` → **Shop Items** → **+ Add Item**. Or in Square itself:
 
 1. In Square: **Items → Categories → Create category** named **Website** (once).
 2. Create or open an item, add its photo, price and options (sizes, colors…), and
@@ -94,14 +95,14 @@ Already in the code (`wrangler.jsonc` → `vars`): the Square location ID
 
 With the Application ID set, customers pay by card **right on the shop page** (Square's secure
 card box; card numbers go straight to Square, never to this site). Payments are recorded the
-moment they go through, so no webhook is needed. Without it, Buy and Quick Pay send customers
+moment they go through, so no webhook is needed. Without it, Buy sends customers
 to Square's own checkout page instead, which needs a webhook (`payment.updated`, URL
 `/api/square-webhook`, signature key as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`) to record payments.
 
 Optional: `SQUARE_SHOP_CATEGORY` to use a category name other than "Website".
 
 Until Square is connected, the shop shows the items in `shop-items.js` with "Call to Order" buttons
-(or a payment link pasted into `buyUrl`), and Quick Pay uses `quickPay.buyUrl` or "Call to pay".
+(or a payment link pasted into `buyUrl`).
 
 ## Setting up "Start an Order"
 

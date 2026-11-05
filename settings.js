@@ -37,7 +37,7 @@ window.SETTINGS = {
     },
     {
       q: "Do you take deposits?",
-      a: "If a deposit is needed, we'll let you know with your quote. You can pay it online with Quick Pay on our Shop page, or by phone.",
+      a: "If a deposit is needed, we'll let you know with your quote. You can pay it at the shop or over the phone.",
     },
     {
       q: "Will I see the design before it's made?",

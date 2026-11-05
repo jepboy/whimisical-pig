@@ -6,14 +6,12 @@
 //   GET  /api/products                  shop items from Square, with stock left
 //   POST /api/quote                     cart -> subtotal, shipping, tax and total from Square
 //   POST /api/pay                       cart + card token -> Square order and payment, on our page
-//   POST /api/quickpay/pay              amount + card token -> Square payment, on our page
 //   POST /api/checkout                  cart -> Square's own checkout page (used if there's
 //                                       no SQUARE_APPLICATION_ID for the on-page card form)
-//   POST /api/quickpay                  amount -> Square's own checkout page (same)
 //   POST /api/square-webhook            Square notices: payments, stock and item changes
 //   POST /api/order-request             "Start an Order" form -> saved for the admin page
 //   POST /api/admin/login | logout      admin password login
-//   ... /api/admin/*                    admin page: requests, online orders, stock, setup check
+//   ... /api/admin/*                    admin page: requests, online orders, items, stock, setup check
 //
 // Square is the one place for shop items, prices, photos and stock. Anything in
 // the Square category named SQUARE_SHOP_CATEGORY ("Website" unless set) shows in
@@ -43,7 +41,6 @@ const CATALOG_SECONDS = 60;       // how long the shop list from Square is reuse
 const SESSION_DAYS = 7;
 const MAX_CART_LINES = 20;
 const MAX_QTY = 20;
-const QUICKPAY_MAX = 10000;       // dollars
 const LOGIN_TRIES = 8;            // wrong passwords allowed per 15 minutes
 const MAX_REQUEST_FILES = 8;
 const MAX_REQUEST_FILE_BYTES = 1_900_000;   // D1 rows hold up to 2 MB
@@ -140,9 +137,7 @@ async function route(request, env, url, path) {
   if (path === "/api/products" && m === "GET") return publicProducts(env);
   if (path === "/api/quote" && m === "POST") return quote(request, env);
   if (path === "/api/pay" && m === "POST") return pay(request, env);
-  if (path === "/api/quickpay/pay" && m === "POST") return quickPayCard(request, env);
   if (path === "/api/checkout" && m === "POST") return checkout(request, env, url);
-  if (path === "/api/quickpay" && m === "POST") return quickPay(request, env, url);
   if (path === "/api/square-webhook" && m === "POST") return squareWebhook(request, env);
   if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env);
 
@@ -155,6 +150,12 @@ async function route(request, env, url, path) {
     if (path === "/api/admin/status" && m === "GET") return setupStatus(request, env, url);
     if (path === "/api/admin/products" && m === "GET") return adminProducts(env, url);
     if (path === "/api/admin/stock" && m === "POST") return setStock(request, env);
+    if (path === "/api/admin/catalog" && m === "GET") return adminCatalog(env);
+    if (path === "/api/admin/items" && m === "POST") return createItem(request, env);
+    if (path === "/api/admin/categories" && m === "POST") return createCategory(request, env);
+    const im = path.match(/^\/api\/admin\/items\/([A-Za-z0-9_-]{1,64})(\/image)?$/);
+    if (im && !im[2] && m === "PUT") return updateItem(request, env, im[1]);
+    if (im && im[2] && m === "POST") return uploadItemImage(request, env, im[1]);
     if (path === "/api/admin/orders" && m === "GET") return listOrders(env);
     const om = path.match(/^\/api\/admin\/orders\/(\d+)$/);
     if (om && m === "PUT") return updateOrder(request, env, +om[1]);
@@ -265,18 +266,7 @@ async function fetchCatalog(env) {
   }
 
   // Stock counts for variations Square tracks
-  const tracked = items.flatMap(it => it.variations.filter(v => v.tracked).map(v => v.id));
-  const counts = {};
-  for (let i = 0; i < tracked.length; i += 1000) {
-    let c;
-    do {
-      const page = await squareOk(env, "POST", "/v2/inventory/counts/batch-retrieve", {
-        catalog_object_ids: tracked.slice(i, i + 1000), location_ids: [loc], states: ["IN_STOCK"], ...(c ? { cursor: c } : {}),
-      });
-      for (const n of page.counts || []) counts[n.catalog_object_id] = Math.floor(Number(n.quantity) || 0);
-      c = page.cursor;
-    } while (c);
-  }
+  const counts = await stockCounts(env, items.flatMap(it => it.variations.filter(v => v.tracked).map(v => v.id)));
 
   for (const it of items) {
     it.image = it.image ? names[it.image] || null : null;
@@ -286,6 +276,22 @@ async function fetchCatalog(env) {
   }
   items.sort((a, b) => (a.ordinal ?? 1e9) - (b.ordinal ?? 1e9) || a.name.localeCompare(b.name));
   return { category_found: true, items, fetched_at: Date.now() };
+}
+
+// In-stock counts at the shop's location, by variation id
+async function stockCounts(env, ids) {
+  const counts = {};
+  for (let i = 0; i < ids.length; i += 1000) {
+    let c;
+    do {
+      const page = await squareOk(env, "POST", "/v2/inventory/counts/batch-retrieve", {
+        catalog_object_ids: ids.slice(i, i + 1000), location_ids: [env.SQUARE_LOCATION_ID], states: ["IN_STOCK"], ...(c ? { cursor: c } : {}),
+      });
+      for (const n of page.counts || []) counts[n.catalog_object_id] = Math.floor(Number(n.quantity) || 0);
+      c = page.cursor;
+    } while (c);
+  }
+  return counts;
 }
 
 // Units held by customers who started checkout in the last HOLD_MINUTES
@@ -390,31 +396,6 @@ async function checkout(request, env, url) {
   return finishPaymentLink(env, res, pending.id);
 }
 
-// Quick Pay: the customer types the amount (invoice balance, deposit, ...)
-async function quickPay(request, env, url) {
-  if (!squareReady(env)) return json({ error: "Online payment isn't set up yet. Please call 315-773-3758." }, 503);
-  const b = await readJson(request);
-  const cents = Math.round(Number(String(b.amount || "").replace(/[$,\s]/g, "")) * 100);
-  if (!Number.isFinite(cents) || cents < 100) return json({ error: "Enter an amount of at least $1.00." }, 400);
-  if (cents > QUICKPAY_MAX * 100) return json({ error: `For payments over $${QUICKPAY_MAX.toLocaleString()}, please call us.` }, 400);
-  const who = String(b.name || "").trim().slice(0, 80);
-  const forWhat = String(b.reference || "").trim().slice(0, 80);
-  const title = ["Quick Pay", forWhat, who].filter(Boolean).join(" · ").slice(0, 255);
-
-  const pending = await env.DB.prepare(
-    `INSERT INTO shop_orders (kind, items, subtotal_cents, fulfillment, buyer_name, note)
-       VALUES ('quickpay', ?, ?, 'none', ?, ?) RETURNING id`
-  ).bind(JSON.stringify([{ name: title, qty: 1, price_cents: cents }]), cents, who || null, forWhat).first();
-
-  const res = await squareCall(env, "POST", "/v2/online-checkout/payment-links", {
-    idempotency_key: `wp-quickpay-${pending.id}-${crypto.randomUUID()}`,
-    payment_note: `${title} (WP-${pending.id})`,
-    quick_pay: { name: title, price_money: { amount: cents, currency: "USD" }, location_id: env.SQUARE_LOCATION_ID },
-    checkout_options: { redirect_url: `${url.origin}/shop.html?paid=WP-${pending.id}` },
-  });
-  return finishPaymentLink(env, res, pending.id);
-}
-
 // ---------------------------------------------------------------- paying on our page
 
 // What the shop page needs to show Square's card form (all public values)
@@ -478,6 +459,7 @@ function readBuyer(b, ship) {
   const buyer = { name: t(b.name), email: t(b.email), phone: t(b.phone, 30) };
   if (!buyer.name) return { error: "Please add your name." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyer.email)) return { error: "Please add a valid email for your receipt." };
+  if (buyer.phone.replace(/\D/g, "").length < 7) return { error: "Please add a phone number in case we have a question about your order." };
   if (ship) {
     const a = b.address || {};
     buyer.address = {
@@ -568,50 +550,6 @@ async function pay(request, env) {
   ).bind(payment.id, Number(payment.total_money?.amount) || Number(order.total_money?.amount) || null, pending.id).run();
   await forgetCatalog(env);
   return json({ ok: true, ref, total_cents: Number(order.total_money?.amount) || 0, receipt_url: payment.receipt_url || null });
-}
-
-// Quick Pay with the card form on our page (invoices, deposits, balances)
-async function quickPayCard(request, env) {
-  if (!cardForm(env)) return json({ error: "Card payments aren't set up yet. Please call 315-773-3758." }, 503);
-  const b = await readJson(request);
-  const cents = Math.round(Number(String(b.amount || "").replace(/[$,\s]/g, "")) * 100);
-  if (!Number.isFinite(cents) || cents < 100) return json({ error: "Enter an amount of at least $1.00." }, 400);
-  if (cents > QUICKPAY_MAX * 100) return json({ error: `For payments over $${QUICKPAY_MAX.toLocaleString()}, please call us.` }, 400);
-  const sourceId = String(b.source_id || "");
-  if (!sourceId) return json({ error: "Please enter your card details." }, 400);
-  const who = String(b.name || "").trim().slice(0, 80);
-  const email = String(b.email || "").trim().slice(0, 120);
-  const forWhat = String(b.reference || "").trim().slice(0, 80);
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Please add a valid email for your receipt." }, 400);
-  const title = ["Quick Pay", forWhat, who].filter(Boolean).join(" · ").slice(0, 255);
-
-  const pending = await env.DB.prepare(
-    `INSERT INTO shop_orders (kind, items, subtotal_cents, fulfillment, buyer_name, buyer_email, note)
-       VALUES ('quickpay', ?, ?, 'none', ?, ?, ?) RETURNING id`
-  ).bind(JSON.stringify([{ name: title, qty: 1, price_cents: cents }]), cents, who || null, email || null, forWhat).first();
-  const ref = `WP-${pending.id}`;
-
-  const paid = await squareCall(env, "POST", "/v2/payments", {
-    source_id: sourceId,
-    idempotency_key: `wp-quickpay-${pending.id}`,
-    amount_money: { amount: cents, currency: "USD" },
-    location_id: env.SQUARE_LOCATION_ID,
-    autocomplete: true,
-    reference_id: ref,
-    note: `${title} (${ref})`.slice(0, 500),
-    ...(email ? { buyer_email_address: email } : {}),
-    ...(b.verification_token ? { verification_token: String(b.verification_token) } : {}),
-  });
-  const payment = paid.data && paid.data.payment;
-  if (!paid.ok || !payment || !["COMPLETED", "APPROVED"].includes(payment.status)) {
-    console.error("Square quick pay failed", paid.status, JSON.stringify(paid.data));
-    await env.DB.prepare(`UPDATE shop_orders SET status = 'failed' WHERE id = ?`).bind(pending.id).run();
-    return json({ error: cardError(paid.data) }, 402);
-  }
-  await env.DB.prepare(
-    `UPDATE shop_orders SET status = 'paid', paid_at = datetime('now'), square_payment_id = ?, paid_cents = ? WHERE id = ?`
-  ).bind(payment.id, cents, pending.id).run();
-  return json({ ok: true, ref, receipt_url: payment.receipt_url || null });
 }
 
 async function finishPaymentLink(env, res, id) {
@@ -915,6 +853,256 @@ async function setStock(request, env) {
   }
   await forgetCatalog(env);
   return json({ ok: true });
+}
+
+// ---------------------------------------------------------------- items (admin)
+// The admin page adds and edits items here; they're saved in Square, so the
+// register and the website stay the same.
+
+const BIG_SIZE = /^(2|3|4|5)\s?X\s?L$|^X{2,5}L$/i;
+const cleanText = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, n);
+
+async function searchAll(env, body) {
+  const objects = [], related = [];
+  let cursor;
+  do {
+    const page = await squareOk(env, "POST", "/v2/catalog/search", { ...body, ...(cursor ? { cursor } : {}) });
+    objects.push(...(page.objects || []));
+    related.push(...(page.related_objects || []));
+    cursor = page.cursor;
+  } while (cursor);
+  return { objects, related };
+}
+
+// The Square category that puts items on the website, made if it's missing
+async function websiteCategoryId(env, make) {
+  const found = await squareOk(env, "POST", "/v2/catalog/search", {
+    object_types: ["CATEGORY"], query: { exact_query: { attribute_name: "name", attribute_value: shopCategory(env) } },
+  });
+  const hit = (found.objects || []).find(o => !o.is_deleted && ((o.category_data || {}).name || "").toLowerCase() === shopCategory(env).toLowerCase());
+  if (hit || !make) return hit ? hit.id : null;
+  const made = await squareOk(env, "POST", "/v2/catalog/object", {
+    idempotency_key: crypto.randomUUID(),
+    object: { type: "CATEGORY", id: "#website", category_data: { name: shopCategory(env) } },
+  });
+  return made.catalog_object.id;
+}
+
+// Everything in Square (not only what's online), for the admin page
+async function adminCatalog(env) {
+  if (!squareReady(env)) return json({ configured: false, items: [] });
+  try {
+    const [{ objects, related }, cats, taxes] = await Promise.all([
+      searchAll(env, { object_types: ["ITEM"], include_related_objects: true, limit: 200 }),
+      searchAll(env, { object_types: ["CATEGORY"], limit: 1000 }),
+      searchAll(env, { object_types: ["TAX"], limit: 1000 }),
+    ]);
+    const names = {};
+    for (const o of [...related, ...cats.objects]) {
+      if (o.type === "CATEGORY") names[o.id] = (o.category_data || {}).name;
+      if (o.type === "IMAGE") names[o.id] = (o.image_data || {}).url;
+    }
+    const website = cats.objects.find(c => ((c.category_data || {}).name || "").toLowerCase() === shopCategory(env).toLowerCase());
+    const items = objects.filter(o => !o.is_deleted && !(o.item_data || {}).is_archived).map(o => {
+      const d = o.item_data || {};
+      const catIds = (d.categories || []).map(c => c.id);
+      return {
+        id: o.id, name: d.name || "Item", description: (d.description_plaintext || d.description || "").trim(),
+        image: names[(d.image_ids || [])[0]] || null,
+        online: !!website && catIds.includes(website.id),
+        categories: catIds.filter(id => !website || id !== website.id).map(id => ({ id, name: names[id] || "" })),
+        tax_ids: d.tax_ids || [],
+        variations: (d.variations || []).filter(v => !v.is_deleted).map(v => {
+          const vd = v.item_variation_data || {};
+          const over = (vd.location_overrides || []).find(x => x.location_id === env.SQUARE_LOCATION_ID) || {};
+          return { id: v.id, name: vd.name || "", price_cents: vd.price_money ? Number(vd.price_money.amount) : null,
+                   tracked: over.track_inventory ?? !!vd.track_inventory, stock: null };
+        }),
+      };
+    });
+    const counts = await stockCounts(env, items.flatMap(it => it.variations.filter(v => v.tracked).map(v => v.id)));
+    for (const it of items) for (const v of it.variations) if (v.tracked) v.stock = counts[v.id] ?? 0;
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    const held = await heldByVariation(env);
+    for (const it of items) for (const v of it.variations) v.held = held[v.id] || 0;
+    return json({
+      configured: true, website_category: shopCategory(env), items,
+      categories: cats.objects.filter(c => !c.is_deleted && (!website || c.id !== website.id))
+        .map(c => ({ id: c.id, name: (c.category_data || {}).name || "" })).sort((a, b) => a.name.localeCompare(b.name)),
+      taxes: taxes.objects.filter(t => !t.is_deleted && (t.tax_data || {}).enabled !== false)
+        .map(t => ({ id: t.id, name: t.tax_data.name, percentage: t.tax_data.percentage, inclusive: t.tax_data.inclusion_type === "INCLUSIVE" })),
+    }, 200, { "Cache-Control": "no-store" });
+  } catch (e) {
+    return json({ error: `Couldn't read items from Square: ${e.message}` }, 502);
+  }
+}
+
+// Read and check the add / edit item form
+function readItemForm(b, creating) {
+  const out = {};
+  if (creating || b.name !== undefined) {
+    out.name = cleanText(b.name, 120);
+    if (!out.name) return { error: "Give the item a name." };
+  }
+  if (b.description !== undefined) out.description = cleanText(b.description, 1000);
+  const money = (v, label) => {
+    if (v === undefined || v === null || v === "") return null;
+    const c = Math.round(Number(String(v).replace(/[$,\s]/g, "")) * 100);
+    if (!Number.isFinite(c) || c < 50 || c > 1000000) throw new Error(`Enter ${label} of at least $0.50.`);
+    return c;
+  };
+  try {
+    out.price = money(b.price, "a price");
+    out.big_price = money(b.big_price, "a 2XL-and-up price");
+  } catch (e) { return { error: e.message }; }
+  if (creating && out.price === null && !b.price_at_register) return { error: "Enter a price, or choose \"price entered at the register\"." };
+  if (creating) {
+    const sizes = (Array.isArray(b.sizes) ? b.sizes : []).map(x => cleanText(x, 30)).filter(Boolean);
+    out.sizes = [...new Set(sizes)].slice(0, 20);
+    if (!out.sizes.length) out.sizes = ["Regular"];
+  }
+  return { form: out };
+}
+
+async function createItem(request, env) {
+  if (!squareReady(env)) return json({ error: "Square isn't connected yet." }, 503);
+  const b = await readJson(request);
+  const { form, error } = readItemForm(b, true);
+  if (error) return json({ error }, 400);
+  const objects = [];
+  let categoryId = cleanText(b.category_id, 64) || null;
+  const newCategory = cleanText(b.new_category, 80);
+  if (!categoryId && newCategory) {
+    categoryId = "#category";
+    objects.push({ type: "CATEGORY", id: "#category", category_data: { name: newCategory } });
+  }
+  const cats = [];
+  if (categoryId) cats.push({ id: categoryId });
+  if (b.online) cats.push({ id: await websiteCategoryId(env, true) });
+  const track = !!b.track;
+  objects.push({
+    type: "ITEM", id: "#item", present_at_all_locations: true,
+    item_data: {
+      name: form.name,
+      ...(form.description ? { description: form.description } : {}),
+      product_type: "REGULAR",
+      ...(cats.length ? { categories: cats } : {}),
+      ...(categoryId ? { reporting_category: { id: categoryId } } : {}),
+      ...(b.tax_id ? { tax_ids: [cleanText(b.tax_id, 64)] } : {}),
+      variations: form.sizes.map((size, i) => {
+        const cents = BIG_SIZE.test(size) && form.big_price ? form.big_price : form.price;
+        return {
+          type: "ITEM_VARIATION", id: `#v${i}`, present_at_all_locations: true,
+          item_variation_data: {
+            item_id: "#item", name: size, track_inventory: track,
+            ...(cents ? { pricing_type: "FIXED_PRICING", price_money: { amount: cents, currency: "USD" } } : { pricing_type: "VARIABLE_PRICING" }),
+          },
+        };
+      }),
+    },
+  });
+  const r = await squareCall(env, "POST", "/v2/catalog/batch-upsert", { idempotency_key: crypto.randomUUID(), batches: [{ objects }] });
+  if (!r.ok) {
+    const e = (r.data.errors || [])[0] || {};
+    return json({ error: `Square didn't save it: ${e.detail || r.status}` }, 502);
+  }
+  const id = ((r.data.id_mappings || []).find(m => m.client_object_id === "#item") || {}).object_id;
+  await forgetCatalog(env);
+  return json({ ok: true, id });
+}
+
+// A new event or partner category
+async function createCategory(request, env) {
+  if (!squareReady(env)) return json({ error: "Square isn't connected yet." }, 503);
+  const name = cleanText((await readJson(request)).name, 80);
+  if (!name) return json({ error: "Name the new event or partner." }, 400);
+  const r = await squareCall(env, "POST", "/v2/catalog/object", {
+    idempotency_key: crypto.randomUUID(), object: { type: "CATEGORY", id: "#category", category_data: { name } },
+  });
+  if (!r.ok) {
+    const e = (r.data.errors || [])[0] || {};
+    return json({ error: `Square didn't save it: ${e.detail || r.status}` }, 502);
+  }
+  return json({ ok: true, id: r.data.catalog_object.id });
+}
+
+// Edit an item: name, description, event, price, on the website or not, stock tracking
+async function updateItem(request, env, id) {
+  if (!squareReady(env)) return json({ error: "Square isn't connected yet." }, 503);
+  const b = await readJson(request);
+  const { form, error } = readItemForm(b, false);
+  if (error) return json({ error }, 400);
+  const got = await squareCall(env, "GET", `/v2/catalog/object/${encodeURIComponent(id)}`);
+  const obj = got.data && got.data.object;
+  if (!got.ok || !obj || obj.type !== "ITEM") return json({ error: "That item isn't in Square anymore." }, 404);
+  const d = obj.item_data;
+  if (form.name) d.name = form.name;
+  if (form.description !== undefined) {
+    d.description = form.description;
+    delete d.description_html;
+    delete d.description_plaintext;
+  }
+  const websiteId = b.online !== undefined || b.category_id !== undefined ? await websiteCategoryId(env, !!b.online) : null;
+  let cats = (d.categories || []).map(c => c.id);
+  if (b.category_id !== undefined) {
+    const keep = cats.filter(c => c === websiteId);
+    const chosen = cleanText(b.category_id, 64);
+    cats = chosen ? [chosen, ...keep] : keep;
+    if (chosen) d.reporting_category = { id: chosen }; else delete d.reporting_category;
+  }
+  if (b.online !== undefined && websiteId) {
+    cats = cats.filter(c => c !== websiteId);
+    if (b.online) cats.push(websiteId);
+  }
+  d.categories = cats.map(c => ({ id: c }));
+  for (const v of d.variations || []) {
+    const vd = v.item_variation_data;
+    if (form.price !== null) {
+      const cents = BIG_SIZE.test(vd.name || "") && form.big_price ? form.big_price : form.price;
+      vd.pricing_type = "FIXED_PRICING";
+      vd.price_money = { amount: cents, currency: "USD" };
+    }
+    if (b.track !== undefined) {
+      vd.track_inventory = !!b.track;
+      for (const o of vd.location_overrides || []) if (o.location_id === env.SQUARE_LOCATION_ID) o.track_inventory = !!b.track;
+    }
+  }
+  const r = await squareCall(env, "POST", "/v2/catalog/object", { idempotency_key: crypto.randomUUID(), object: obj });
+  if (!r.ok) {
+    const e = (r.data.errors || [])[0] || {};
+    return json({ error: `Square didn't save it: ${e.detail || r.status}` }, 502);
+  }
+  await forgetCatalog(env);
+  return json({ ok: true });
+}
+
+// A photo for an item, sent straight on to Square
+async function uploadItemImage(request, env, id) {
+  if (!squareReady(env)) return json({ error: "Square isn't connected yet." }, 503);
+  const type = (request.headers.get("Content-Type") || "").split(";")[0];
+  if (!/^image\/(jpeg|png|gif)$/.test(type)) return json({ error: "Use a JPG, PNG or GIF photo." }, 400);
+  const bytes = await request.arrayBuffer();
+  if (bytes.byteLength > 14_000_000) return json({ error: "That photo is too large." }, 413);
+  const fd = new FormData();
+  fd.append("request", new Blob([JSON.stringify({
+    idempotency_key: crypto.randomUUID(), object_id: id, is_primary: true,
+    image: { type: "IMAGE", id: "#image", image_data: { name: "Website photo" } },
+  })], { type: "application/json" }));
+  fd.append("image_file", new Blob([bytes], { type }), "photo." + type.split("/")[1]);
+  const base = env.SQUARE_API_BASE ||
+    (env.SQUARE_ENVIRONMENT === "sandbox" ? "https://connect.squareupsandbox.com" : "https://connect.squareup.com");
+  const r = await fetch(base + "/v2/catalog/images", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "Square-Version": SQUARE_VERSION },
+    body: fd,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const e = (data.errors || [])[0] || {};
+    return json({ error: `Square didn't take the photo: ${e.detail || r.status}` }, 502);
+  }
+  await forgetCatalog(env);
+  return json({ ok: true, url: (data.image && data.image.image_data || {}).url || null });
 }
 
 async function listOrders(env) {

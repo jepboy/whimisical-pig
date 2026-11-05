@@ -161,7 +161,7 @@ function buildHeader(current) {
           ${link("order.html", "Start an Order", "order")}
           ${link("help.html", "Help", "help")}
           ${link("visit.html", "Visit", "visit")}
-          <li><a class="call" href="tel:315-773-3758">Call Us</a></li>
+          <li><a class="call" href="mailto:WhimsicalPig@hotmail.com">Email Us</a></li>
         </ul>
       </nav>
     </div>`;

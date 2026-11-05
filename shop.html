@@ -116,6 +116,61 @@
   .thanks strong { font: 600 1.35rem var(--serif); color: var(--brass-soft); display: block; }
   .thanks[hidden] { display: none; }
 
+  /* Quick pay form (when Square is connected) */
+  .qp-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 10px; margin-left: auto; align-items: end; }
+  .qp-form label { display: block; font: 700 0.64rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .qp-form input { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
+  .qp-form input:focus { outline: none; border-color: var(--pink); }
+  .qp-form .btn { margin: 0; }
+  .qp-msg { grid-column: 1 / -1; min-height: 1.2em; color: #e59a90; font-size: 0.88rem; }
+  .quickpay.has-form { flex-wrap: wrap; }
+
+  .opt-select {
+    margin-top: 12px; padding: 9px 12px; min-width: 160px; border: 1px solid var(--rule); border-radius: 10px;
+    background: var(--bg); color: var(--cream); cursor: pointer;
+  }
+
+  /* Cart */
+  .cart-btn {
+    position: fixed; right: 20px; bottom: 20px; z-index: 40;
+    display: flex; align-items: center; gap: 10px; padding: 13px 20px;
+    border: 2px solid #000; border-radius: 999px; background: var(--pink); color: #000;
+    font: 700 0.78rem var(--sans); letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+  .cart-btn[hidden] { display: none; }
+  .cart-btn .n { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px; background: #000; color: var(--pink); letter-spacing: 0; }
+  .cart-btn.bump { animation: bump .35s ease; }
+  @keyframes bump { 50% { transform: scale(1.08); } }
+  dialog.cart {
+    width: min(460px, 100vw); max-width: 100vw; height: 100vh; max-height: 100vh; margin: 0 0 0 auto; padding: 0;
+    border: 0; border-left: 2px solid #000; background: var(--bg-2); color: var(--cream);
+  }
+  dialog.cart::backdrop { background: rgba(0, 0, 0, 0.6); }
+  .cart-in { display: flex; flex-direction: column; height: 100%; padding: 26px 24px; }
+  .cart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .cart-head h2 { font-size: 1.9rem; }
+  .cart-head button { width: 40px; height: 40px; border: 2px solid var(--pink); border-radius: 50%; background: none; color: var(--pink); font-size: 1.3rem; cursor: pointer; }
+  .lines { flex: 1; overflow: auto; display: grid; align-content: start; gap: 12px; }
+  .line { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--hair); }
+  .line .thumb { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; background: #2a2420; }
+  .line .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .line h3 { font-size: 1.15rem; }
+  .line .sub { color: var(--muted); font-size: 0.85rem; }
+  .line .ctl { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .line select { padding: 4px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); }
+  .line .rm { border: 0; background: none; color: var(--pink); font-size: 0.82rem; text-decoration: underline; cursor: pointer; }
+  .line .amt { font: 600 1.15rem var(--serif); color: var(--brass-soft); }
+  .cart-foot { padding-top: 16px; border-top: 1px solid var(--rule); }
+  .ful { display: grid; gap: 8px; margin-bottom: 14px; }
+  .ful label { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; cursor: pointer; }
+  .ful input { accent-color: #e7a3b8; }
+  .total { display: flex; justify-content: space-between; font: 600 1.35rem var(--serif); }
+  .total small { display: block; font: 400 0.8rem var(--sans); color: var(--muted); }
+  .cart-foot .btn { width: 100%; margin-top: 14px; }
+  .cart-err { min-height: 1.2em; margin-top: 8px; color: #e59a90; font-size: 0.88rem; }
+  .cart-empty { color: var(--muted); padding: 30px 0; text-align: center; }
+
   .custom {
     max-width: 900px;
     margin: 88px auto 0;
@@ -127,11 +182,14 @@
 
   @media (max-width: 860px) {
     .grid { grid-template-columns: repeat(2, 1fr); gap: 40px 20px; }
+    .qp-form { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 640px) {
     .shop-body { padding-top: 40px; }
     .quickpay { flex-direction: column; text-align: center; padding: 26px 20px; }
     .quickpay .btn { margin: 4px 0 0; }
+    .qp-form { grid-template-columns: 1fr; width: 100%; margin: 4px 0 0; text-align: left; }
+    .cart-btn { right: 12px; bottom: 12px; }
     .item .frame { padding: 6px; }
     .item .mat { padding: 7px; }
     .info h3 { font-size: 1.2rem; }
@@ -158,11 +216,9 @@
   </section>
   <div class="wrap shop-body">
 
-    <div class="thanks" id="thanks" hidden role="status">
-      <strong>Thank you for your order!</strong> Square will email your receipt, and we'll be in touch about pickup or shipping.
-    </div>
+    <div class="thanks" id="thanks" hidden role="status"></div>
 
-    <div class="quickpay">
+    <div class="quickpay" id="quickpay">
       <span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/></svg></span>
       <div>
         <h2>Quick Pay</h2>
@@ -192,30 +248,88 @@
 
 <footer id="site-footer"></footer>
 
+<button class="cart-btn" id="cart-btn" type="button" hidden>Cart <span class="n" id="cart-n">0</span></button>
+<dialog class="cart" id="cart" aria-label="Your cart">
+  <div class="cart-in">
+    <div class="cart-head"><h2>Your Cart</h2><button type="button" id="cart-close" aria-label="Close cart">×</button></div>
+    <div class="lines" id="lines"></div>
+    <div class="cart-foot" id="cart-foot">
+      <div class="ful" id="ful"></div>
+      <div class="total"><span>Subtotal<small>Sales tax is added at checkout</small></span><span id="subtotal">$0</span></div>
+      <button class="btn" type="button" id="checkout">Check Out Securely</button>
+      <p class="cart-err" id="cart-err" role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
 <script src="shop-items.js"></script>
 <script>
   const shop = window.SHOP || { items: [] };
   const grid = document.getElementById("grid");
   const filters = document.getElementById("filters");
+  const $ = id => document.getElementById(id);
   const money = c => "$" + (c / 100).toFixed(2).replace(/\.00$/, "");
-
-  // Quick pay: use the payment link if there is one, otherwise call the shop
-  const qp = document.getElementById("quickpay-btn");
-  if (shop.quickPay && shop.quickPay.buyUrl) {
-    qp.href = shop.quickPay.buyUrl;
-  } else {
-    qp.textContent = "Call to pay";
-  }
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const params = new URLSearchParams(location.search);
+  let shippingFee = null;              // cents, or null for pickup only
+  const variations = new Map();        // variation id -> { item, v }
 
   // Gift cards (link set in settings.js)
   if (window.SETTINGS && SETTINGS.giftCardUrl) {
-    document.getElementById("giftcard").hidden = false;
-    document.getElementById("giftcard-btn").href = SETTINGS.giftCardUrl;
+    $("giftcard").hidden = false;
+    $("giftcard-btn").href = SETTINGS.giftCardUrl;
   }
 
   // Back from Square checkout
-  if (new URLSearchParams(location.search).has("thanks")) {
-    document.getElementById("thanks").hidden = false;
+  const thanks = $("thanks");
+  if (params.has("thanks")) {
+    thanks.hidden = false;
+    thanks.innerHTML = `<strong>Thank you for your order!</strong> Your order number is <b>${esc(params.get("thanks"))}</b>.
+      Square will email your receipt, and we'll be in touch when it's ready.`;
+    saveCart([]);
+  } else if (params.has("paid")) {
+    thanks.hidden = false;
+    thanks.innerHTML = `<strong>Thank you, your payment went through!</strong> Square will email your receipt.`;
+  }
+
+  // ---------- Quick Pay ----------
+  function setupQuickPay(live) {
+    const btn = $("quickpay-btn");
+    if (!live) {
+      if (shop.quickPay && shop.quickPay.buyUrl) btn.href = shop.quickPay.buyUrl;
+      else btn.textContent = "Call to pay";
+      return;
+    }
+    btn.remove();
+    const box = $("quickpay");
+    box.classList.add("has-form");
+    box.insertAdjacentHTML("beforeend", `
+      <form class="qp-form" id="qp-form" novalidate>
+        <div><label for="qp-amount">Amount ($)</label><input id="qp-amount" inputmode="decimal" placeholder="0.00" required></div>
+        <div><label for="qp-ref">Invoice or order #</label><input id="qp-ref" maxlength="80" placeholder="Optional"></div>
+        <div><label for="qp-name">Your name</label><input id="qp-name" maxlength="80" autocomplete="name"></div>
+        <button class="btn" type="submit">Pay Now</button>
+        <p class="qp-msg" id="qp-msg" role="alert"></p>
+      </form>`);
+    $("qp-form").onsubmit = async e => {
+      e.preventDefault();
+      const b = e.target.querySelector("button");
+      $("qp-msg").textContent = "";
+      b.disabled = true; b.textContent = "One moment…";
+      try {
+        location.href = await post("/api/quickpay", { amount: $("qp-amount").value, reference: $("qp-ref").value, name: $("qp-name").value });
+      } catch (err) {
+        $("qp-msg").textContent = err.message;
+        b.disabled = false; b.textContent = "Pay Now";
+      }
+    };
+  }
+
+  async function post(path, body) {
+    const res = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.url) throw new Error(data.error || "Checkout couldn't start. Please try again.");
+    return data.url;     // Square's secure checkout page
   }
 
   function card(category) {
@@ -228,62 +342,156 @@
     return el;
   }
 
-  // Live items from the shop database (managed at /admin)
+  // ---------- Items from Square ----------
   function renderLive(products) {
     for (const p of products) {
       const el = card(p.category);
       const img = el.querySelector("img");
       img.alt = p.name;
-      if (p.image_id) loadImg(img, "/img/" + p.image_id); else img.remove();
+      if (p.image) loadImg(img, "", p.image); else img.remove();
       const info = el.querySelector(".info");
       info.querySelector("h3").textContent = p.name;
       if (p.description) info.insertAdjacentHTML("beforeend", '<p class="note"></p>'), info.lastChild.textContent = p.description;
-      info.insertAdjacentHTML("beforeend", `<span class="price">${money(p.price_cents)}</span>`);
+      p.variations.forEach(v => variations.set(v.id, { item: p, v }));
 
-      if (p.available > 0) {
-        const left = p.available <= 3 ? `Only ${p.available} left` : `${p.available} in stock`;
-        const max = Math.min(p.available, 10);
-        info.insertAdjacentHTML("beforeend", `
-          <p class="left${p.available <= 3 ? " few" : ""}">${left}</p>
-          <div class="buy">
-            ${max > 1 ? `<label class="sr-only" for="q${p.id}">Quantity</label>
-              <select id="q${p.id}">${Array.from({ length: max }, (_, i) => `<option>${i + 1}</option>`).join("")}</select>` : ""}
-            <button class="btn" type="button">Buy Now</button>
-          </div>
-          <p class="err" role="alert"></p>`);
-        const btn = info.querySelector(".buy .btn");
-        btn.onclick = async () => {
-          const qty = max > 1 ? +info.querySelector("select").value : 1;
-          const err = info.querySelector(".err");
-          err.textContent = "";
-          btn.disabled = true;
-          btn.textContent = "One moment…";
-          try {
-            const res = await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: p.id, qty }),
-            });
-            const data = await res.json();
-            if (!res.ok || !data.url) throw new Error(data.error || "Checkout couldn't start.");
-            location.href = data.url;          // Square's secure checkout page
-          } catch (e) {
-            err.textContent = e.message;
-            btn.disabled = false;
-            btn.textContent = "Buy Now";
-          }
-        };
-      } else {
+      const inStock = p.variations.filter(v => v.available !== 0);
+      if (!inStock.length) {
         el.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold">Sold out</span>');
-        info.insertAdjacentHTML("beforeend", '<p class="left">Sold out. Check back soon</p>');
+        const low = Math.min(...p.variations.map(v => v.price_cents));
+        info.insertAdjacentHTML("beforeend", `<span class="price">${money(low)}</span><p class="left">Sold out. Check back soon</p>`);
+        grid.appendChild(el);
+        continue;
       }
+      const many = p.variations.length > 1;
+      info.insertAdjacentHTML("beforeend", `
+        ${many ? `<label class="sr-only" for="v-${p.id}">Option</label>
+          <select class="opt-select" id="v-${p.id}">${p.variations.map(v =>
+            `<option value="${esc(v.id)}"${v.available === 0 ? " disabled" : ""}>${esc(v.name || "Option")}${v.available === 0 ? " (sold out)" : ""}</option>`).join("")}</select>` : ""}
+        <span class="price"></span>
+        <p class="left"></p>
+        <div class="buy">
+          <label class="sr-only" for="q-${p.id}">Quantity</label>
+          <select id="q-${p.id}"></select>
+          <button class="btn" type="button">Add to Cart</button>
+        </div>`);
+      const pick = info.querySelector(".opt-select");
+      if (pick) pick.value = inStock[0].id;
+      const qty = info.querySelector(".buy select");
+      const show = () => {
+        const v = variations.get(pick ? pick.value : p.variations[0].id).v;
+        info.querySelector(".price").textContent = money(v.price_cents);
+        const left = info.querySelector(".left");
+        left.textContent = v.available === null ? "" : v.available <= 3 ? `Only ${v.available} left` : `${v.available} in stock`;
+        left.className = "left" + (v.available !== null && v.available <= 3 ? " few" : "");
+        const max = v.available === null ? 10 : Math.min(v.available, 10);
+        qty.innerHTML = Array.from({ length: max }, (_, i) => `<option>${i + 1}</option>`).join("");
+        qty.hidden = max < 2;
+      };
+      if (pick) pick.onchange = show;
+      show();
+      const btn = info.querySelector(".buy .btn");
+      btn.onclick = () => {
+        addToCart(pick ? pick.value : p.variations[0].id, +qty.value || 1);
+        btn.textContent = "Added ✓";
+        setTimeout(() => { btn.textContent = "Add to Cart"; }, 1400);
+      };
       grid.appendChild(el);
     }
     return products.map(p => p.category);
   }
 
-  // Fallback list from shop-items.js (used before any items are added at /admin,
-  // or when the page is opened as a plain file without the back end)
+  // ---------- Cart (kept in this browser) ----------
+  function loadCart() {
+    try { return JSON.parse(localStorage.getItem("wp-cart") || "[]").filter(l => l && l.variation_id && l.qty > 0); }
+    catch (e) { return []; }
+  }
+  function saveCart(lines) {
+    try { localStorage.setItem("wp-cart", JSON.stringify(lines)); } catch (e) {}
+  }
+  let cart = loadCart();
+  const limitOf = id => { const v = variations.get(id).v; return v.available === null ? 20 : Math.min(v.available, 20); };
+
+  function addToCart(id, qty) {
+    const line = cart.find(l => l.variation_id === id);
+    if (line) line.qty = Math.min(line.qty + qty, limitOf(id));
+    else cart.push({ variation_id: id, qty: Math.min(qty, limitOf(id)) });
+    saveCart(cart);
+    renderCart();
+    const b = $("cart-btn");
+    b.classList.remove("bump"); void b.offsetWidth; b.classList.add("bump");
+  }
+
+  function renderCart() {
+    cart = cart.filter(l => variations.has(l.variation_id) && limitOf(l.variation_id) > 0)
+               .map(l => ({ ...l, qty: Math.min(l.qty, limitOf(l.variation_id)) }));
+    saveCart(cart);
+    const count = cart.reduce((n, l) => n + l.qty, 0);
+    $("cart-n").textContent = count;
+    $("cart-btn").hidden = !count && !$("cart").open;
+    const lines = $("lines");
+    if (!cart.length) {
+      lines.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+      $("cart-foot").hidden = true;
+      return;
+    }
+    $("cart-foot").hidden = false;
+    let sub = 0;
+    lines.innerHTML = cart.map(l => {
+      const { item, v } = variations.get(l.variation_id);
+      sub += v.price_cents * l.qty;
+      const max = limitOf(l.variation_id);
+      return `<div class="line" data-id="${esc(l.variation_id)}">
+        <div class="thumb">${item.image ? `<img src="${esc(item.image)}" alt="">` : ""}</div>
+        <div>
+          <h3>${esc(item.name)}</h3>
+          <div class="sub">${item.variations.length > 1 ? esc(v.name) + " · " : ""}${money(v.price_cents)} each</div>
+          <div class="ctl">
+            <select aria-label="Quantity">${Array.from({ length: max }, (_, i) => `<option${i + 1 === l.qty ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
+            <button class="rm" type="button">Remove</button>
+          </div>
+        </div>
+        <span class="amt">${money(v.price_cents * l.qty)}</span>
+      </div>`;
+    }).join("");
+    $("subtotal").textContent = money(sub);
+  }
+
+  $("lines").onchange = e => {
+    const id = e.target.closest(".line").dataset.id;
+    cart.find(l => l.variation_id === id).qty = +e.target.value;
+    renderCart();
+  };
+  $("lines").onclick = e => {
+    if (!e.target.classList.contains("rm")) return;
+    const id = e.target.closest(".line").dataset.id;
+    cart = cart.filter(l => l.variation_id !== id);
+    renderCart();
+  };
+  $("cart-btn").onclick = () => { renderCart(); $("cart").showModal(); };
+  $("cart-close").onclick = () => { $("cart").close(); renderCart(); };
+  $("cart").onclick = e => { if (e.target === $("cart")) { $("cart").close(); renderCart(); } };
+
+  function setupFulfillment() {
+    $("ful").innerHTML = `
+      <label><input type="radio" name="ful" value="pickup" checked> Pick up at our shop in Watertown (free)</label>
+      ${shippingFee !== null ? `<label><input type="radio" name="ful" value="ship"> Ship it to me (+${money(shippingFee)})</label>` : ""}`;
+  }
+
+  $("checkout").onclick = async () => {
+    const b = $("checkout");
+    $("cart-err").textContent = "";
+    b.disabled = true; b.textContent = "One moment…";
+    try {
+      const ful = document.querySelector('input[name="ful"]:checked');
+      location.href = await post("/api/checkout", { items: cart, fulfillment: ful ? ful.value : "pickup" });
+    } catch (err) {
+      $("cart-err").textContent = err.message;
+      b.disabled = false; b.textContent = "Check Out Securely";
+    }
+  };
+
+  // ---------- Fallback list from shop-items.js ----------
+  // Used until Square is connected, or when the page is opened as a plain file.
   function renderStatic(items) {
     for (const it of items) {
       const el = card(it.category);
@@ -325,14 +533,23 @@
   }
 
   (async () => {
-    let live = null;
+    let data = null;
     if (location.protocol.startsWith("http")) {
       try {
         const res = await fetch("/api/products", { headers: { Accept: "application/json" } });
-        if (res.ok) live = (await res.json()).products;
+        if (res.headers.get("Content-Type")?.includes("json")) data = await res.json();
       } catch (e) {}
     }
-    buildFilters(live && live.length ? renderLive(live) : renderStatic(shop.items));
+    const live = !!(data && data.configured);
+    setupQuickPay(live);
+    if (live && data.products.length) {
+      shippingFee = data.shipping_fee_cents;
+      buildFilters(renderLive(data.products));
+      setupFulfillment();
+      renderCart();
+    } else {
+      buildFilters(renderStatic(shop.items));
+    }
   })();
 </script>
 </body>

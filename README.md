@@ -18,15 +18,15 @@ can't take this repo as-is because of the shop back end; use the Git connection 
 | `index.html` | Home: the full logo with the flying pig, featured banners, specialties, a peek at our work, and how ordering works |
 | `work.html` | **Our Work**: the full gallery with Military / Framing / Apparel / Awards & Gifts filters |
 | `visit.html` | **Visit**: address, hours, phone, email, map, and ways to reach us from out of town |
-| `shop.html` | Online shop: ready-made items with prices and stock left, Square checkout, plus **Quick Pay** |
-| `admin.html` | **Shop admin** at `/admin`: add items, prices, photos and stock; see online orders |
+| `shop.html` | Online shop: items from Square with options, prices and stock left, a cart, Square checkout, plus **Quick Pay** |
+| `admin.html` | **Shop admin** at `/admin`: order requests, online orders, stock counts and a setup check |
 | `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `story.html` | **Our Story**: the shop's story with the pig painting. Written from known facts only — add your own history (who started it, how, and why a pig) |
 | `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
 | `settings.js` | **Edit this** for the announcement bar, review and gift card links, and the FAQ answers |
-| `shop-items.js` | Backup item list, shown only before any items are added at `/admin` |
+| `shop-items.js` | Backup item list, shown only until Square is connected |
 | `order-config.js` | **Edit this** to change order types, examples and questions, and where orders are sent |
 
 ## Shop-wide settings (`settings.js`)
@@ -46,15 +46,37 @@ before ordering.
 
 ## The shop and its admin page
 
-Items, prices, photos and stock live in a small database on Cloudflare (created
-automatically). Manage them at **`/admin`**. Square only handles the payment.
+**Square is the one place for shop items, prices, photos and stock.** Anything in
+the Square category **Website** shows in the online shop. In-store and online sales
+come out of the same stock count, and Square adds sales tax at checkout.
 
 **How it works**
 
-- The Shop page lists every item marked "Show in the shop", with its price and how many are left.
-- **Buy Now** checks stock, holds the item for 30 minutes, and sends the customer to Square's secure checkout.
-- When Square reports the payment complete, the order shows as **Paid** in the admin page and the stock goes down by itself.
-- Sales rung up **in the store** don't change the website's count. Use the − button in the admin page after an in-store sale of a shop item.
+- **Shop page:** lists everything in Square's Website category, with options like
+  sizes, price and how many are left. Customers add items to a cart, choose pick up
+  (or shipping, if a shipping fee is set), and pay on Square's secure checkout page.
+- While a customer is paying, their items are held for 30 minutes so two people
+  can't buy the last one.
+- **Quick Pay:** customers type the amount and an invoice or order number, then pay
+  through Square. No separate payment link is needed.
+- When Square reports a payment, it shows in the admin page under **Online Orders**.
+
+**The admin page** (`/admin`, password protected) has four tabs:
+
+| Tab | What it's for |
+| --- | --- |
+| Order Requests | Everything from the Start an Order form, with photos. Soonest due first: red = past due, amber = due within 3 days. Status (new → quoted → waiting on items → in production → ready → done), private notes, search, reply by email or call. |
+| Online Orders | Paid shop orders and Quick Pay payments: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
+| Shop Items | What's in the Website category, live from Square. Quick stock counts with + and −. Adding items, prices and photos is done in Square. |
+| Setup | A checklist of what's connected, with anything missing in red. |
+
+**Adding things to the online shop (in Square)**
+
+1. In Square: **Items → Categories → Create category** named **Website** (once).
+2. Create or open an item, add its photo, price and options (sizes, colors…), and
+   add it to the **Website** category. Turn on **stock tracking** if you want the shop
+   to show how many are left and stop selling at zero.
+3. It appears on the website within a minute.
 
 **One-time setup**
 
@@ -64,19 +86,23 @@ automatically). Manage them at **`/admin`**. Square only handles the payment.
    (any name, e.g. "Whimsical Pig website"). Under **Production**, copy the **Access token**, and under **Locations**
    copy the shop's **Location ID**. Add both in Cloudflare as Secrets:
    `SQUARE_ACCESS_TOKEN` and `SQUARE_LOCATION_ID`.
-3. **Payment notices.** In the Square app, open **Webhooks → Subscriptions → Add subscription** (Production):
+3. **Square notices.** In the Square app, open **Webhooks → Subscriptions → Add subscription** (Production):
    - URL: `https://whimisical-pig.wwagner.workers.dev/api/square-webhook` (use the shop's own domain later if it moves)
-   - Event: `payment.updated`
+   - Events: `payment.created`, `payment.updated`, `inventory.count.updated`, `catalog.version.updated`
 
    Save, copy the subscription's **Signature key**, and add it in Cloudflare as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`.
-4. **Test first (optional).** Use the Square app's **Sandbox** token, location and webhook instead, and add the secret
-   `SQUARE_ENVIRONMENT` = `sandbox`. Buy something with Square's test card, check it shows as Paid, then switch the
-   secrets to Production and delete `SQUARE_ENVIRONMENT`.
+4. **Shipping (optional).** To offer shipping, add a variable `SHIPPING_FEE` with the flat charge in dollars, e.g. `12.95`.
+   Without it, online orders are pick up only.
+5. **Check it.** Open `/admin` → **Setup**. Everything should be green.
+6. **Test first (recommended).** Use the Square app's **Sandbox** token, location and webhook instead, and add
+   `SQUARE_ENVIRONMENT` = `sandbox`. Make a test item in the sandbox's Website category with stock tracking on, buy one
+   with Square's test card, and check that: it shows as **Paid** under Online Orders, and the stock went down by one.
+   Then switch the secrets to Production and delete `SQUARE_ENVIRONMENT`.
 
-Until steps 2–3 are done, Buy Now shows "Online checkout isn't set up yet. Please call…".
+Optional: `SQUARE_SHOP_CATEGORY` to use a category name other than "Website".
 
-**Quick Pay** (invoices and deposits) is still a single Square payment link where the customer types the amount:
-create it in Square and paste it into `shop-items.js` as `quickPay.buyUrl`.
+Until Square is connected, the shop shows the items in `shop-items.js` with "Call to Order" buttons
+(or a payment link pasted into `buyUrl`), and Quick Pay uses `quickPay.buyUrl` or "Call to pay".
 
 ## Setting up "Start an Order"
 

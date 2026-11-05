@@ -1,7 +1,8 @@
 // =====================================================================
-//  THE WHIMSICAL PIG — SHOP ITEMS
-//  Edit this file to change what's for sale. No coding needed beyond
-//  keeping the quotes and commas in place.
+//  THE WHIMSICAL PIG — BACKUP SHOP LIST
+//  Once Square is connected (see README), the shop shows items from Square's
+//  "Website" category instead, and this file isn't used. Until then, edit this
+//  to change what's shown. Keep the quotes and commas in place.
 //
 //  For each item:
 //    name     what the customer sees

@@ -32,7 +32,7 @@
 // =====================================================================
 
 window.ORDER = {
-  tally: "",
+  tally: "https://tally.so/r/OQDqLA",
   endpoint: "",
   email: "WhimsicalPig@hotmail.com",
 

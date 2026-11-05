@@ -23,7 +23,7 @@
     "SQUARE_LOCATION_ID": "6875TE29BSGD6",
     "SHIPPING_FEE": "5",
     // The Square app's Application ID (public). Turns on paying by card on our own page.
-    "SQUARE_APPLICATION_ID": ""
+    "SQUARE_APPLICATION_ID": "sq0idp-4rtvDyFQUMdpIpsfpkZOMA"
   },
   // Shop database. Cloudflare creates it automatically on the first deploy.
   "d1_databases": [

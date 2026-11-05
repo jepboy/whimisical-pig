@@ -97,11 +97,26 @@ const SCHEMA = [
      expires_at INTEGER NOT NULL DEFAULT 0
    )`,
   `CREATE TABLE IF NOT EXISTS login_fails (ip TEXT NOT NULL, at INTEGER NOT NULL)`,
+  // Photos added from the admin page: gallery photos, replacements for the
+  // site's own photos, and banner pictures. Each has a big and a small copy.
+  `CREATE TABLE IF NOT EXISTS site_photos (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     kind TEXT NOT NULL DEFAULT 'gallery',
+     grp TEXT NOT NULL DEFAULT '',
+     caption TEXT NOT NULL DEFAULT '',
+     full BLOB NOT NULL,
+     small BLOB NOT NULL,
+     mime TEXT NOT NULL DEFAULT 'image/jpeg',
+     sort INTEGER NOT NULL DEFAULT 0,
+     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+   )`,
 ];
 // Changes to tables that may already exist from an earlier version
 const MIGRATIONS = [
   `ALTER TABLE requests ADD COLUMN note TEXT NOT NULL DEFAULT ''`,
   `UPDATE requests SET status = 'in production' WHERE status = 'in progress'`,
+  `ALTER TABLE requests ADD COLUMN notified TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE shop_orders ADD COLUMN notified TEXT NOT NULL DEFAULT ''`,
 ];
 
 let schemaReady = false;
@@ -115,13 +130,13 @@ async function ensureSchema(db) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
     try {
       if (path.startsWith("/api/")) {
         await ensureSchema(env.DB);
-        return await route(request, env, url, path);
+        return await route(request, env, url, path, ctx);
       }
       return env.ASSETS.fetch(request);
     } catch (err) {
@@ -129,14 +144,22 @@ export default {
       return json({ error: "Something went wrong. Please try again." }, 500);
     }
   },
+  // Once a day (see "triggers" in wrangler.jsonc): email the shop about items
+  // running low, including ones sold in the store
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(ensureSchema(env.DB).then(() => lowStockCheck(env)).catch(e => console.error("Daily stock check failed", e)));
+  },
 };
 
-async function route(request, env, url, path) {
+async function route(request, env, url, path, ctx) {
   const m = request.method;
 
   if (path === "/api/products" && m === "GET") return publicProducts(env);
   if (path === "/api/quote" && m === "POST") return quote(request, env);
-  if (path === "/api/pay" && m === "POST") return pay(request, env);
+  if (path === "/api/pay" && m === "POST") return pay(request, env, ctx);
+  if (path === "/api/site" && m === "GET") return publicSite(env);
+  const pm = path.match(/^\/api\/photo\/(\d+)$/);
+  if (pm && m === "GET") return servePhoto(env, +pm[1], url.searchParams.get("s") === "sm");
   if (path === "/api/checkout" && m === "POST") return checkout(request, env, url);
   if (path === "/api/square-webhook" && m === "POST") return squareWebhook(request, env);
   if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env);
@@ -157,6 +180,14 @@ async function route(request, env, url, path) {
     if (im && !im[2] && m === "PUT") return updateItem(request, env, im[1]);
     if (im && im[2] && m === "POST") return uploadItemImage(request, env, im[1]);
     if (path === "/api/admin/orders" && m === "GET") return listOrders(env);
+    if (path === "/api/admin/notify" && m === "POST") return notifyCustomer(request, env);
+    if (path === "/api/admin/test-email" && m === "POST") return testEmail(env);
+    if (path === "/api/admin/site" && m === "GET") return adminSite(env);
+    if (path === "/api/admin/site" && m === "PUT") return saveSite(request, env);
+    if (path === "/api/admin/photos" && m === "POST") return addPhoto(request, env);
+    const phm = path.match(/^\/api\/admin\/photos\/(\d+)$/);
+    if (phm && m === "PUT") return updatePhoto(request, env, +phm[1]);
+    if (phm && m === "DELETE") return deletePhoto(env, +phm[1]);
     const om = path.match(/^\/api\/admin\/orders\/(\d+)$/);
     if (om && m === "PUT") return updateOrder(request, env, +om[1]);
     if (path === "/api/admin/requests" && m === "GET") return listRequests(env);
@@ -306,8 +337,9 @@ async function heldByVariation(env) {
 }
 
 // How many a customer can buy right now: null = no limit (Square isn't counting it)
-function available(v, held) {
+function available(v, held, preorder) {
   if (v.sold_out) return 0;
+  if (preorder) return null;               // pre-orders are made to order
   if (!v.tracked) return null;
   return Math.max(0, v.stock - (held[v.id] || 0));
 }
@@ -321,9 +353,11 @@ async function publicProducts(env) {
   try { catalog = await loadCatalog(env); }
   catch { return json({ ...base, products: [], error: "The shop couldn't load. Please try again soon." }, 503); }
   const held = await heldByVariation(env);
+  const pre = await activePreorders(env);
   const products = catalog.items.map(it => ({
     id: it.id, name: it.name, description: it.description, category: it.category, image: it.image,
-    variations: it.variations.map(v => ({ id: v.id, name: v.name, price_cents: v.price_cents, available: available(v, held) })),
+    ...(pre[it.id] ? { preorder: { until: pre[it.id].until, ready: pre[it.id].ready } } : {}),
+    variations: it.variations.map(v => ({ id: v.id, name: v.name, price_cents: v.price_cents, available: available(v, held, pre[it.id]) })),
   }));
   return json({ ...base, products }, 200, { "Cache-Control": "no-store" });
 }
@@ -350,17 +384,20 @@ async function readCart(env, body) {
   const byId = new Map();
   for (const it of catalog.items) for (const v of it.variations) byId.set(v.id, { item: it, v });
   const held = await heldByVariation(env);
+  const pre = await activePreorders(env);
 
   const items = [];
   for (const [id, qty] of wanted) {
     const hit = byId.get(id);
     if (!hit) return { error: json({ error: "Something in your cart isn't available anymore. Please remove it and try again." }, 409) };
     const label = hit.item.name + (hit.item.variations.length > 1 && hit.v.name ? ` (${hit.v.name})` : "");
-    const left = available(hit.v, held);
+    const preorder = !!pre[hit.item.id];
+    const left = available(hit.v, held, preorder);
     if (left !== null && left < qty) {
       return { error: json({ error: left > 0 ? `Only ${left} left of ${label}.` : `Sorry, ${label} just sold out.` }, 409) };
     }
-    items.push({ variation_id: id, name: label, qty, price_cents: hit.v.price_cents });
+    items.push({ variation_id: id, name: label, qty, price_cents: hit.v.price_cents,
+                 ...(preorder ? { preorder: true, ready: pre[hit.item.id].ready || "" } : {}) });
   }
   const subtotal = items.reduce((s, l) => s + l.price_cents * l.qty, 0);
   return { items, subtotal, ship, fee };
@@ -416,7 +453,8 @@ function squareOrder(env, ref, cart, buyer) {
   const order = {
     location_id: env.SQUARE_LOCATION_ID,
     reference_id: ref,
-    line_items: cart.items.map(l => ({ catalog_object_id: l.variation_id, quantity: String(l.qty) })),
+    line_items: cart.items.map(l => ({ catalog_object_id: l.variation_id, quantity: String(l.qty),
+                                       ...(l.preorder ? { note: `Pre-order${l.ready ? ": " + l.ready : ""}`.slice(0, 2000) } : {}) })),
     pricing_options: { auto_apply_taxes: true, auto_apply_discounts: true },
   };
   if (cart.ship) {
@@ -496,7 +534,7 @@ function cardError(data) {
 }
 
 // Pay for a cart with the card the customer typed into Square's form on our page
-async function pay(request, env) {
+async function pay(request, env, ctx) {
   if (!cardForm(env)) return json({ error: "Card payments aren't set up yet. Please call 315-773-3758." }, 503);
   const b = await readJson(request);
   const sourceId = String(b.source_id || "");
@@ -549,6 +587,8 @@ async function pay(request, env) {
     `UPDATE shop_orders SET status = 'paid', paid_at = datetime('now'), square_payment_id = ?, paid_cents = ? WHERE id = ?`
   ).bind(payment.id, Number(payment.total_money?.amount) || Number(order.total_money?.amount) || null, pending.id).run();
   await forgetCatalog(env);
+  // Email the shop if this sale left anything running low (after the reply is sent)
+  if (ctx) ctx.waitUntil(lowStockCheck(env, cart.items.map(l => l.variation_id)).catch(e => console.error("Low stock check failed", e)));
   return json({ ok: true, ref, total_cents: Number(order.total_money?.amount) || 0, receipt_url: payment.receipt_url || null });
 }
 
@@ -804,6 +844,11 @@ async function setupStatus(request, env, url) {
       ? `Last notice from Square: ${new Date(last.value.at).toISOString().slice(0, 16).replace("T", " ")} UTC (${last.value.type}).`
       : `No notices from Square yet. Webhook URL: ${env.SQUARE_WEBHOOK_URL || url.origin + "/api/square-webhook"}`);
   }
+  add("email", mailReady(env), !mailReady(env)
+    ? "Emails are off. Add a Resend API key (RESEND_API_KEY) to get low-stock emails (see README)."
+    : canMailCustomers(env)
+      ? `Emails are on: low-stock alerts go to ${shopEmail(env)}, and order updates can be emailed to customers from ${env.MAIL_FROM}.`
+      : `Low-stock alerts go to ${shopEmail(env)}. To email customers straight from here, verify your domain in Resend and set MAIL_FROM (see README).`);
   const fee = shippingCents(env);
   add("shipping", true, fee === null ? "Shop orders are pick up only (set SHIPPING_FEE to offer shipping)."
                                      : `Shipping is offered for $${(fee / 100).toFixed(2)}.`);
@@ -811,6 +856,7 @@ async function setupStatus(request, env, url) {
     checks,
     dashboard: sandbox ? "https://squareupsandbox.com/dashboard" : "https://app.squareup.com/dashboard",
     category: shopCategory(env),
+    mail: { alerts: mailReady(env), customers: canMailCustomers(env) },
   }, 200, { "Cache-Control": "no-store" });
 }
 
@@ -925,8 +971,10 @@ async function adminCatalog(env) {
     items.sort((a, b) => a.name.localeCompare(b.name));
     const held = await heldByVariation(env);
     for (const it of items) for (const v of it.variations) v.held = held[v.id] || 0;
+    const pre = await allPreorders(env);
+    for (const it of items) it.preorder = pre[it.id] ? { ...pre[it.id], active: preorderActive(pre[it.id]) } : null;
     return json({
-      configured: true, website_category: shopCategory(env), items,
+      configured: true, website_category: shopCategory(env), items, low_stock: lowStockLevel(env),
       categories: cats.objects.filter(c => !c.is_deleted && (!website || c.id !== website.id))
         .map(c => ({ id: c.id, name: (c.category_data || {}).name || "" })).sort((a, b) => a.name.localeCompare(b.name)),
       taxes: taxes.objects.filter(t => !t.is_deleted && (t.tax_data || {}).enabled !== false)
@@ -956,6 +1004,9 @@ function readItemForm(b, creating) {
     out.big_price = money(b.big_price, "a 2XL-and-up price");
   } catch (e) { return { error: e.message }; }
   if (creating && out.price === null && !b.price_at_register) return { error: "Enter a price, or choose \"price entered at the register\"." };
+  if (b.preorder !== undefined && b.preorder && b.preorder.until && !/^\d{4}-\d{2}-\d{2}$/.test(String(b.preorder.until))) {
+    return { error: "Pick the last day to pre-order from the calendar." };
+  }
   if (creating) {
     const sizes = (Array.isArray(b.sizes) ? b.sizes : []).map(x => cleanText(x, 30)).filter(Boolean);
     out.sizes = [...new Set(sizes)].slice(0, 20);
@@ -1007,6 +1058,7 @@ async function createItem(request, env) {
     return json({ error: `Square didn't save it: ${e.detail || r.status}` }, 502);
   }
   const id = ((r.data.id_mappings || []).find(m => m.client_object_id === "#item") || {}).object_id;
+  if (id && b.preorder !== undefined) await savePreorder(env, id, b.preorder);
   await forgetCatalog(env);
   return json({ ok: true, id });
 }
@@ -1072,6 +1124,7 @@ async function updateItem(request, env, id) {
     const e = (r.data.errors || [])[0] || {};
     return json({ error: `Square didn't save it: ${e.detail || r.status}` }, 502);
   }
+  if (b.preorder !== undefined) await savePreorder(env, id, b.preorder);
   await forgetCatalog(env);
   return json({ ok: true });
 }
@@ -1108,7 +1161,7 @@ async function uploadItemImage(request, env, id) {
 async function listOrders(env) {
   const { results } = await env.DB.prepare(
     `SELECT id, kind, items, subtotal_cents, paid_cents, fulfillment, status, handled, note,
-            buyer_name, buyer_email, buyer_phone, ship_to, created_at, paid_at
+            buyer_name, buyer_email, buyer_phone, ship_to, created_at, paid_at, notified
        FROM shop_orders
       WHERE status = 'paid' OR (status = 'pending' AND created_at > datetime('now', '-${HOLD_MINUTES} minutes'))
       ORDER BY id DESC LIMIT 300`
@@ -1128,6 +1181,265 @@ async function updateOrder(request, env, id) {
   if (!sets.length) return json({ error: "Nothing to change." }, 400);
   const r = await env.DB.prepare(`UPDATE shop_orders SET ${sets.join(", ")} WHERE id = ?`).bind(...vals, id).run();
   if (!r.meta.changes) return json({ error: "Order not found." }, 404);
+  return json({ ok: true });
+}
+
+
+// ---------------------------------------------------------------- pre-orders
+// Items sold before they're made (event shirts). Saved here by Square item id:
+// { until: last day to order "YYYY-MM-DD" or "", ready: "Ready by June 14" }.
+// While a pre-order is open, stock doesn't limit sales.
+
+const todayNY = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+const preorderActive = p => !!p && (!p.until || p.until >= todayNY());
+async function allPreorders(env) {
+  const row = await kvGet(env, "preorders");
+  return (row && row.value) || {};
+}
+async function activePreorders(env) {
+  const all = await allPreorders(env);
+  return Object.fromEntries(Object.entries(all).filter(([, p]) => preorderActive(p)));
+}
+async function savePreorder(env, itemId, p) {
+  const all = await allPreorders(env);
+  if (p && p.on) all[itemId] = { until: /^\d{4}-\d{2}-\d{2}$/.test(String(p.until || "")) ? p.until : "", ready: cleanText(p.ready, 120) };
+  else delete all[itemId];
+  await kvPut(env, "preorders", all, 0);
+}
+
+// ---------------------------------------------------------------- email
+// Sent through Resend (resend.com, free for 3,000 emails a month).
+//   RESEND_API_KEY (secret)  turns email on. Without a verified domain, Resend only
+//                            sends to the address the Resend account was made with,
+//                            which is enough for low-stock alerts to the shop.
+//   MAIL_FROM (variable)     e.g. "The Whimsical Pig <orders@thewhimsicalpig.com>" once
+//                            that domain is verified in Resend. Needed to email customers.
+//   SHOP_EMAIL (variable)    where alerts go, and where customer replies go.
+
+const mailReady = env => !!env.RESEND_API_KEY;
+const canMailCustomers = env => mailReady(env) && !!env.MAIL_FROM;
+const shopEmail = env => env.SHOP_EMAIL || "WhimsicalPig@hotmail.com";
+
+async function sendMail(env, { to, subject, text, replyTo }) {
+  if (!mailReady(env)) return { ok: false, error: "Email isn't set up yet." };
+  const r = await fetch((env.RESEND_API_BASE || "https://api.resend.com") + "/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: env.MAIL_FROM || "The Whimsical Pig website <onboarding@resend.dev>",
+      to: [to], subject, text, ...(replyTo ? { reply_to: replyTo } : {}),
+    }),
+  });
+  if (r.ok) return { ok: true };
+  const d = await r.json().catch(() => ({}));
+  console.error("Email failed", r.status, JSON.stringify(d));
+  return { ok: false, error: `The email didn't send: ${d.message || r.status}` };
+}
+
+async function testEmail(env) {
+  if (!mailReady(env)) return json({ error: "Add the Resend API key (RESEND_API_KEY) in Cloudflare first." }, 503);
+  const r = await sendMail(env, { to: shopEmail(env), subject: "Test email from your website",
+    text: "This is a test from The Whimsical Pig website. Low-stock alerts will arrive like this." });
+  return r.ok ? json({ ok: true, to: shopEmail(env) }) : json({ error: r.error }, 502);
+}
+
+// ---------------------------------------------------------------- low stock
+
+const lowStockLevel = env => Math.max(0, parseInt(env.LOW_STOCK || "2", 10) || 0);
+
+// Emails the shop about tracked website items at or below the low-stock level.
+// Each one is only emailed once, until it's restocked above the level.
+// `onlyIds` limits the check to some variations (the ones just sold).
+async function lowStockCheck(env, onlyIds) {
+  if (!squareReady(env)) return [];
+  const level = lowStockLevel(env);
+  const catalog = await loadCatalog(env, true);
+  const pre = await activePreorders(env);
+  const flags = ((await kvGet(env, "low_alerted")) || {}).value || {};
+  const fresh = [];
+  for (const it of catalog.items) {
+    if (pre[it.id]) continue;
+    for (const v of it.variations) {
+      if (!v.tracked || (onlyIds && !onlyIds.includes(v.id))) continue;
+      if (v.stock > level) { delete flags[v.id]; continue; }
+      if (!flags[v.id]) fresh.push({ id: v.id, name: it.name + (it.variations.length > 1 && v.name ? ` (${v.name})` : ""), stock: v.stock });
+    }
+  }
+  if (fresh.length && mailReady(env)) {
+    const lines = fresh.map(x => `  • ${x.name}: ${x.stock <= 0 ? "SOLD OUT" : x.stock + " left"}`).join("\n");
+    const sent = await sendMail(env, {
+      to: shopEmail(env),
+      subject: fresh.length === 1 ? `Running low: ${fresh[0].name}` : `${fresh.length} shop items running low`,
+      text: `These website shop items are at ${level} or fewer:\n\n${lines}\n\n` +
+            `Update the counts on the admin page (Shop Items) after restocking.\n`,
+    });
+    if (sent.ok) for (const x of fresh) flags[x.id] = Date.now();
+  }
+  await kvPut(env, "low_alerted", flags, 0);
+  return fresh;
+}
+
+// ---------------------------------------------------------------- customer updates
+// "Your order is ready" messages from the admin page. Sends the email when it can
+// (MAIL_FROM set); either way it records that the customer was told.
+
+async function notifyCustomer(request, env) {
+  const b = await readJson(request);
+  const id = parseInt(b.id, 10);
+  const table = b.kind === "order" ? "shop_orders" : b.kind === "request" ? "requests" : null;
+  if (!table || !id) return json({ error: "Which order?" }, 400);
+  const row = await env.DB.prepare(
+    table === "requests" ? `SELECT email FROM requests WHERE id = ?` : `SELECT buyer_email AS email FROM shop_orders WHERE id = ?`
+  ).bind(id).first();
+  if (!row) return json({ error: "Order not found." }, 404);
+  const how = b.manual ? cleanText(b.manual, 20) : "email";
+  if (!b.manual) {
+    if (!canMailCustomers(env)) return json({ error: "Sending from the website isn't set up yet. Use \"Open in my email\" instead." }, 503);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email || "")) return json({ error: "This order has no email address." }, 400);
+    const subject = cleanText(b.subject, 150), text = String(b.message || "").trim().slice(0, 5000);
+    if (!subject || !text) return json({ error: "Write a subject and a message." }, 400);
+    const sent = await sendMail(env, { to: row.email, subject, text, replyTo: shopEmail(env) });
+    if (!sent.ok) return json({ error: sent.error }, 502);
+  }
+  const label = `${cleanText(b.label, 40) || "Update"} · ${how} · ${new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })}`;
+  await env.DB.prepare(`UPDATE ${table} SET notified = ? WHERE id = ?`).bind(label, id).run();
+  return json({ ok: true, notified: label });
+}
+
+// ---------------------------------------------------------------- banners and photos
+// Saved in kv "site": { banners: [...], photos: { hidden: [], captions: {}, replace: {} } }
+//   banners   notices shown on the site (a thin bar, or a bigger feature banner)
+//   hidden    keys of the site's own gallery photos taken off the site
+//   captions  new captions for the site's own gallery photos
+//   replace   key -> id of an uploaded photo shown instead of the site's own one
+// A key is a work photo name ("military-shadow-boxes_05") or a file ("images/painting.webp").
+// Photos added from the admin page are in the site_photos table.
+
+const BANNER_STYLES = ["pink", "black", "cream"];
+const PAGES = ["all", "home", "work", "shop", "order", "design", "visit", "story", "help"];
+const PHOTO_KEY = /^(?:[\w-]{1,80}|images\/[\w-]{1,80}\.(?:webp|png|jpg))$/;
+const MAX_PHOTO_BYTES = 1_900_000, MAX_SMALL_BYTES = 700_000;
+
+async function siteData(env) {
+  const row = await kvGet(env, "site");
+  const v = (row && row.value) || {};
+  return { banners: v.banners || [], photos: { hidden: [], captions: {}, replace: {}, ...(v.photos || {}) } };
+}
+
+function bannerActive(b, today) {
+  return b.on && (!b.start || b.start <= today) && (!b.end || b.end >= today);
+}
+
+async function publicSite(env) {
+  const site = await siteData(env);
+  const today = todayNY();
+  const { results } = await env.DB.prepare(
+    `SELECT id, grp, caption FROM site_photos WHERE kind = 'gallery' ORDER BY sort, id`).all();
+  return json({
+    banners: site.banners.filter(b => bannerActive(b, today)).map(({ on, start, end, ...b }) => b),
+    ...site.photos,
+    added: results.map(r => ({ id: r.id, group: r.grp, caption: r.caption })),
+  }, 200, { "Cache-Control": "public, max-age=60" });
+}
+
+async function servePhoto(env, id, small) {
+  const r = await env.DB.prepare(`SELECT ${small ? "small" : "full"} AS data, mime FROM site_photos WHERE id = ?`).bind(id).first();
+  if (!r) return new Response("Not found", { status: 404 });
+  return new Response(new Uint8Array(r.data), {
+    headers: { "Content-Type": r.mime, "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" },
+  });
+}
+
+async function adminSite(env) {
+  const site = await siteData(env);
+  const { results } = await env.DB.prepare(
+    `SELECT id, kind, grp, caption, sort, created_at FROM site_photos ORDER BY sort, id`).all();
+  return json({ ...site, uploads: results, styles: BANNER_STYLES, pages: PAGES }, 200, { "Cache-Control": "no-store" });
+}
+
+const safeLink = v => {
+  const l = cleanText(v, 300);
+  if (!l) return "";
+  return /^(https?:\/\/|mailto:|tel:|\/|[\w-]+\.html)/i.test(l) && !/^\s*javascript:/i.test(l) ? l : null;
+};
+
+async function saveSite(request, env) {
+  const b = await readJson(request);
+  const site = await siteData(env);
+  if (b.banners !== undefined) {
+    if (!Array.isArray(b.banners) || b.banners.length > 12) return json({ error: "Up to 12 banners." }, 400);
+    const out = [];
+    for (const x of b.banners) {
+      const link = safeLink(x.link);
+      if (link === null) return json({ error: `The link "${cleanText(x.link, 60)}" isn't a web address. Start it with https://` }, 400);
+      const banner = {
+        id: cleanText(x.id, 40) || crypto.randomUUID().slice(0, 8),
+        kind: x.kind === "feature" ? "feature" : "bar",
+        title: cleanText(x.title, 120), text: cleanText(x.text, 400),
+        button: cleanText(x.button, 40), link,
+        style: BANNER_STYLES.includes(x.style) ? x.style : "pink",
+        pages: (Array.isArray(x.pages) ? x.pages : ["all"]).filter(p => PAGES.includes(p)),
+        start: /^\d{4}-\d{2}-\d{2}$/.test(x.start || "") ? x.start : "",
+        end: /^\d{4}-\d{2}-\d{2}$/.test(x.end || "") ? x.end : "",
+        photo: Number.isInteger(x.photo) ? x.photo : null,
+        on: !!x.on,
+      };
+      if (!banner.pages.length) banner.pages = ["all"];
+      if (!banner.text && !banner.title) return json({ error: "Each banner needs some words." }, 400);
+      out.push(banner);
+    }
+    site.banners = out;
+  }
+  if (b.photos !== undefined) {
+    const p = b.photos || {};
+    const keys = a => (Array.isArray(a) ? a : []).filter(k => PHOTO_KEY.test(k)).slice(0, 500);
+    const map = (o, f) => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).filter(([k]) => PHOTO_KEY.test(k)).slice(0, 500).map(([k, v]) => [k, f(v)]));
+    site.photos = {
+      hidden: [...new Set(keys(p.hidden))],
+      captions: map(p.captions, v => cleanText(v, 120)),
+      replace: Object.fromEntries(Object.entries(map(p.replace, v => parseInt(v, 10))).filter(([, v]) => v > 0)),
+    };
+  }
+  await kvPut(env, "site", site, 0);
+  return json({ ok: true, ...site });
+}
+
+// A photo from the admin page: the browser sends a big copy and a small copy
+async function addPhoto(request, env) {
+  let form;
+  try { form = await request.formData(); } catch { return json({ error: "Couldn't read the photo." }, 400); }
+  const full = form.get("full"), small = form.get("small");
+  if (!full || typeof full !== "object" || !small || typeof small !== "object") return json({ error: "No photo was sent." }, 400);
+  if (!/^image\/(jpeg|png|webp)$/.test(full.type)) return json({ error: "Use a JPG, PNG or WebP photo." }, 415);
+  if (full.size > MAX_PHOTO_BYTES || small.size > MAX_SMALL_BYTES) return json({ error: "That photo is too large." }, 413);
+  const kind = ["gallery", "replacement", "banner"].includes(form.get("kind")) ? form.get("kind") : "gallery";
+  const max = await env.DB.prepare(`SELECT COALESCE(MAX(sort), 0) AS n FROM site_photos`).first();
+  const row = await env.DB.prepare(
+    `INSERT INTO site_photos (kind, grp, caption, full, small, mime, sort) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(kind, cleanText(form.get("group"), 60), cleanText(form.get("caption"), 120),
+         await full.arrayBuffer(), await small.arrayBuffer(), full.type, max.n + 1).first();
+  return json({ ok: true, id: row.id });
+}
+
+async function updatePhoto(request, env, id) {
+  const b = await readJson(request);
+  const sets = [], vals = [];
+  if (b.caption !== undefined) { sets.push("caption = ?"); vals.push(cleanText(b.caption, 120)); }
+  if (b.group !== undefined) { sets.push("grp = ?"); vals.push(cleanText(b.group, 60)); }
+  if (b.sort !== undefined) { sets.push("sort = ?"); vals.push(parseInt(b.sort, 10) || 0); }
+  if (!sets.length) return json({ error: "Nothing to change." }, 400);
+  const r = await env.DB.prepare(`UPDATE site_photos SET ${sets.join(", ")} WHERE id = ?`).bind(...vals, id).run();
+  if (!r.meta.changes) return json({ error: "Photo not found." }, 404);
+  return json({ ok: true });
+}
+
+async function deletePhoto(env, id) {
+  await env.DB.prepare(`DELETE FROM site_photos WHERE id = ?`).bind(id).run();
+  // Anything that showed this photo goes back to normal
+  const site = await siteData(env);
+  site.photos.replace = Object.fromEntries(Object.entries(site.photos.replace).filter(([, v]) => v !== id));
+  for (const b of site.banners) if (b.photo === id) b.photo = null;
+  await kvPut(env, "site", site, 0);
   return json({ ok: true });
 }
 

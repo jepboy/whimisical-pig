@@ -118,10 +118,38 @@
   .thumb img + .add { background: rgba(0,0,0,0.55); opacity: 0; transition: opacity 0.15s; }
   .thumb:hover img + .add, .thumb:focus-visible img + .add { opacity: 1; }
   .desc { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
-  dialog#item-dlg { margin: auto; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--rule); border-radius: 18px; background: var(--panel); color: var(--cream); }
-  dialog#item-dlg::backdrop { background: rgba(0,0,0,0.7); }
-  #item-form { display: grid; gap: 14px; padding: 26px 24px; }
-  #item-form h2 { font-size: 1.8rem; }
+  dialog.dlg, dialog#item-dlg { margin: auto; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--rule); border-radius: 18px; background: var(--panel); color: var(--cream); }
+  dialog.dlg::backdrop, dialog#item-dlg::backdrop { background: rgba(0,0,0,0.7); }
+  #item-form, .dlg form, .dlg-body { display: grid; gap: 14px; padding: 26px 24px; }
+  #item-form h2, .dlg h2 { font-size: 1.8rem; }
+  dialog.dlg.wide { width: min(760px, calc(100vw - 24px)); }
+  .wrapbtns { flex-wrap: wrap; }
+  .tag.pre { background: var(--pink); color: #000; }
+  .tag.low { background: #5a2b2b; color: #f3c3c0; }
+  .told { color: #a9c98f; font-size: 0.8rem; }
+  .sub-h { font-size: 1.5rem; margin: 26px 0 10px; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .ph-card { display: grid; gap: 8px; padding: 10px; background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; }
+  .ph-card.gone { opacity: 0.45; }
+  .ph-card .img { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #2a2420; }
+  .ph-card .img img { width: 100%; height: 100%; object-fit: cover; }
+  .ph-card .img .tag { position: absolute; top: 6px; left: 6px; }
+  .ph-card input { width: 100%; padding: 7px 9px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); font: 0.88rem var(--sans); }
+  .ph-card .where { color: var(--muted); font-size: 0.78rem; }
+  .ph-card .acts { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .ph-card .acts button { border: 0; background: none; color: var(--pink); font-size: 0.82rem; font-weight: 700; text-decoration: underline; padding: 0; }
+  .ph-card .acts button.del { color: var(--muted); }
+  .banner-card .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .banner-card .full { grid-column: 1 / -1; }
+  .banner-card .pages { display: flex; flex-wrap: wrap; gap: 6px; font-weight: 400; }
+  .banner-card .pages label { display: inline-flex; gap: 5px; align-items: center; padding: 4px 9px; border: 1px solid var(--rule); border-radius: 999px; font-size: 0.85rem; }
+  .banner-card .preview { margin-top: 14px; border-radius: 12px; overflow: hidden; border: 1px dashed var(--rule); }
+  .banner-card .preview .feature-banner { padding: 20px 0; }
+  .banner-card .preview .wrap { width: auto; padding: 0 16px; }
+  .banner-card .row-top { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .partner { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; align-items: center; padding: 14px 16px; background: var(--bg); border-radius: 12px; }
+  .partner code { font-size: 0.85rem; color: var(--pink); word-break: break-all; }
+  .partner .acts { display: flex; flex-wrap: wrap; gap: 8px; }
   .fld { display: grid; gap: 6px; font-weight: 700; font-size: 0.85rem; border: 0; padding: 0; margin: 0; }
   .fld legend { margin-bottom: 6px; }
   .fld .opt { font-weight: 400; color: var(--muted); }
@@ -153,13 +181,13 @@
     .tools input { min-width: 0; width: 100%; }
   }
   @media (max-width: 560px) {
-    .two { grid-template-columns: 1fr; }
+    .two, .banner-card .grid2 { grid-template-columns: 1fr; }
     .bar .brand > span { display: none; }
     .bar .btn.sm { padding: 8px 12px; letter-spacing: 0.1em; }
   }
 </style>
 </head>
-<body>
+<body data-no-site-changes>
 
 <div class="bar">
   <div class="wrap">
@@ -187,7 +215,9 @@
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="requests">Order Requests <span class="count" id="n-requests"></span></button>
       <button role="tab" aria-selected="false" data-tab="orders">Online Orders <span class="count" id="n-orders"></span></button>
-      <button role="tab" aria-selected="false" data-tab="items">Shop Items</button>
+      <button role="tab" aria-selected="false" data-tab="items">Shop Items <span class="warn" id="n-low"></span></button>
+      <button role="tab" aria-selected="false" data-tab="banners">Banners</button>
+      <button role="tab" aria-selected="false" data-tab="photos">Site Photos</button>
       <button role="tab" aria-selected="false" data-tab="setup">Setup <span class="warn" id="n-setup"></span></button>
     </div>
 
@@ -223,6 +253,7 @@
           <button class="btn ghost sm" id="ord-refresh" type="button">Refresh</button>
         </div>
       </div>
+      <div id="pre-totals"></div>
       <div class="list" id="orders"></div>
     </section>
 
@@ -235,6 +266,7 @@
         </div>
         <div class="tools">
           <select id="items-filter" aria-label="Show"></select>
+          <button class="btn ghost sm" id="partners-btn" type="button">Partner Pages</button>
           <button class="btn sm" id="item-add" type="button">+ Add Item</button>
           <button class="btn ghost sm" id="items-refresh" type="button">Refresh</button>
         </div>
@@ -266,6 +298,11 @@
         <label class="fld" id="tax-row">Tax <select name="tax_id"></select></label>
         <label class="tick"><input type="checkbox" name="online" checked> Show it on the website shop</label>
         <label class="tick"><input type="checkbox" name="track"> Count stock (sold out when it hits 0)</label>
+        <label class="tick"><input type="checkbox" name="pre_on"> Pre-order: take orders before it's made (stock doesn't limit it)</label>
+        <div class="two" id="pre-row" hidden>
+          <label class="fld">Last day to order <span class="opt">(optional)</span> <input type="date" name="pre_until"></label>
+          <label class="fld">When it'll be ready <input name="pre_ready" maxlength="120" placeholder="Ready by June 14, pick up at the faire"></label>
+        </div>
         <label class="fld" id="photo-row">Photo <span class="opt">(optional, you can add one later)</span> <input type="file" name="photo" accept="image/*"></label>
         <p class="form-msg" id="item-msg" role="alert"></p>
         <div class="dlg-btns">
@@ -275,6 +312,91 @@
       </form>
     </dialog>
 
+    <!-- Banners on the site -->
+    <section id="tab-banners" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>Banners</h2>
+          <p class="hint">Notices on the website: sales, holiday deadlines, closures, events. Changes show on the site within a minute.</p>
+        </div>
+        <div class="tools">
+          <select id="banner-new" aria-label="Add a banner">
+            <option value="">+ Add a banner…</option>
+            <option value="bar">Top bar (thin strip on every page)</option>
+            <option value="feature">Feature banner (big, with a photo)</option>
+            <option value="holiday">Holiday order deadline</option>
+            <option value="closed">Closed notice</option>
+            <option value="event">We'll be at an event</option>
+          </select>
+          <button class="btn sm" id="banners-save" type="button">Save Banners</button>
+        </div>
+      </div>
+      <p class="hint" id="banners-msg" role="status"></p>
+      <div class="list" id="banners"></div>
+      <input type="file" id="banner-photo-pick" accept="image/*" hidden>
+    </section>
+
+    <!-- Photos on the site -->
+    <section id="tab-photos" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>Site Photos</h2>
+          <p class="hint">Add photos to Our Work, change captions, replace or remove photos. Changes show on the site within a minute.</p>
+        </div>
+        <div class="tools">
+          <select id="photo-filter" aria-label="Show"></select>
+          <button class="btn sm" id="photo-add" type="button">+ Add Photos</button>
+        </div>
+      </div>
+      <p class="hint" id="photos-msg" role="status"></p>
+      <h3 class="sub-h">Our Work gallery</h3>
+      <div class="pgrid" id="gallery-admin"></div>
+      <h3 class="sub-h">Photos on the pages</h3>
+      <p class="hint">These are part of a page's design, so they can be replaced but not removed.</p>
+      <div class="pgrid" id="page-photos"></div>
+      <input type="file" id="replace-pick" accept="image/*" hidden>
+    </section>
+
+    <dialog id="addphotos-dlg" class="dlg" aria-labelledby="addphotos-title">
+      <form id="addphotos-form" method="dialog" novalidate>
+        <h2 id="addphotos-title">Add Photos to Our Work</h2>
+        <label class="fld">Photos <input type="file" name="files" accept="image/*" multiple required></label>
+        <label class="fld">Group <select name="group"></select></label>
+        <label class="fld" id="newgroup-row" hidden>New group name <input name="new_group" maxlength="60" placeholder="Signs"></label>
+        <label class="fld">Caption <span class="opt">(optional, used for all of them; you can change each one after)</span> <input name="caption" maxlength="120" placeholder="Framed flag case"></label>
+        <p class="form-msg" id="addphotos-msg" role="alert"></p>
+        <div class="dlg-btns">
+          <button class="btn ghost sm" type="button" data-close>Cancel</button>
+          <button class="btn sm" type="submit" id="addphotos-save">Add Photos</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="notify-dlg" class="dlg" aria-labelledby="notify-title">
+      <form id="notify-form" method="dialog" novalidate>
+        <h2 id="notify-title">Let the Customer Know</h2>
+        <p class="hint" id="notify-to"></p>
+        <label class="fld">Subject <input name="subject" maxlength="150"></label>
+        <label class="fld">Message <textarea name="message" rows="9" maxlength="5000"></textarea></label>
+        <p class="form-msg" id="notify-msg" role="alert"></p>
+        <div class="dlg-btns wrapbtns">
+          <button class="btn ghost sm" type="button" data-close>Skip</button>
+          <a class="btn ghost sm" id="notify-sms" href="#">Text Them</a>
+          <a class="btn ghost sm" id="notify-mailto" href="#">Open in My Email</a>
+          <button class="btn sm" type="submit" id="notify-send">Send Email</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="partners-dlg" class="dlg wide" aria-labelledby="partners-title">
+      <div class="dlg-body">
+        <h2 id="partners-title">Partner Pages</h2>
+        <p class="hint">Each event or partner has its own shop page showing only their merch. Share the link, or print a sign with a QR code for their table.</p>
+        <div class="list" id="partners-list"></div>
+        <div class="dlg-btns"><button class="btn sm" type="button" data-close>Done</button></div>
+      </div>
+    </dialog>
+
     <!-- Setup checklist -->
     <section id="tab-setup" hidden>
       <div class="toolbar">
@@ -282,19 +404,28 @@
           <h2>Setup Check</h2>
           <p class="hint">What's connected. Anything red needs a step from the README.</p>
         </div>
-        <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
+        <div class="tools">
+          <button class="btn ghost sm" id="test-email" type="button">Send a Test Email</button>
+          <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
+        </div>
       </div>
       <div class="checks" id="checks"></div>
     </section>
   </div>
 </main>
 
+<script src="site.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const money = c => "$" + (c / 100).toFixed(2);
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const when = t => t ? new Date(t.replace(" ", "T") + "Z").toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   let dashboard = "https://app.squareup.com/dashboard";
+  let mail = { alerts: false, customers: false };
+  // The shop's pages keep a copy of banners and photos for a minute; drop it so changes show here right away
+  const freshSite = () => { try { sessionStorage.removeItem("wp-site"); } catch (e) {} };
+  // Close buttons inside any dialog
+  document.addEventListener("click", e => { if (e.target.matches("[data-close]")) e.target.closest("dialog").close(); });
 
   async function api(path, opts = {}) {
     const res = await fetch(path, { credentials: "same-origin", ...opts });
@@ -310,7 +441,7 @@
   function showLogin() { $("app").hidden = true; $("who").hidden = true; $("login-box").hidden = false; $("pw").focus(); }
   function showApp() {
     $("login-box").hidden = true; $("app").hidden = false; $("who").hidden = false;
-    loadRequests(); loadOrders(true); loadSetup(true);
+    loadRequests(); loadOrders(true); loadSetup(true); loadItems(true);
   }
   $("login-box").onsubmit = async e => {
     e.preventDefault();
@@ -321,7 +452,8 @@
   $("logout").onclick = async () => { await send("/api/admin/logout", "POST", {}); showLogin(); };
 
   // ---------- tabs ----------
-  const loaders = { requests: () => loadRequests(), orders: () => loadOrders(), items: () => loadItems(), setup: () => loadSetup() };
+  const loaders = { requests: () => loadRequests(), orders: () => loadOrders(), items: () => loadItems(),
+                    banners: () => loadBanners(), photos: () => loadPhotos(), setup: () => loadSetup() };
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(o => {
       o.setAttribute("aria-selected", o === b);
@@ -393,7 +525,7 @@
           <div>
             <span class="tag ${r.status === "new" ? "new" : r.status === "done" ? "done" : ""}">${esc(r.status)}</span>
             <h3>${esc(r.type || "Order")} · ${esc(r.name || "No name")}</h3>
-            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}</p>
+            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
           </div>
           <div class="facts">
             <div><span class="k">Needed by</span><span class="due ${r.status === "done" ? "" : due.cls}">${due.text}</span></div>
@@ -426,8 +558,11 @@
     const id = +e.target.closest(".card").dataset.id;
     try {
       await send(`/api/admin/requests/${id}`, "PUT", { status: e.target.value });
-      requests.find(r => r.id === id).status = e.target.value;
+      const r = requests.find(r => r.id === id);
+      r.status = e.target.value;
       loadRequests();
+      const msg = requestMessage(r);
+      if (msg) openNotify({ kind: "request", id, email: r.email, phone: r.phone, name: r.name, ...msg }, loadRequests);
     } catch (err) { alert(err.message); }
   };
   $("requests").onclick = async e => {
@@ -451,7 +586,18 @@
       orders = data.orders; ordStatuses = data.statuses;
     } catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
     $("n-orders").textContent = orders.filter(o => o.status === "paid" && o.handled === "new").length || "";
-    if (!countOnly) drawOrders();
+    if (!countOnly) { drawOrders(); drawPreTotals(); }
+  }
+  // How many of each pre-order item to make: paid orders not yet picked up or shipped
+  function drawPreTotals() {
+    const tally = {};
+    for (const o of orders) {
+      if (o.status !== "paid" || o.handled === "done") continue;
+      for (const l of o.items) if (l.preorder) tally[l.name] = (tally[l.name] || 0) + l.qty;
+    }
+    const rows = Object.entries(tally).sort((a, b) => a[0].localeCompare(b[0]));
+    $("pre-totals").innerHTML = rows.length ? `<div class="banner"><strong>Pre-orders to make:</strong>
+      ${rows.map(([n, q]) => `<div class="lines-mini"><div><span>${esc(n)}</span><strong>${q}</strong></div></div>`).join("")}</div>` : "";
   }
   const ORDER_LABELS = { new: "New", ready: "Ready / packed", done: "Picked up / shipped" };
   function drawOrders() {
@@ -475,7 +621,8 @@
             ${o.buyer_phone ? `<div><span class="k">Phone</span><a href="tel:${esc(o.buyer_phone)}">${esc(o.buyer_phone)}</a></div>` : ""}
           </div>
         </header>
-        <div class="lines-mini">${o.items.map(l => `<div><span>${l.qty} × ${esc(l.name)}</span><span>${money(l.price_cents * l.qty)}</span></div>`).join("")}</div>
+        <div class="lines-mini">${o.items.map(l => `<div><span>${l.qty} × ${esc(l.name)}${l.preorder ? ' <span class="tag pre">Pre-order</span>' : ""}</span><span>${money(l.price_cents * l.qty)}</span></div>`).join("")}</div>
+        ${o.notified ? `<p class="told">Told: ${esc(o.notified)}</p>` : ""}
         ${o.ship_to ? `<pre>${esc(o.ship_to)}</pre>` : ""}
         ${paid ? `<textarea class="note-box" data-act="note" placeholder="Notes (tracking number, who picked it up…)">${esc(o.note)}</textarea><span class="saved"></span>
         <footer>
@@ -491,8 +638,13 @@
   $("orders").onchange = async e => {
     if (e.target.dataset.act !== "handled") return;
     const id = +e.target.closest(".card").dataset.id;
-    try { await send(`/api/admin/orders/${id}`, "PUT", { handled: e.target.value }); await loadOrders(); }
-    catch (err) { alert(err.message); }
+    try {
+      await send(`/api/admin/orders/${id}`, "PUT", { handled: e.target.value });
+      await loadOrders();
+      const o = orders.find(x => x.id === id);
+      const msg = o && orderMessage(o);
+      if (msg) openNotify({ kind: "order", id, email: o.buyer_email, phone: o.buyer_phone, name: o.buyer_name, ...msg }, loadOrders);
+    } catch (err) { alert(err.message); }
   };
   $("ord-filter").onchange = drawOrders;
   $("ord-refresh").onclick = () => loadOrders();
@@ -516,11 +668,16 @@
       return;
     }
     cat = data;
-    note.innerHTML = "";
+    const lows = cat.items.flatMap(it => it.online && !(it.preorder && it.preorder.active)
+      ? it.variations.filter(v => v.tracked && v.stock <= cat.low_stock).map(v => it.name + (it.variations.length > 1 ? ` (${v.name})` : "") + `: ${v.stock <= 0 ? "sold out" : v.stock + " left"}`) : []);
+    $("n-low").textContent = lows.length ? "●" : "";
+    note.innerHTML = lows.length ? `<div class="banner bad"><strong>Running low (${cat.low_stock} or fewer):</strong> ${lows.map(esc).join(" · ")}</div>` : "";
     const filter = $("items-filter"), keep = filter.value || "all";
     const online = cat.items.filter(i => i.online).length;
     const used = cat.categories.filter(c => cat.items.some(i => i.categories.some(x => x.id === c.id)));
+    const pres = cat.items.filter(i => i.preorder).length;
     filter.innerHTML = [["all", `All items (${cat.items.length})`], ["online", `On the website (${online})`], ["offline", `Not on the website (${cat.items.length - online})`],
+      ...(pres ? [["pre", `Pre-orders (${pres})`]] : []),
       ...used.map(c => ["c:" + c.id, c.name])].map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
     filter.value = [...filter.options].some(o => o.value === keep) ? keep : "all";
     drawItems();
@@ -528,7 +685,7 @@
 
   function drawItems() {
     const box = $("items"), want = $("items-filter").value;
-    const list = cat.items.filter(i => want === "all" ? true : want === "online" ? i.online : want === "offline" ? !i.online
+    const list = cat.items.filter(i => want === "all" ? true : want === "online" ? i.online : want === "offline" ? !i.online : want === "pre" ? !!i.preorder
       : i.categories.some(c => "c:" + c.id === want));
     if (!list.length) { box.innerHTML = '<div class="empty">No items here yet. Use “+ Add Item” to make one.</div>'; return; }
     box.innerHTML = list.map(it => `
@@ -545,6 +702,7 @@
             <span class="hint">${esc(it.categories.map(c => c.name).join(", ") || "No event or partner")}</span>
             <label class="switch"><input type="checkbox" data-act="online"${it.online ? " checked" : ""}> On the website</label>
             ${it.variations.some(v => v.price_cents === null) ? '<span class="tag off">Price set at register</span>' : ""}
+            ${it.preorder ? `<span class="tag ${it.preorder.active ? "pre" : "off"}">${it.preorder.active ? "Pre-order" : "Pre-order closed"}</span>` : ""}
           </div>
           ${it.description ? `<p class="desc">${esc(it.description.length > 160 ? it.description.slice(0, 157) + "…" : it.description)}</p>` : ""}
           <div class="vars">${it.variations.map(v => `
@@ -553,7 +711,7 @@
               <span class="price">${v.price_cents === null ? "—" : money(v.price_cents)}</span>
               ${v.tracked ? `<div class="stock">
                   <button type="button" data-d="-1" aria-label="One fewer">−</button>
-                  <div><input type="number" min="0" value="${v.stock}" aria-label="In stock" class="${v.stock <= 1 ? "low" : ""}"><small>${v.held ? v.held + " in checkout" : "in stock"}</small></div>
+                  <div><input type="number" min="0" value="${v.stock}" aria-label="In stock" class="${v.stock <= cat.low_stock ? "low" : ""}"><small>${v.held ? v.held + " in checkout" : "in stock"}</small></div>
                   <button type="button" data-d="1" aria-label="One more">+</button>
                 </div>`
               : `<span class="hint">Stock not counted</span>`}
@@ -568,7 +726,7 @@
     try {
       await send("/api/admin/stock", "POST", { variation_id: row.dataset.id, count });
       input.value = count;
-      input.classList.toggle("low", count <= 1);
+      input.classList.toggle("low", count <= cat.low_stock);
     } catch (err) { alert(err.message); }
     input.disabled = false;
   }
@@ -652,6 +810,11 @@
     // Sizes, tax and photo are only set when adding; after that, Square handles them
     $("sizes-row").hidden = $("tax-row").hidden = $("photo-row").hidden = !!it;
     $("new-cat-row").hidden = true;
+    const pre = it && it.preorder;
+    form.elements.pre_on.checked = !!pre;
+    form.elements.pre_until.value = pre ? pre.until : "";
+    form.elements.pre_ready.value = pre ? pre.ready : "";
+    $("pre-row").hidden = !pre;
     if (it) {
       form.elements.name.value = it.name;
       form.elements.description.value = it.description;
@@ -672,11 +835,36 @@
     form.elements.name.focus();
   }
   $("item-add").onclick = () => openItem(null);
+
+  // ----- partner pages: a shop page per event or partner, with a QR sign -----
+  const slug = t => t.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  $("partners-btn").onclick = () => {
+    const box = $("partners-list");
+    const used = cat.categories.map(c => ({ ...c, n: cat.items.filter(i => i.online && i.categories.some(x => x.id === c.id)).length }));
+    box.innerHTML = used.length ? used.map(c => {
+      const link = `${location.origin}/shop.html?c=${slug(c.name)}`;
+      return `<div class="partner">
+        <div><strong>${esc(c.name)}</strong> <span class="hint">· ${c.n} item${c.n === 1 ? "" : "s"} on the website</span><br><code>${esc(link)}</code></div>
+        <div class="acts">
+          <button class="btn ghost sm" type="button" data-copy="${esc(link)}">Copy Link</button>
+          <a class="btn ghost sm" href="${esc(link)}" target="_blank" rel="noopener">Open</a>
+          <a class="btn sm" href="sign.html?c=${slug(c.name)}&name=${encodeURIComponent(c.name)}" target="_blank" rel="noopener">QR Sign</a>
+        </div></div>`;
+    }).join("") : '<div class="empty">No events or partners yet. Pick one when you add an item.</div>';
+    $("partners-dlg").showModal();
+  };
+  $("partners-list").onclick = async e => {
+    const b = e.target.closest("[data-copy]");
+    if (!b) return;
+    try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "Copied ✓"; }
+    catch (err) { prompt("Copy this link:", b.dataset.copy); }
+  };
   $("item-cancel").onclick = () => dlg.close();
   form.elements.category_id.onchange = e => {
     $("new-cat-row").hidden = e.target.value !== "__new";
     if (e.target.value === "__new") form.elements.new_category.focus();
   };
+  form.elements.pre_on.onchange = e => { $("pre-row").hidden = !e.target.checked; };
   form.elements.one_size.onchange = e => {
     form.querySelectorAll('[name=size]').forEach(b => { b.disabled = e.target.checked; });
     $("big-row").hidden = e.target.checked;
@@ -707,6 +895,7 @@
       name, description: f.description.value.trim(), online: f.online.checked, track: f.track.checked,
       category_id: f.category_id.value === "__new" ? "" : f.category_id.value,
       price: price || undefined, big_price: big || undefined,
+      preorder: { on: f.pre_on.checked, until: f.pre_until.value, ready: f.pre_ready.value.trim() },
     };
     if (f.category_id.value === "__new") body.new_category = f.new_category.value.trim();
     $("item-save").disabled = true;
@@ -742,6 +931,7 @@
     try { data = await api("/api/admin/status"); }
     catch (err) { $("checks").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
     dashboard = data.dashboard;
+    mail = data.mail || mail;
     const bad = data.checks.filter(c => !c.ok).length;
     $("n-setup").textContent = bad ? "●" : "";
     if (countOnly) return;
@@ -749,6 +939,384 @@
       <div class="check ${c.ok ? "ok" : "no"}"><span class="dot">${c.ok ? "✓" : "!"}</span><p>${esc(c.text)}</p></div>`).join("");
   }
   $("setup-refresh").onclick = () => loadSetup();
+  $("test-email").onclick = async e => {
+    const b = e.target;
+    b.disabled = true;
+    try { const r = await send("/api/admin/test-email", "POST", {}); alert(`Sent a test email to ${r.to}. Check that inbox (and its junk folder).`); }
+    catch (err) { alert(err.message); }
+    b.disabled = false;
+  };
+
+  // ---------- telling customers about their order ----------
+  const first = n => String(n || "").trim().split(/\s+/)[0] || "there";
+  const SIGN = "\n\nQuestions? Just reply to this email or call 315-773-3758.\n\nThank you!\nThe Whimsical Pig\n50 Public Square, Suite E1, Watertown, NY · Mon–Fri 9am–5pm";
+  const FILL = "[add it here]";
+  function requestMessage(r) {
+    const what = (r.type || "custom").toLowerCase();
+    const ship = /ship|mail/i.test(r.fulfill || "");
+    if (r.status === "in production") return { label: "Started",
+      subject: `We've started on your order (${r.ref})`,
+      text: `Hi ${first(r.name)},\n\nJust a note that we've started on your ${what} order (${r.ref}). We'll let you know as soon as it's ready.` + SIGN };
+    if (r.status === "ready") return { label: "Ready",
+      subject: `Your order is ready! (${r.ref})`,
+      text: ship
+        ? `Hi ${first(r.name)},\n\nGood news: your ${what} order (${r.ref}) is finished and will be on its way soon. We'll send the tracking number when it ships.` + SIGN
+        : `Hi ${first(r.name)},\n\nGood news: your ${what} order (${r.ref}) is ready to pick up!\n\nCome by 50 Public Square, Suite E1 in Watertown, Monday to Friday, 9am to 5pm.` + SIGN };
+    return null;
+  }
+  function orderMessage(o) {
+    if (o.status !== "paid") return null;
+    const ref = "WP-" + o.id;
+    if (o.handled === "ready" && o.fulfillment !== "ship") return { label: "Ready for pickup",
+      subject: `Your order is ready for pickup (${ref})`,
+      text: `Hi ${first(o.buyer_name)},\n\nYour order ${ref} is ready to pick up!\n\nCome by 50 Public Square, Suite E1 in Watertown, Monday to Friday, 9am to 5pm.` + SIGN };
+    if (o.handled === "done" && o.fulfillment === "ship") return { label: "Shipped",
+      subject: `Your order has shipped (${ref})`,
+      text: `Hi ${first(o.buyer_name)},\n\nYour order ${ref} is on its way!\n\nTracking number: ${FILL}` + SIGN };
+    return null;
+  }
+
+  let notifying = null;
+  function openNotify(n, after) {
+    if (!n.email && !n.phone) return;
+    notifying = { ...n, after };
+    const f = $("notify-form").elements;
+    $("notify-title").textContent = `Tell ${first(n.name)}: ${n.label}`;
+    $("notify-to").textContent = [n.email, n.phone].filter(Boolean).join(" · ");
+    f.subject.value = n.subject;
+    f.message.value = n.text;
+    $("notify-msg").textContent = mail.customers ? "" : "Pick how to send it. (To send straight from here, see Setup.)";
+    $("notify-send").hidden = !mail.customers || !n.email;
+    $("notify-mailto").hidden = !n.email;
+    $("notify-sms").hidden = !n.phone;
+    $("notify-dlg").showModal();
+  }
+  const notifyText = () => {
+    const f = $("notify-form").elements;
+    if (f.message.value.includes(FILL)) { $("notify-msg").textContent = "Fill in the tracking number, or delete that line."; f.message.focus(); return null; }
+    return { subject: f.subject.value.trim(), message: f.message.value.trim() };
+  };
+  async function recordNotify(extra) {
+    const r = await send("/api/admin/notify", "POST", { kind: notifying.kind, id: notifying.id, label: notifying.label, ...extra });
+    $("notify-dlg").close();
+    if (notifying.after) notifying.after();
+    return r;
+  }
+  $("notify-form").onsubmit = async e => {
+    e.preventDefault();
+    const t = notifyText();
+    if (!t) return;
+    $("notify-send").disabled = true;
+    $("notify-msg").textContent = "Sending…";
+    try { await recordNotify(t); } catch (err) { $("notify-msg").textContent = err.message; }
+    $("notify-send").disabled = false;
+  };
+  // Opens Kat's own email app (or Messages on a phone) with the message filled in
+  $("notify-mailto").onclick = e => {
+    const t = notifyText();
+    if (!t) { e.preventDefault(); return; }
+    e.currentTarget.href = `mailto:${encodeURIComponent(notifying.email)}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.message)}`;
+    recordNotify({ manual: "email app" }).catch(() => {});
+  };
+  $("notify-sms").onclick = e => {
+    const t = notifyText();
+    if (!t) { e.preventDefault(); return; }
+    const short = t.message.split(/\n\nQuestions\?/)[0] + "\n– The Whimsical Pig";
+    e.currentTarget.href = `sms:${notifying.phone.replace(/[^\d+]/g, "")}?&body=${encodeURIComponent(short)}`;
+    recordNotify({ manual: "text" }).catch(() => {});
+  };
+
+  // ---------- shrinking photos before upload ----------
+  async function shrink(file, max, quality) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error(`"${file.name}" isn't a photo this browser can open. Try a JPG or PNG.`)); i.src = url; });
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      const g = c.getContext("2d");
+      g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      return await new Promise(ok => c.toBlob(ok, "image/jpeg", quality));
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function uploadSitePhoto(file, kind, group = "", caption = "") {
+    const fd = new FormData();
+    fd.append("full", await shrink(file, 1600, 0.85), "full.jpg");
+    fd.append("small", await shrink(file, 700, 0.8), "small.jpg");
+    fd.append("kind", kind); fd.append("group", group); fd.append("caption", caption);
+    return (await api("/api/admin/photos", { method: "POST", body: fd })).id;
+  }
+
+  // ---------- site data (banners + photo changes) ----------
+  let site = null;
+  async function loadSite() {
+    site = await api("/api/admin/site");
+    return site;
+  }
+  const saveSite = body => send("/api/admin/site", "PUT", body).then(r => { freshSite(); site.banners = r.banners; site.photos = r.photos; return r; });
+
+  // ---------- banners ----------
+  const PAGE_NAMES = { all: "Every page", home: "Home", work: "Our Work", shop: "Shop", order: "Start an Order", design: "Design & Merch", visit: "Visit", story: "Our Story", help: "Help" };
+  const STYLE_NAMES = { pink: "Pink", black: "Black", cream: "Light pink" };
+  let banners = [];
+  async function loadBanners() {
+    try { await loadSite(); } catch (err) { $("banners").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+    banners = site.banners.map(b => ({ ...b }));
+    drawBanners();
+  }
+  const isoDay = d => d.toISOString().slice(0, 10);
+  const PRESETS = {
+    bar: () => ({ kind: "bar", style: "pink", text: "", title: "", pages: ["all"] }),
+    feature: () => ({ kind: "feature", style: "pink", title: "", text: "", pages: ["home"] }),
+    holiday: () => ({ kind: "bar", style: "black", text: "Ordering a framed gift for the holidays? Please order by Dec 1 so it's ready in time.",
+      button: "Start an Order", link: "order.html", pages: ["all"], end: new Date().getFullYear() + "-12-01" }),
+    closed: () => ({ kind: "bar", style: "black", text: "We're closed this Friday. Back Monday at 9am!", pages: ["all"], end: isoDay(new Date(Date.now() + 7 * 86400000)) }),
+    event: () => ({ kind: "feature", style: "pink", title: "Come See Us!", text: "We'll be at the Lewis County Ren Faire with all-new shirts.",
+      button: "Shop Ren Faire Merch", link: "shop.html?c=lewis-county-ren-faire", pages: ["home", "shop"] }),
+  };
+  $("banner-new").onchange = e => {
+    const make = PRESETS[e.target.value];
+    e.target.value = "";
+    if (!make) return;
+    banners.unshift({ id: "", on: true, button: "", link: "", start: "", end: "", photo: null, ...make() });
+    drawBanners();
+    $("banners-msg").textContent = "Fill it in, then press Save Banners.";
+  };
+  function bannerPreview(b) {
+    if (!b.title && !b.text) return '<p class="hint" style="padding:10px">The preview shows here.</p>';
+    if (b.kind === "bar") return `<div class="announce style-${esc(b.style)}"><span>${esc([b.title, b.text].filter(Boolean).join(" · "))}</span>${b.link ? `<a>${esc(b.button || "Learn more")} →</a>` : ""}</div>`;
+    return `<section class="feature-banner style-${esc(b.style)}"><div class="wrap"><div class="fb-in">
+      ${b.photo ? `<img src="/api/photo/${b.photo}?s=sm" alt="">` : ""}
+      <div class="fb-words">${b.title ? `<h2>${esc(b.title)}</h2>` : ""}${b.text ? `<p>${esc(b.text)}</p>` : ""}${b.link ? `<a class="btn">${esc(b.button || "Learn more")}</a>` : ""}</div></div></div></section>`;
+  }
+  function drawBanners() {
+    const box = $("banners");
+    if (!banners.length) { box.innerHTML = '<div class="empty">No banners yet. Use “+ Add a banner…” above.</div>'; return; }
+    const today = isoDay(new Date());
+    box.innerHTML = banners.map((b, i) => {
+      const live = b.on && (!b.start || b.start <= today) && (!b.end || b.end >= today);
+      return `<article class="card banner-card" data-i="${i}">
+        <div class="row-top">
+          <span class="tag ${live ? "paid" : "off"}">${live ? "Showing" : b.on ? (b.end && b.end < today ? "Ended" : "Scheduled") : "Off"}</span>
+          <label class="switch"><input type="checkbox" data-f="on"${b.on ? " checked" : ""}> Turned on</label>
+          <label class="switch">Kind <select data-f="kind">${[["bar", "Top bar"], ["feature", "Feature banner"]].map(([v, t]) => `<option value="${v}"${b.kind === v ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+          <label class="switch">Color <select data-f="style">${Object.entries(STYLE_NAMES).map(([v, t]) => `<option value="${v}"${b.style === v ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+          <span style="margin-left:auto" class="acts">
+            <button class="link-btn" type="button" data-a="up"${i ? "" : " disabled"}>Move up</button>
+            <button class="link-btn" type="button" data-a="del">Delete</button>
+          </span>
+        </div>
+        <div class="grid2">
+          ${b.kind === "feature" ? `<label class="fld">Headline <input data-f="title" maxlength="120" value="${esc(b.title)}" placeholder="Come See Us!"></label>` : ""}
+          <label class="fld ${b.kind === "feature" ? "" : "full"}">${b.kind === "feature" ? "Words" : "Message"} <input data-f="text" maxlength="400" value="${esc(b.text)}" placeholder="${b.kind === "feature" ? "We'll be at the Ren Faire with new shirts." : "Holiday framing orders due Dec 1"}"></label>
+          <label class="fld">Button words <span class="opt">(optional)</span> <input data-f="button" maxlength="40" value="${esc(b.button)}" placeholder="Shop Now"></label>
+          <label class="fld">Button goes to <span class="opt">(a page or web address)</span> <input data-f="link" maxlength="300" value="${esc(b.link)}" placeholder="shop.html"></label>
+          <label class="fld">Start showing <span class="opt">(optional)</span> <input type="date" data-f="start" value="${esc(b.start)}"></label>
+          <label class="fld">Stop after <span class="opt">(optional)</span> <input type="date" data-f="end" value="${esc(b.end)}"></label>
+          <fieldset class="fld full"><legend>Show on</legend><div class="pages">${Object.entries(PAGE_NAMES).map(([v, t]) =>
+            `<label><input type="checkbox" data-page="${v}"${b.pages.includes(v) ? " checked" : ""}> ${t}</label>`).join("")}</div></fieldset>
+          ${b.kind === "feature" ? `<div class="fld full">Photo <span class="opt">(optional)</span>
+            <span class="acts"><button class="btn ghost sm" type="button" data-a="photo">${b.photo ? "Change Photo" : "Add a Photo"}</button>
+            ${b.photo ? '<button class="link-btn" type="button" data-a="nophoto">Remove photo</button>' : ""}</span></div>` : ""}
+        </div>
+        <div class="preview">${bannerPreview(b)}</div>
+      </article>`;
+    }).join("");
+  }
+  const bannerOf = el => banners[+el.closest("[data-i]").dataset.i];
+  $("banners").oninput = e => {
+    const b = bannerOf(e.target), f = e.target.dataset.f;
+    if (e.target.dataset.page) {
+      const v = e.target.dataset.page;
+      b.pages = e.target.checked ? (v === "all" ? ["all"] : [...b.pages.filter(p => p !== "all"), v]) : b.pages.filter(p => p !== v);
+      drawBanners();
+    } else if (f) {
+      b[f] = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      if (f === "kind" || f === "on") drawBanners();
+      else e.target.closest(".banner-card").querySelector(".preview").innerHTML = bannerPreview(b);
+    }
+    $("banners-msg").textContent = "Unsaved changes. Press Save Banners.";
+  };
+  let photoForBanner = null;
+  $("banners").onclick = e => {
+    const a = e.target.dataset.a;
+    if (!a) return;
+    const i = +e.target.closest("[data-i]").dataset.i;
+    if (a === "del") { if (!confirm("Delete this banner?")) return; banners.splice(i, 1); }
+    if (a === "up") banners.splice(i - 1, 0, banners.splice(i, 1)[0]);
+    if (a === "nophoto") banners[i].photo = null;
+    if (a === "photo") { photoForBanner = i; $("banner-photo-pick").click(); return; }
+    drawBanners();
+    $("banners-msg").textContent = "Unsaved changes. Press Save Banners.";
+  };
+  $("banner-photo-pick").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file || photoForBanner === null) return;
+    $("banners-msg").textContent = "Uploading the photo…";
+    try { banners[photoForBanner].photo = await uploadSitePhoto(file, "banner"); drawBanners(); $("banners-msg").textContent = "Photo added. Press Save Banners."; }
+    catch (err) { $("banners-msg").textContent = err.message; }
+  };
+  $("banners-save").onclick = async () => {
+    $("banners-msg").textContent = "Saving…";
+    try {
+      await saveSite({ banners });
+      banners = site.banners.map(b => ({ ...b }));
+      drawBanners();
+      $("banners-msg").textContent = "Saved. The website shows the change within a minute.";
+    } catch (err) { $("banners-msg").textContent = err.message; }
+  };
+
+  // ---------- site photos ----------
+  // Photos that are part of the pages (replace only). Keys match site.js.
+  const PAGE_PHOTOS = [
+    ["images/logo-full.webp", "Big logo", "Home page"],
+    ["images/flying-pig.webp", "Flying pig", "Top of most pages"],
+    ["images/painting.webp", "Pig painting", "Our Story"],
+    ["shop_04", "Our Shop slide", "Home page slideshow"],
+    ["apparel-printing_05", "Custom shirt", "Home page"],
+    ["shop_02", "Merch booth", "Home page, Design & Merch"],
+    ["apparel-printing_01", "Event shirts", "Design & Merch"],
+    ["shop_05", "Merch on the table", "Design & Merch"],
+    ["shop_03", "Out at local events", "Our Story"],
+    ["shop_06", "Storefront", "Our Story, Visit"],
+    ["shop_07", "Inside the shop", "Our Story, Visit"],
+    ["shop_08", "Hand-painted sign", "Our Story"],
+    ["shop_09", "At the counter", "Visit"],
+  ];
+  const builtinSrc = key => key.startsWith("images/") ? key : `images/work/${key}-sm.webp`;
+  let replaceKey = null;
+  async function loadPhotos() {
+    try { await loadSite(); } catch (err) { $("photos-msg").textContent = err.message; return; }
+    const groups = [...new Set([...WORK.map(w => w[1]), ...site.uploads.filter(u => u.kind === "gallery").map(u => u.grp)].filter(Boolean))];
+    const keep = $("photo-filter").value || "all";
+    $("photo-filter").innerHTML = [["all", "All groups"], ...groups.map(g => [g, g]), ["__gone", "Removed photos"]]
+      .map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+    $("photo-filter").value = [...$("photo-filter").options].some(o => o.value === keep) ? keep : "all";
+    drawPhotos();
+  }
+  function photoCard({ key, id, src, caption, where, gone, replaced, added }) {
+    return `<div class="ph-card${gone ? " gone" : ""}" ${key ? `data-key="${esc(key)}"` : `data-id="${id}"`}>
+      <div class="img"><img src="${esc(src)}" alt="" loading="lazy">${replaced ? '<span class="tag pre">Replaced</span>' : added ? '<span class="tag pre">Added</span>' : ""}</div>
+      ${caption !== null ? `<input value="${esc(caption)}" maxlength="120" aria-label="Caption" data-cap placeholder="Caption">` : ""}
+      <span class="where">${esc(where)}</span>
+      <div class="acts">${gone ? '<button type="button" data-p="restore">Put back</button>' : `
+        ${key ? `<button type="button" data-p="replace">Replace</button>` : ""}
+        ${replaced ? '<button type="button" data-p="unreplace">Use the original</button>' : ""}
+        ${caption !== null ? `<button type="button" class="del" data-p="delete">Remove</button>` : ""}`}</div>
+    </div>`;
+  }
+  function drawPhotos() {
+    const want = $("photo-filter").value, ph = site.photos;
+    const cards = [];
+    if (want === "all" || want !== "__gone") {
+      for (const u of site.uploads.filter(u => u.kind === "gallery" && (want === "all" || u.grp === want))) {
+        cards.push(photoCard({ id: u.id, src: `/api/photo/${u.id}?s=sm`, caption: u.caption, where: u.grp || "More", added: true }));
+      }
+    }
+    for (const [key, group, cap] of WORK) {
+      const gone = ph.hidden.includes(key);
+      if (want === "__gone" ? !gone : gone || (want !== "all" && group !== want)) continue;
+      const rid = ph.replace[key];
+      cards.push(photoCard({ key, src: rid ? `/api/photo/${rid}?s=sm` : builtinSrc(key), caption: ph.captions[key] ?? cap, where: group, gone, replaced: !!rid }));
+    }
+    $("gallery-admin").innerHTML = cards.join("") || '<div class="empty">No photos here.</div>';
+    $("page-photos").innerHTML = PAGE_PHOTOS.map(([key, name, where]) => {
+      const rid = ph.replace[key];
+      return photoCard({ key, src: rid ? `/api/photo/${rid}?s=sm` : builtinSrc(key), caption: null, where: `${name} · ${where}`, replaced: !!rid });
+    }).join("");
+  }
+  $("photo-filter").onchange = drawPhotos;
+  const photoMsg = t => { $("photos-msg").textContent = t; };
+  const savePhotos = async (msg = "Saved. The website shows the change within a minute.") => {
+    try { await saveSite({ photos: site.photos }); photoMsg(msg); } catch (err) { photoMsg(err.message); }
+    drawPhotos();
+  };
+  async function photoAction(e) {
+    const p = e.target.dataset.p;
+    if (!p) return;
+    const card = e.target.closest(".ph-card"), key = card.dataset.key, id = +card.dataset.id;
+    const ph = site.photos;
+    if (p === "replace") { replaceKey = key; $("replace-pick").click(); return; }
+    if (p === "unreplace") {
+      const old = ph.replace[key];
+      delete ph.replace[key];
+      await savePhotos("Back to the original photo.");
+      if (old) api(`/api/admin/photos/${old}`, { method: "DELETE" }).catch(() => {});
+    }
+    if (p === "restore") { ph.hidden = ph.hidden.filter(k => k !== key); await savePhotos("Put back on the site."); }
+    if (p === "delete") {
+      if (key) {
+        if (!confirm("Take this photo off the website? You can put it back later from “Removed photos”.")) return;
+        ph.hidden.push(key);
+        await savePhotos("Removed from the website.");
+      } else {
+        if (!confirm("Delete this photo for good?")) return;
+        try { await api(`/api/admin/photos/${id}`, { method: "DELETE" }); freshSite(); await loadPhotos(); photoMsg("Deleted."); }
+        catch (err) { photoMsg(err.message); }
+      }
+    }
+  }
+  $("gallery-admin").onclick = $("page-photos").onclick = photoAction;
+  // Captions save when you leave the box
+  $("gallery-admin").addEventListener("change", async e => {
+    if (!e.target.matches("[data-cap]")) return;
+    const card = e.target.closest(".ph-card"), v = e.target.value.trim();
+    if (card.dataset.key) {
+      const orig = (WORK.find(w => w[0] === card.dataset.key) || [])[2];
+      if (v && v !== orig) site.photos.captions[card.dataset.key] = v; else delete site.photos.captions[card.dataset.key];
+      await savePhotos("Caption saved.");
+    } else {
+      try { await send(`/api/admin/photos/${card.dataset.id}`, "PUT", { caption: v }); freshSite(); photoMsg("Caption saved."); }
+      catch (err) { photoMsg(err.message); }
+    }
+  });
+  $("replace-pick").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file || !replaceKey) return;
+    photoMsg("Uploading…");
+    try {
+      const old = site.photos.replace[replaceKey];
+      site.photos.replace[replaceKey] = await uploadSitePhoto(file, "replacement");
+      await savePhotos("Photo replaced.");
+      if (old) api(`/api/admin/photos/${old}`, { method: "DELETE" }).catch(() => {});
+    } catch (err) { photoMsg(err.message); }
+  };
+  // Add photos to the Our Work gallery
+  const addForm = $("addphotos-form");
+  $("photo-add").onclick = async () => {
+    if (!site) await loadSite();
+    const groups = [...new Set([...WORK.map(w => w[1]), ...site.uploads.filter(u => u.kind === "gallery").map(u => u.grp)].filter(Boolean))];
+    addForm.reset();
+    addForm.elements.group.innerHTML = groups.map(g => `<option>${esc(g)}</option>`).join("") + '<option value="__new">+ New group…</option>';
+    const want = $("photo-filter").value;
+    if (groups.includes(want)) addForm.elements.group.value = want;
+    $("newgroup-row").hidden = true;
+    $("addphotos-msg").textContent = "";
+    $("addphotos-dlg").showModal();
+  };
+  addForm.elements.group.onchange = e => { $("newgroup-row").hidden = e.target.value !== "__new"; };
+  addForm.onsubmit = async e => {
+    e.preventDefault();
+    const f = addForm.elements, files = [...f.files.files];
+    const group = f.group.value === "__new" ? f.new_group.value.trim() : f.group.value;
+    if (!files.length) { $("addphotos-msg").textContent = "Choose one or more photos."; return; }
+    if (!group) { $("addphotos-msg").textContent = "Name the new group."; return; }
+    $("addphotos-save").disabled = true;
+    let done = 0;
+    try {
+      for (const file of files) {
+        $("addphotos-msg").textContent = `Uploading ${done + 1} of ${files.length}…`;
+        await uploadSitePhoto(file, "gallery", group, f.caption.value.trim());
+        done++;
+      }
+      $("addphotos-dlg").close();
+      freshSite();
+      await loadPhotos();
+      photoMsg(`Added ${done} photo${done === 1 ? "" : "s"} to Our Work.`);
+    } catch (err) { $("addphotos-msg").textContent = (done ? `${done} uploaded. ` : "") + err.message; }
+    $("addphotos-save").disabled = false;
+  };
 
   // ---------- start ----------
   api("/api/admin/me").then(showApp).catch(showLogin);

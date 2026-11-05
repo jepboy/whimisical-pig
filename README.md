@@ -19,13 +19,15 @@ can't take this repo as-is because of the shop back end; use the Git connection 
 | `work.html` | **Our Work**: the full gallery with Military / Framing / Apparel / Awards & Gifts filters |
 | `visit.html` | **Visit**: address, hours, phone, email, map, and ways to reach us from out of town |
 | `shop.html` | Online shop: items from Square with options, prices and stock left, sort and "Shop by event" filters, a cart, and card payment right on the page |
+| `sign.html` | Printable partner sign with a QR code (opened from the admin page) |
+| `vendor/qrcode.js` | QR code maker for the sign (MIT license, by Kazuhiko Arase) |
 | `admin.html` | **Shop admin** at `/admin`: order requests, online orders, adding and editing shop items, stock counts and a setup check |
 | `src/worker.js` | The shop's back end (runs on Cloudflare): item list, checkout, Square payment notices, admin |
 | `order.html` | **Start an Order**: a step-by-step form with example pieces, questions per order type, and photo uploads |
 | `story.html` | **Our Story**: the shop's story with the pig painting. Written from known facts only — add your own history (who started it, how, and why a pig) |
 | `help.html` | **Help & FAQ**: common questions, what to have ready for each order type, how to mail items in, and caring for a framed piece |
 | `site.css`, `site.js` | Shared look, header, footer and product list for every page |
-| `settings.js` | **Edit this** for the announcement bar, review and gift card links, and the FAQ answers |
+| `settings.js` | **Edit this** for review and gift card links and the FAQ answers (banners are easier from `/admin` → Banners) |
 | `shop-items.js` | Backup item list, shown only until Square is connected |
 | `order-config.js` | **Edit this** to change order types, examples and questions, and where orders are sent |
 
@@ -60,14 +62,23 @@ come out of the same stock count, and Square adds sales tax at checkout.
   can't buy the last one.
 - When Square reports a payment, it shows in the admin page under **Online Orders**.
 
-**The admin page** (`/admin`, password protected) has four tabs:
+**The admin page** (`/admin`, password protected) has these tabs:
 
 | Tab | What it's for |
 | --- | --- |
 | Order Requests | Everything from the Start an Order form, with photos. Soonest due first: red = past due, amber = due within 3 days. Status (new → quoted → waiting on items → in production → ready → done), private notes, search, reply by email or call. |
 | Online Orders | Paid shop orders: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
 | Shop Items | Every item in Square. **+ Add Item** (name, event or partner, sizes, price, a higher 2XL-and-up price, tax, photo). Edit name, description, event and price; turn "On the website" on or off; click the picture box to add or change a photo; count stock with + and −. Everything is saved in Square, so the register matches. |
-| Setup | A checklist of what's connected, with anything missing in red. |
+| Banners | Notices on the website: a thin **top bar** or a big **feature banner** with a photo and a button. Pick the pages, the colors, and start/stop dates (a holiday deadline banner turns itself off after the date). Ready-made starters for holiday deadlines, closures and events. |
+| Site Photos | Add photos to **Our Work** (in any group, or a new one), change captions, **replace** any photo, or **remove** gallery photos (they can be put back). Photos that are part of a page's design (logo, storefront, painting…) can be replaced. |
+| Setup | A checklist of what's connected, with anything missing in red. **Send a Test Email** checks email. |
+
+**More on the shop tools**
+
+- **Low-stock emails:** when an online sale leaves an item at 2 or fewer (change with the `LOW_STOCK` variable), the shop gets an email. Every morning the site also checks everything, including in-store sales. Each item is emailed once until it's restocked. Running-low items also show in red on Shop Items.
+- **Telling customers:** when an order request is set to *in production* or *ready*, or a shop order to *ready* (pickup) or *picked up / shipped* (shipping), a message pops up already written. Edit it, then **Send Email** (once set up, below), **Open in My Email**, or **Text Them** (opens Messages on a phone). The card then shows "Told: Ready · email · Nov 5".
+- **Pre-orders:** tick *Pre-order* on an item to sell it before it's made (event shirts). Stock doesn't limit it, customers see "Pre-order · Ready by …", and it stops on the last day you set. **Online Orders** shows a running "Pre-orders to make" count by size.
+- **Partner pages:** Shop Items → **Partner Pages** lists a link for each event or partner, like `/shop.html?c=lewis-county-ren-faire`, which opens the shop on just their merch with an "Official merch" header. **QR Sign** opens a printable sign for their table.
 
 **Adding things to the online shop**
 
@@ -100,6 +111,18 @@ to Square's own checkout page instead, which needs a webhook (`payment.updated`,
 `/api/square-webhook`, signature key as Secret `SQUARE_WEBHOOK_SIGNATURE_KEY`) to record payments.
 
 Optional: `SQUARE_SHOP_CATEGORY` to use a category name other than "Website".
+
+**Email (low-stock alerts and customer updates)** uses [Resend](https://resend.com), free for 3,000 emails a month.
+
+1. Sign up at resend.com **with WhimsicalPig@hotmail.com** (alerts can go to that address right away).
+2. In Resend: **API Keys → Create API key** (sending access). In Cloudflare add it as a **Secret** named
+   `RESEND_API_KEY`. Then `/admin` → **Setup → Send a Test Email**.
+3. To send customers their order updates from the admin page: in Resend, **Domains → Add domain**
+   `thewhimsicalpig.com` and add the DNS records it shows wherever that domain's DNS is managed. Once
+   it says *Verified*, set `MAIL_FROM` in `wrangler.jsonc` (`"The Whimsical Pig <orders@thewhimsicalpig.com>"`).
+   Until then, use **Open in My Email** or **Text Them**, which need no setup.
+
+`SHOP_EMAIL` in `wrangler.jsonc` is where alerts go and where customer replies land.
 
 Until Square is connected, the shop shows the items in `shop-items.js` with "Call to Order" buttons
 (or a payment link pasted into `buyUrl`).

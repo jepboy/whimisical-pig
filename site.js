@@ -20,9 +20,16 @@ const WORK = [
   ...Array.from({ length: 6 }, (_, i) => ["apparel-printing_0" + (i + 1), "Printing", "Printed shirts"]),
   ...Array.from({ length: 6 }, (_, i) => ["patches_0" + (i + 1), "Patches", "Custom patch"]),
 ];
-const workPhoto = (name, small = true) => "images/work/" + name + (small ? "-sm" : "") + ".webp";
+// Banners and photo changes made on the admin page (see siteChanges below)
+let SITE_CHANGES = null;
+const swapped = name => SITE_CHANGES && SITE_CHANGES.replace[name];
+const workPhoto = (name, small = true) => swapped(name)
+  ? `/api/photo/${swapped(name)}${small ? "?s=sm" : ""}`
+  : "images/work/" + name + (small ? "-sm" : "") + ".webp";
 // Lets the browser pick the 480px or 640px copy to suit the tile and the screen
 function useThumbs(img, name, sizes) {
+  img.dataset.key = name;
+  if (swapped(name)) { img.removeAttribute("srcset"); img.src = workPhoto(name); return; }
   img.sizes = sizes;
   img.srcset = `images/work/${name}-xs.webp 480w, images/work/${name}-sm.webp 640w`;
   img.src = workPhoto(name);
@@ -50,7 +57,8 @@ function loadImg(img, local, fallback) {
 // Gallery of photo tiles. Each opens the big photo in a lightbox
 // (or on its own if scripts are off). `items` defaults to every photo.
 function renderGallery(container, items = WORK) {
-  return items.map(([name, group, cap]) => {
+  if (items === WORK) container.dataset.all = "";    // photos added on the admin page join this one
+  const tiles = items.map(([name, group, cap]) => {
     const a = document.createElement("a");
     a.className = "tile";
     a.href = workPhoto(name, false);
@@ -64,7 +72,131 @@ function renderGallery(container, items = WORK) {
     container.appendChild(a);
     return a;
   });
+  if (SITE_CHANGES) tiles.forEach(t => applyPhoto(t.querySelector("img"), SITE_CHANGES));
+  return tiles.filter(t => t.isConnected);
 }
+
+// ---------- Banners and photos from the admin page ----------
+// /api/site lists the banners to show and any photo changes. It's kept for a
+// minute per visit so moving between pages doesn't ask again.
+const siteChanges = (() => {
+  if (location.protocol === "file:") return Promise.resolve(null);
+  try {
+    const c = JSON.parse(sessionStorage.getItem("wp-site"));
+    if (c && Date.now() - c.at < 60000) return Promise.resolve(c.data);
+  } catch (e) {}
+  return fetch("/api/site").then(r => r.ok ? r.json() : null).then(d => {
+    try { sessionStorage.setItem("wp-site", JSON.stringify({ at: Date.now(), data: d })); } catch (e) {}
+    return d;
+  }).catch(() => null);
+})();
+
+// Which site photo an <img> shows: a work photo name, or a file in images/
+function photoKeyOf(img) {
+  if (img.dataset.key) return img.dataset.key;
+  const src = img.getAttribute("src") || "";
+  const m = src.match(/images\/work\/([\w-]+?)(?:-sm|-xs)?\.webp$/) || src.match(/(images\/[\w\-./]+)$/);
+  return m ? (img.dataset.key = m[1]) : null;
+}
+function applyPhoto(img, d) {
+  if (!img) return;
+  const key = photoKeyOf(img);
+  if (!key) return;
+  const tile = img.closest(".tile");
+  if (tile && d.hidden.includes(key)) { tile.remove(); return; }
+  const id = d.replace[key];
+  if (id && !img.src.includes("/api/photo/")) {
+    const small = img.hasAttribute("srcset") || /-(sm|xs)\.webp$/.test(img.getAttribute("src") || "");
+    img.removeAttribute("srcset");
+    img.src = `/api/photo/${id}${small ? "?s=sm" : ""}`;
+    if (tile) tile.href = `/api/photo/${id}`;
+  }
+  if (tile && d.captions[key]) {
+    tile.querySelector(".cap").textContent = img.alt = d.captions[key];
+  }
+}
+
+function addedTiles(container, d) {
+  for (const p of d.added) {
+    if (container.querySelector(`[data-photo="${p.id}"]`)) continue;
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = `/api/photo/${p.id}`;
+    a.dataset.group = p.group || "More";
+    a.dataset.photo = p.id;
+    a.innerHTML = '<div class="pic"><img alt="" loading="lazy" decoding="async"></div><span class="cap"></span>';
+    a.querySelector(".cap").textContent = p.caption;
+    const im = a.querySelector("img");
+    im.alt = p.caption || "Our work";
+    im.src = `/api/photo/${p.id}?s=sm`;
+    a.onclick = e => { e.preventDefault(); openLightbox(a); };
+    container.appendChild(a);
+  }
+}
+
+function renderBanners(list) {
+  const page = document.body.dataset.page || "";
+  const mine = list.filter(b => b.pages.includes("all") || b.pages.includes(page));
+  const header = document.getElementById("site-header");
+  const utility = document.querySelector(".utility");
+  for (const b of mine.filter(b => b.kind === "bar")) {
+    const bar = document.createElement("div");
+    bar.className = "announce style-" + b.style;
+    const words = document.createElement("span");
+    words.textContent = [b.title, b.text].filter(Boolean).join(" · ");
+    bar.appendChild(words);
+    if (b.link) {
+      const a = document.createElement("a");
+      a.href = b.link;
+      a.textContent = (b.button || "Learn more") + " →";
+      bar.appendChild(a);
+    }
+    if (utility) utility.before(bar); else if (header) header.before(bar);
+  }
+  const main = document.querySelector("main");
+  const feats = mine.filter(b => b.kind === "feature");
+  if (!main || !feats.length) return;
+  const after = main.firstElementChild;
+  for (const b of feats.reverse()) {
+    const sec = document.createElement("section");
+    sec.className = "feature-banner style-" + b.style;
+    sec.innerHTML = '<div class="wrap"><div class="fb-in"><div class="fb-words"><h2></h2><p></p></div></div></div>';
+    const inner = sec.querySelector(".fb-in");
+    if (b.photo) {
+      const im = document.createElement("img");
+      im.src = `/api/photo/${b.photo}?s=sm`;
+      im.alt = "";
+      im.decoding = "async";
+      inner.prepend(im);
+    }
+    sec.querySelector("h2").textContent = b.title;
+    sec.querySelector("p").textContent = b.text;
+    if (!b.title) sec.querySelector("h2").remove();
+    if (!b.text) sec.querySelector("p").remove();
+    if (b.link) {
+      const a = document.createElement("a");
+      a.className = "btn";
+      a.href = b.link;
+      a.textContent = b.button || "Learn more";
+      sec.querySelector(".fb-words").appendChild(a);
+    }
+    if (after) after.after(sec); else main.prepend(sec);
+  }
+}
+
+siteChanges.then(d => {
+  if (!d) return;
+  d = { banners: [], hidden: [], captions: {}, replace: {}, added: [], ...d };
+  SITE_CHANGES = d;
+  const go = () => {
+    if ("noSiteChanges" in document.body.dataset) return;     // the admin page shows the originals
+    renderBanners(d.banners);
+    document.querySelectorAll("[data-all]").forEach(c => addedTiles(c, d));
+    document.querySelectorAll("img").forEach(img => applyPhoto(img, d));
+    document.dispatchEvent(new CustomEvent("site-changes", { detail: d }));
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
+});
 
 // Lightbox: shows a tile's big photo, with previous / next through the tiles
 // currently showing in the same gallery.

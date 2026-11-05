@@ -77,25 +77,33 @@
 <footer id="site-footer"></footer>
 
 <script>
-  const tiles = renderGallery(document.getElementById("gallery"));
-  const groups = [...new Set(WORK.map(w => w[1]))];
+  const gallery = document.getElementById("gallery");
+  renderGallery(gallery);
   const filters = document.getElementById("filters");
+  let groups = [];
   const pick = g => {
     for (const o of filters.children) o.setAttribute("aria-pressed", o.textContent === g);
-    for (const t of tiles) t.hidden = g !== "All" && t.dataset.group !== g;
+    for (const t of gallery.children) t.hidden = g !== "All" && t.dataset.group !== g;
   };
-  for (const g of ["All", ...groups]) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = g;
-    b.onclick = () => {
-      pick(g);
-      history.replaceState(null, "", g === "All" ? "work.html" : "?group=" + encodeURIComponent(g));
-    };
-    filters.appendChild(b);
+  // Filter buttons, one per group (built again if photos are added from the admin page)
+  function buildFilters() {
+    groups = [...new Set([...gallery.children].map(t => t.dataset.group))];
+    filters.innerHTML = "";
+    for (const g of ["All", ...groups]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = g;
+      b.onclick = () => {
+        pick(g);
+        history.replaceState(null, "", g === "All" ? "work.html" : "?group=" + encodeURIComponent(g));
+      };
+      filters.appendChild(b);
+    }
+    const start = new URLSearchParams(location.search).get("group");
+    pick(groups.includes(start) ? start : "All");
   }
-  const start = new URLSearchParams(location.search).get("group");
-  pick(groups.includes(start) ? start : "All");
+  buildFilters();
+  document.addEventListener("site-changes", buildFilters);
 </script>
 </body>
 </html>

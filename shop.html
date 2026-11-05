@@ -111,6 +111,13 @@
   .info .btn { padding: 11px 22px; }
   .info .left { margin-top: 6px; font-size: 0.85rem; letter-spacing: 0.04em; color: var(--muted); }
   .info .left.few { color: var(--pink); font-weight: 700; }
+  .sold.pre { background: var(--pink); color: #000; }
+  .info .left.pre { color: var(--pink); font-weight: 700; }
+  /* arrived from a partner's link */
+  .partner-head { margin-bottom: 26px; padding: 24px 26px; border: 2px solid #000; border-radius: 18px; background: var(--pink); color: #1a0f13; text-align: center; }
+  .partner-head .eyebrow { color: #1a0f13; }
+  .partner-head h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); margin: 4px 0 6px; }
+  .partner-head a { color: #1a0f13; font-weight: 700; }
   .buy { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
   .buy select {
     padding: 0 10px; border: 1px solid var(--rule); background: var(--bg); color: var(--cream);
@@ -244,6 +251,12 @@
         <p>Let them choose their own piece.</p>
       </div>
       <a class="btn ghost" id="giftcard-btn" href="#">Buy a Gift Card</a>
+    </div>
+
+    <div class="partner-head" id="partner-head" hidden>
+      <span class="eyebrow">Official merch</span>
+      <h2 id="partner-name"></h2>
+      <p>Made and sold year-round by The Whimsical Pig in Watertown. <a href="shop.html">See the whole shop →</a></p>
     </div>
 
     <div class="shop-tools" id="shop-tools" hidden>
@@ -408,6 +421,12 @@
 
   const SIZE_NAMES = /^(x{0,3}s|s|m|l|x{0,4}l|\d?x{1,3}l|\dxl|youth .+|y?(xs|s|m|l|xl)|one size|small|medium|large|x-?large|\dx-?large)$/i;
 
+  // "Pre-order · Ready by June 14 · Order by Jun 1"
+  function preText(pre) {
+    const by = pre.until ? new Date(pre.until + "T12:00:00").toLocaleDateString([], { month: "short", day: "numeric" }) : "";
+    return ["Pre-order", pre.ready, by && "order by " + by].filter(Boolean).join(" · ");
+  }
+
   function card(category) {
     const el = document.createElement("article");
     el.className = "item";
@@ -443,6 +462,9 @@
       }
       const many = p.variations.length > 1;
       const sizes = p.variations.every(v => SIZE_NAMES.test(v.name || ""));
+      const pre = p.preorder;
+      const buyWord = pre ? "Pre-order" : "Add to Cart";
+      if (pre) el.querySelector(".pic").insertAdjacentHTML("beforeend", '<span class="sold pre">Pre-order</span>');
       const prices = p.variations.map(v => v.price_cents);
       const low = Math.min(...prices), high = Math.max(...prices);
       el.dataset.price = low;
@@ -456,7 +478,7 @@
         <div class="buy">
           <label class="sr-only" for="q-${p.id}">Quantity</label>
           <select id="q-${p.id}"></select>
-          <button class="btn" type="button">Add to Cart</button>
+          <button class="btn" type="button">${buyWord}</button>
         </div>`);
       const pick = info.querySelector(".opt-select");
       const qty = info.querySelector(".buy select");
@@ -465,7 +487,8 @@
         if (!chosen) {
           // Nothing picked yet: show the price range and wait for a size
           info.querySelector(".price").textContent = low === high ? money(low) : `${money(low)} – ${money(high)}`;
-          info.querySelector(".left").textContent = "";
+          info.querySelector(".left").textContent = pre ? preText(pre) : "";
+          if (pre) info.querySelector(".left").className = "left pre";
           qty.innerHTML = Array.from({ length: 10 }, (_, i) => `<option>${i + 1}</option>`).join("");
           return;
         }
@@ -475,6 +498,7 @@
         const left = info.querySelector(".left");
         left.textContent = v.available === null ? "" : v.available <= 3 ? `Only ${v.available} left` : `${v.available} in stock`;
         left.className = "left" + (v.available !== null && v.available <= 3 ? " few" : "");
+        if (pre) { left.textContent = preText(pre); left.className = "left pre"; }
         const max = v.available === null ? 10 : Math.min(v.available, 10);
         qty.innerHTML = Array.from({ length: max }, (_, i) => `<option>${i + 1}</option>`).join("");
         qty.hidden = max < 2;
@@ -487,12 +511,12 @@
           pick.classList.add("bad");
           pick.focus();
           btn.textContent = sizes ? "Pick a size first" : "Pick an option first";
-          setTimeout(() => { btn.textContent = "Add to Cart"; }, 1600);
+          setTimeout(() => { btn.textContent = buyWord; }, 1600);
           return;
         }
         addToCart(pick ? pick.value : p.variations[0].id, +qty.value || 1);
         btn.textContent = "Added ✓";
-        setTimeout(() => { btn.textContent = "Add to Cart"; }, 1400);
+        setTimeout(() => { btn.textContent = buyWord; }, 1400);
       };
       grid.appendChild(el);
     }
@@ -543,7 +567,7 @@
         <div class="thumb">${item.image ? `<img src="${esc(item.image)}" alt="">` : ""}</div>
         <div>
           <h3>${esc(item.name)}</h3>
-          <div class="sub">${item.variations.length > 1 ? esc(v.name) + " · " : ""}${money(v.price_cents)} each</div>
+          <div class="sub">${item.preorder ? "Pre-order · " : ""}${item.variations.length > 1 ? esc(v.name) + " · " : ""}${money(v.price_cents)} each</div>
           <div class="ctl">
             <select aria-label="Quantity">${Array.from({ length: max }, (_, i) => `<option${i + 1 === l.qty ? " selected" : ""}>${i + 1}</option>`).join("")}</select>
             <button class="rm" type="button">Remove</button>
@@ -686,6 +710,10 @@
     return items.map(it => it.category);
   }
 
+  // Short web-address version of a name: "Lewis County Ren Faire" -> "lewis-county-ren-faire"
+  const slug = t => t.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  let partnerPick = null;
+
   // Category filters (only shown when there's more than one category)
   function buildFilters(categories) {
     $("shop-tools").hidden = !grid.children.length;
@@ -698,16 +726,25 @@
       b.textContent = c;
       b.setAttribute("aria-pressed", c === "All");
       b.onclick = () => {
+        $("partner-head").hidden = c !== partnerPick;
         for (const o of filters.children) o.setAttribute("aria-pressed", o === b);
         for (const el of grid.children) el.hidden = c !== "All" && el.dataset.category !== c;
-        history.replaceState(null, "", c === "All" ? "shop.html" : "?c=" + encodeURIComponent(c));
+        history.replaceState(null, "", c === "All" ? "shop.html" : "?c=" + slug(c));
       };
       filters.appendChild(b);
     }
     // Links like shop.html?c=Lewis County Ren Faire open on that partner's merch
     const wanted = (params.get("c") || "").toLowerCase();
-    const hit = [...filters.children].find(b => b.textContent.toLowerCase() === wanted);
-    if (hit) hit.click();
+    const hit = [...filters.children].find(b => b.textContent.toLowerCase() === wanted || slug(b.textContent) === wanted);
+    if (hit) {
+      partnerPick = hit.textContent;
+      $("partner-name").textContent = partnerPick;
+      document.title = partnerPick + " Merch — The Whimsical Pig";
+      hit.click();
+    } else if (cats.length === 1 && (cats[0].toLowerCase() === wanted || slug(cats[0]) === wanted)) {
+      $("partner-name").textContent = partnerPick = cats[0];
+      $("partner-head").hidden = false;
+    }
   }
 
   // Sort the items; sold-out ones always go last

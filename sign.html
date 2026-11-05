@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Sign — The Whimsical Pig</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="images/favicon.png">
+<link rel="preload" href="fonts/cormorant.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="site.css">
+<style>
+  /* A printable sign for a partner's table or booth: scan to shop their merch */
+  body { background: #e9e2e4; color: #1a0f13; cursor: auto; }
+  .tools { display: flex; gap: 10px; justify-content: center; padding: 18px; }
+  .tools .btn.ghost { color: #1a0f13; border-color: #1a0f13; }
+  .sheet {
+    width: min(8.5in, calc(100vw - 24px)); min-height: 11in; margin: 0 auto 30px; padding: 0.6in 0.6in 0.5in;
+    background: #fff; border: 1px solid #ccc; display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .sheet .logo { width: 62%; max-width: 380px; }
+  .sheet .kicker { margin-top: 18px; font: 700 0.95rem var(--sans); letter-spacing: 0.3em; text-transform: uppercase; color: #c9505b; }
+  .sheet h1 { font-size: clamp(2.4rem, 7vw, 3.6rem); line-height: 1.05; margin: 6px 0 4px; }
+  .sheet .sub { font-size: 1.15rem; color: #3a2a30; }
+  .qr { width: 62%; max-width: 360px; margin: 26px 0 14px; padding: 14px; border: 4px solid #000; border-radius: 22px; background: #fff; }
+  .qr svg { display: block; width: 100%; height: auto; }
+  .scan { font: 600 2rem var(--serif); }
+  .url { margin-top: 6px; font-size: 0.95rem; color: #3a2a30; word-break: break-all; }
+  .foot { margin-top: auto; padding-top: 24px; font-size: 0.95rem; color: #3a2a30; }
+  .missing { max-width: 520px; margin: 60px auto; padding: 30px; background: #fff; border-radius: 14px; text-align: center; }
+  @media print {
+    @page { size: letter; margin: 0; }
+    body { background: #fff; }
+    .tools { display: none; }
+    .sheet { width: 100%; min-height: 100vh; margin: 0; border: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="tools">
+  <button class="btn" type="button" onclick="print()">Print This Sign</button>
+  <a class="btn ghost" id="open-shop" href="shop.html">Open Their Shop Page</a>
+</div>
+<main id="sign"></main>
+
+<script src="vendor/qrcode.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const name = (params.get("name") || "").slice(0, 80);
+  const slug = (params.get("c") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 80);
+  const box = document.getElementById("sign");
+  if (!slug) {
+    box.innerHTML = '<div class="missing"><h1>Which partner?</h1><p>Open this sign from the admin page: Shop Items → Partner Pages.</p></div>';
+  } else {
+    const link = location.origin + "/shop.html?c=" + slug;
+    document.getElementById("open-shop").href = link;
+    const qr = qrcode(0, "M");
+    qr.addData(link);
+    qr.make();
+    box.innerHTML = `
+      <div class="sheet">
+        <img class="logo" src="images/logo-full.webp" alt="The Whimsical Pig">
+        <div class="kicker">Official Merch</div>
+        <h1 id="pname"></h1>
+        <p class="sub">Shirts, hoodies and more, made in Watertown. Order any time, all year.</p>
+        <div class="qr">${qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true })}</div>
+        <div class="scan">Scan to shop</div>
+        <div class="url"></div>
+        <div class="foot">The Whimsical Pig · 50 Public Square, Suite E1 · Watertown, NY · 315-773-3758</div>
+      </div>`;
+    box.querySelector("#pname").textContent = name || slug.replace(/-/g, " ");
+    box.querySelector(".url").textContent = link.replace(/^https?:\/\//, "");
+    document.title = (name || "Partner") + " Sign — The Whimsical Pig";
+  }
+</script>
+</body>
+</html>

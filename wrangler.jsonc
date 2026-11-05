@@ -23,7 +23,15 @@
     "SQUARE_LOCATION_ID": "6875TE29BSGD6",
     "SHIPPING_FEE": "5",
     // The Square app's Application ID (public). Turns on paying by card on our own page.
-    "SQUARE_APPLICATION_ID": "sq0idp-4rtvDyFQUMdpIpsfpkZOMA"
+    "SQUARE_APPLICATION_ID": "sq0idp-4rtvDyFQUMdpIpsfpkZOMA",
+    // Where low-stock alerts go, and where customers' replies to order updates go
+    "SHOP_EMAIL": "WhimsicalPig@hotmail.com"
+    // Add once the domain is verified in Resend, to email customers from the admin page:
+    // "MAIL_FROM": "The Whimsical Pig <orders@thewhimsicalpig.com>"
+  },
+  // Daily low-stock check at 13:00 UTC (8am New York in winter, 9am in summer)
+  "triggers": {
+    "crons": ["0 13 * * *"]
   },
   // Shop database. Cloudflare creates it automatically on the first deploy.
   "d1_databases": [

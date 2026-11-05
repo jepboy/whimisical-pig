@@ -525,9 +525,14 @@
       b.onclick = () => {
         for (const o of filters.children) o.setAttribute("aria-pressed", o === b);
         for (const el of grid.children) el.hidden = c !== "All" && el.dataset.category !== c;
+        history.replaceState(null, "", c === "All" ? "shop.html" : "?c=" + encodeURIComponent(c));
       };
       filters.appendChild(b);
     }
+    // Links like shop.html?c=Lewis County Ren Faire open on that partner's merch
+    const wanted = (params.get("c") || "").toLowerCase();
+    const hit = [...filters.children].find(b => b.textContent.toLowerCase() === wanted);
+    if (hit) hit.click();
   }
 
   (async () => {

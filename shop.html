@@ -310,7 +310,7 @@
       </div>
       <div id="p-ship" hidden>
         <h3>Ship to</h3>
-        <div class="pf"><label for="p-line1">Street address</label><input id="p-line1" autocomplete="shipping address-line1"></div>
+        <div class="pf"><label for="p-line1">Street address</label><input id="p-line1" placeholder="Start typing, then pick your address"></div>
         <div class="pf"><label for="p-line2">Apt, suite (optional)</label><input id="p-line2" autocomplete="shipping address-line2"></div>
         <div class="pf three">
           <div><label for="p-city">City</label><input id="p-city" autocomplete="shipping address-level2"></div>
@@ -336,6 +336,7 @@
 </dialog>
 
 <script src="shop-items.js"></script>
+<script src="address.js"></script>
 <script>
   const shop = window.SHOP || { items: [] };
   const grid = document.getElementById("grid");
@@ -344,6 +345,7 @@
   const money = c => "$" + (c / 100).toFixed(2).replace(/\.00$/, "");
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const params = new URLSearchParams(location.search);
+  attachAddressLookup({ street: $("p-line1"), city: $("p-city"), state: $("p-state"), zip: $("p-zip") });
   let shippingFee = null;              // cents, or null for pickup only
   const variations = new Map();        // variation id -> { item, v }
 

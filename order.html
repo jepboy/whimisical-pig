@@ -314,6 +314,16 @@
     .review dd { margin-bottom: 10px; }
     .nav-row .btn { padding: 13px 18px; }
   }
+  /* address, size grid, width × height */
+  .field.addr input + input, .field.addr .addr-wrap + input, .field.addr .addr-3 { margin-top: 8px; }
+  .addr-3 { display: grid; grid-template-columns: 1fr 74px 110px; gap: 8px; }
+  .size-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+  .size-grid label { display: grid; gap: 4px; text-align: center; font-weight: 700; font-size: 0.85rem; }
+  .size-grid input { text-align: center; }
+  .size-total { margin-top: 8px; font-weight: 700; }
+  .dims { display: flex; align-items: center; gap: 10px; }
+  .dims input { max-width: 110px; }
+  @media (max-width: 480px) { .addr-3 { grid-template-columns: 1fr 64px 96px; } }
 </style>
 </head>
 <body data-page="order">
@@ -411,11 +421,18 @@
             <div class="opts" data-name="c_fulfill"></div>
             <p class="err">Please choose one.</p>
           </fieldset>
-          <div class="field" data-req data-show-if='{"name":"c_fulfill","is":"Ship it to me"}'>
-            <label for="c_address">Shipping address <span class="req">*</span></label>
-            <textarea id="c_address" name="c_address" autocomplete="shipping street-address" placeholder="Name, street, city, state, ZIP"></textarea>
-            <p class="help">So we can get you a shipping quote.</p>
-            <p class="err">Please add the address to ship to.</p>
+          <div class="field addr" data-req data-show-if='{"name":"c_fulfill","is":"Ship it to me"}'>
+            <input type="hidden" id="c_address" name="c_address">
+            <label for="c_addr_street">Shipping address <span class="req">*</span></label>
+            <input type="text" id="c_addr_street" name="c_addr_street" placeholder="Start typing your street address">
+            <input type="text" id="c_addr_line2" name="c_addr_line2" autocomplete="shipping address-line2" placeholder="Apt, suite, unit (optional)" aria-label="Apartment, suite or unit">
+            <div class="addr-3">
+              <input type="text" id="c_addr_city" name="c_addr_city" autocomplete="shipping address-level2" placeholder="City" aria-label="City">
+              <input type="text" id="c_addr_state" name="c_addr_state" autocomplete="shipping address-level1" placeholder="State" maxlength="2" aria-label="State">
+              <input type="text" id="c_addr_zip" name="c_addr_zip" autocomplete="shipping postal-code" inputmode="numeric" placeholder="ZIP" maxlength="10" aria-label="ZIP code">
+            </div>
+            <p class="help">Pick your address from the list as you type. So we can get you a shipping quote.</p>
+            <p class="err">Please fill in the street, city, state and ZIP.</p>
           </div>
           <fieldset class="field">
             <legend>Best way to reach you</legend>
@@ -460,6 +477,7 @@
 <footer id="site-footer"></footer>
 
 <script src="order-config.js"></script>
+<script src="address.js"></script>
 <script>
   const CFG = window.ORDER;
   const DRAFT_KEY = "whimsicalpig-order-draft";
@@ -553,6 +571,19 @@
         return `<div class="field"${reqAttr}><label for="${id}">${esc(q.label)}${req}</label><input type="number" inputmode="numeric" min="${q.min || 0}" ${attrs}>${help}${err}</div>`;
       case "date":
         return `<div class="field"${reqAttr}><label for="${id}">${esc(q.label)}${req}</label><input type="date" ${attrs}>${help}${err}</div>`;
+      // A box per size; the total fills in the quantity question (q.total)
+      case "sizes": {
+        const sizes = q.options || ["Youth S", "Youth M", "Youth L", "S", "M", "L", "XL", "2XL", "3XL", "4XL"];
+        return `<fieldset class="field" data-composite="sizes"${q.total ? ` data-total="${prefix + q.total}"` : ""}${reqAttr}>
+          <legend>${esc(q.label)}${req}</legend><input type="hidden" id="${id}" name="${id}">
+          <div class="size-grid">${sizes.map(z => `<label>${esc(z)}<input type="number" inputmode="numeric" min="0" max="9999" name="${id}__${esc(z)}" data-size="${esc(z)}" placeholder="0"></label>`).join("")}</div>
+          <p class="size-total" aria-live="polite"></p>${help}${err}</fieldset>`;
+      }
+      // Width × height in inches
+      case "dims":
+        return `<fieldset class="field" data-composite="dims"${reqAttr}><legend>${esc(q.label)}${req}</legend><input type="hidden" id="${id}" name="${id}">
+          <div class="dims"><input type="number" inputmode="decimal" min="0" step="any" name="${id}__w" placeholder="Width" aria-label="Width in inches">
+          <span>×</span><input type="number" inputmode="decimal" min="0" step="any" name="${id}__h" placeholder="Height" aria-label="Height in inches"><span>inches</span></div>${help}${err}</fieldset>`;
       default:
         return `<div class="field"${reqAttr}><label for="${id}">${esc(q.label)}${req}</label><input type="text" ${attrs}>${help}${err}</div>`;
     }
@@ -573,7 +604,26 @@
   }
 
   // Questions with showIf only appear when another answer matches
+  // Size grids, width × height and the address boxes write their answer into a hidden field
+  function syncComposites() {
+    form.querySelectorAll('[data-composite="sizes"]').forEach(f => {
+      const picked = [...f.querySelectorAll("[data-size]")].map(i => [i.dataset.size, Math.max(0, parseInt(i.value, 10) || 0)]).filter(([, n]) => n > 0);
+      const total = picked.reduce((a, [, n]) => a + n, 0);
+      f.querySelector('input[type="hidden"]').value = picked.map(([z, n]) => `${z} ×${n}`).join(", ");
+      f.querySelector(".size-total").textContent = total ? `Total: ${total}` : "";
+      const qty = f.dataset.total && form.querySelector(`[name="${f.dataset.total}"]`);
+      if (qty && total) qty.value = total;
+    });
+    form.querySelectorAll('[data-composite="dims"]').forEach(f => {
+      const [w, h] = [...f.querySelectorAll('input[type="number"]')].map(i => i.value.trim());
+      f.querySelector('input[type="hidden"]').value = w && h ? `${w} × ${h} in` : "";
+    });
+    const a = k => (form.elements["c_addr_" + k] || {}).value?.trim() || "";
+    const full = a("street") && a("city") && a("state") && a("zip");
+    form.elements.c_address.value = full ? `${a("street")}${a("line2") ? ", " + a("line2") : ""}\n${a("city")}, ${a("state").toUpperCase()} ${a("zip")}` : "";
+  }
   function applyConditions() {
+    syncComposites();
     form.querySelectorAll("[data-show-if]").forEach(f => {
       const c = JSON.parse(f.dataset.showIf);
       const picked = valuesOf(c.name);
@@ -594,6 +644,8 @@
   fillOpts("c_contact", ["Call", "Text", "Email"]);
   fillOpts("c_fulfill", ["I'll pick it up at the shop", "Ship it to me"]);
   fillOpts("c_delivery", ["I'll drop them off at the shop", "I'll mail them", "No items to send"]);
+  attachAddressLookup({ street: form.elements.c_addr_street, city: form.elements.c_addr_city,
+                        state: form.elements.c_addr_state, zip: form.elements.c_addr_zip });
 
   const photoInput = document.getElementById("photos");
   const drop = document.getElementById("drop");
@@ -693,7 +745,7 @@
     });
     if (!ok) {
       statusEl.textContent = "A couple of things still need filling in.";
-      const firstBad = panel.querySelector(".bad input, .bad select, .bad textarea");
+      const firstBad = panel.querySelector('.bad input:not([type="hidden"]), .bad select, .bad textarea');
       if (firstBad) firstBad.focus();
     }
     return ok;

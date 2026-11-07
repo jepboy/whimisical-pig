@@ -23,7 +23,9 @@
 //    itemsIn    true (or a showIf) when the customer brings us items; only then
 //               does the contact step ask "Getting your items to us"
 //    questions  the details we need. type can be:
-//               text, textarea, number, date, select, radio, checks, note
+//               text, textarea, number, date, select, radio, checks, note,
+//               sizes (a box per size; total: "quantity" fills that question in),
+//               dims (width × height in inches)
 //               required: true     makes one mandatory
 //               showIf: { q: "id", is: "answer" }   only asks when another
 //                                  question has that answer (or is: ["a", "b"]
@@ -110,8 +112,9 @@ window.ORDER = {
         { id: "garment", label: "What items?", type: "text", required: true, placeholder: "e.g. black polos, navy hats, grey hoodies" },
         { id: "garment_colors", label: "Garment colors", type: "text", placeholder: "e.g. black, heather grey",
           showIf: { q: "garments_from", is: "Please provide the garments" } },
+        { id: "sizes", label: "How many of each size?", type: "sizes", total: "quantity",
+          help: "Leave a size blank if you don't need it. The total fills in the quantity." },
         { id: "quantity", label: "Total quantity", type: "number", required: true, min: 1 },
-        { id: "sizes", label: "Sizes & how many of each", type: "textarea", placeholder: "e.g. S ×4, M ×10, L ×8, XL ×3" },
         { id: "logo_status", label: "Your logo", type: "radio", required: true,
           options: ["New logo (I'll upload it next)", "You have it on file", "No logo, just words"] },
         { id: "logo_text", label: "Words you'd like", type: "textarea", showIf: { q: "logo_status", is: "No logo, just words" },
@@ -193,7 +196,7 @@ window.ORDER = {
       ],
       questions: [
         { id: "piece", label: "What are we framing?", type: "text", required: true },
-        { id: "size", label: "Size (width × height)", type: "text", placeholder: "e.g. 16 × 20 in" },
+        { id: "size", label: "Size of the piece", type: "dims", help: "Measure the art or item itself. Leave blank if you're not sure." },
         { id: "glass", label: "Glass", type: "select", options: ["Help me choose", "Regular", "UV protective", "Non-glare"] },
         { id: "mat", label: "Mat", type: "select", options: ["Help me choose", "Single mat", "Double mat", "No mat"] },
         { id: "style", label: "Frame style or colors you like", type: "textarea", placeholder: "Optional" },
@@ -253,7 +256,8 @@ window.ORDER = {
         { id: "partner_dates", label: "Event dates", type: "text", showIf: { q: "partner_type", is: "Event / festival" }, placeholder: "e.g. every July, 3rd weekend" },
         { id: "partner_items", label: "What merch are you interested in?", type: "checks",
           options: ["T-shirts", "Sweatpants", "Hoodies / sweatshirts", "Hats", "Bags", "Patches", "Other"] },
-        { id: "partner_qty", label: "Rough quantity", type: "text", placeholder: "e.g. 200 shirts a year, or 100 per event" },
+        { id: "partner_qty", label: "About how many items a year?", type: "radio",
+          options: ["Under 50", "50 – 150", "150 – 500", "500+", "Not sure yet"] },
         { id: "partner_sell", label: "Where will it be sold?", type: "checks",
           options: ["At our business / event", "Online", "Through The Whimsical Pig", "Not sure yet"] },
         { id: "partner_logo", label: "Do you have a logo?", type: "radio", required: true,

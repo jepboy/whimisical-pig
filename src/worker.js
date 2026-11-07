@@ -1493,9 +1493,9 @@ async function shopvoxCall(env, method, path, body) {
   url.searchParams.set("authToken", env.SHOPVOX_API_TOKEN);
   const r = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json", "Accept": "application/json",
+    headers: { ...(body instanceof FormData ? {} : { "Content-Type": "application/json" }), "Accept": "application/json",
                "Authorization": `Bearer ${env.SHOPVOX_API_TOKEN}`, "authToken": env.SHOPVOX_API_TOKEN, "accountID": env.SHOPVOX_ACCOUNT_ID },
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {}),
   });
   const text = await r.text();
   let data = null;
@@ -1547,15 +1547,22 @@ async function pushRequestToShopvox(env, id, origin) {
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
     ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
   };
-  // The first photo also goes in as the lead's asset, so it shows in shopVOX
+  // The first photo goes in as the lead's asset (an uploaded file, like shopVOX's own
+  // lead form sends it), so it shows under Assets in shopVOX
   const firstPhoto = files.find(f => /^image\//.test(f.mime));
-  const withPhoto = firstPhoto ? { ...lead, asset: `${base}/api/files/${firstPhoto.id}/${firstPhoto.share_key}` } : null;
+  let withPhoto = null;
+  if (firstPhoto) {
+    const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
+    withPhoto = new FormData();
+    for (const [k, v] of Object.entries(lead)) if (v !== null && v !== undefined) withPhoto.append(k, String(v));
+    withPhoto.append("asset", new Blob([row.data], { type: firstPhoto.mime }), firstPhoto.name);
+  }
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
   const retryable = r => r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 403;
   // Try with the photo, then without it if shopVOX won't take it; plain body first,
   // then wrapped in its name (some shopVOX endpoints want that)
   let res = null;
-  for (const body of [withPhoto, withPhoto && { salesLead: withPhoto }, lead, { salesLead: lead }].filter(Boolean)) {
+  for (const body of [withPhoto, lead, { salesLead: lead }].filter(Boolean)) {
     const r = await shopvoxCall(env, "POST", "/sales_leads", body);
     if (!res || idOf(r)) res = r;
     if (idOf(r) || !retryable(r)) break;

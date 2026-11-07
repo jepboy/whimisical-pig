@@ -125,6 +125,9 @@ email, needed-by date, every answer, and links to their photos. The admin page s
    - `SHOPVOX_API_TOKEN` as a **Secret** (the API Token)
    - `SHOPVOX_PIPELINE` and `SHOPVOX_STAGE` are already set in `wrangler.jsonc`
      ("Sales Pipeline", starting in "Assigned"). Change them there if the pipeline is renamed.
+   - `SHOPVOX_SALES_REP` ("Katarina", in `wrangler.jsonc`) is the sales rep every website lead
+     is assigned to. It must match her name in shopVOX exactly. The lead's expected close date
+     is the customer's "needed by" date, and the first photo goes into the lead's Assets.
 3. `/admin` → **Setup → Test shopVOX**.
 
 To see customer emails on each order, connect the shop's inbox inside shopVOX (its email

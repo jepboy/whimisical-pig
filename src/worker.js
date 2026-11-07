@@ -1482,6 +1482,7 @@ async function deletePhoto(env, id) {
 //   SHOPVOX_API_TOKEN    the API Token from the same place (a Secret)
 //   SHOPVOX_PIPELINE     the sales-lead pipeline name to file them in (required by shopVOX)
 //   SHOPVOX_STAGE        optional: the stage new leads start in
+//   SHOPVOX_SALES_REP    optional: the shopVOX user every website lead is assigned to
 // API reference: https://shopvoxapi.docs.apiary.io
 
 const shopvoxReady = env => !!(env.SHOPVOX_ACCOUNT_ID && env.SHOPVOX_API_TOKEN);
@@ -1546,26 +1547,32 @@ async function pushRequestToShopvox(env, id, origin) {
     leadSourceName: "Website",
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
     ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
+    ...(/^\d{4}-\d{2}-\d{2}$/.test(r.needed_by || "") ? { expectedCloseDate: r.needed_by } : {}),
   };
   // The first photo goes in as the lead's asset (an uploaded file, like shopVOX's own
   // lead form sends it), so it shows under Assets in shopVOX
   const firstPhoto = files.find(f => /^image\//.test(f.mime));
-  let withPhoto = null;
-  if (firstPhoto) {
-    const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
-    withPhoto = new FormData();
-    for (const [k, v] of Object.entries(lead)) if (v !== null && v !== undefined) withPhoto.append(k, String(v));
+  const photoRow = firstPhoto && await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
+  const asForm = l => {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries(l)) if (v !== null && v !== undefined) fd.append(k, String(v));
     // The database can return the file as a list of numbers; make it real bytes
-    withPhoto.append("asset", new Blob([new Uint8Array(row.data)], { type: firstPhoto.mime }), firstPhoto.name);
-  }
+    fd.append("asset", new Blob([new Uint8Array(photoRow.data)], { type: firstPhoto.mime }), firstPhoto.name);
+    return fd;
+  };
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
   const retryable = r => r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 403;
   // Try with the photo, then without it if shopVOX won't take it; plain body first,
   // then wrapped in its name (some shopVOX endpoints want that)
-  let res = null;
-  for (const body of [withPhoto, lead, { salesLead: lead }].filter(Boolean)) {
-    const r = await shopvoxCall(env, "POST", "/sales_leads", body);
-    if (!res || idOf(r)) res = r;
+  // Assign the sales rep (SHOPVOX_SALES_REP); if shopVOX doesn't know that name,
+  // the lead still goes in, unassigned
+  const rep = env.SHOPVOX_SALES_REP ? { ...lead, salesRepName: env.SHOPVOX_SALES_REP } : null;
+  const tries = [];
+  for (const l of [rep, lead].filter(Boolean)) tries.push(...[photoRow && asForm(l), l, { salesLead: l }].filter(Boolean).map(body => ({ body, rep: l === rep })));
+  let res = null, repUsed = false;
+  for (const t of tries) {
+    const r = await shopvoxCall(env, "POST", "/sales_leads", t.body);
+    if (!res || idOf(r)) { res = r; repUsed = t.rep; }
     if (idOf(r) || !retryable(r)) break;
   }
   const leadId = idOf(res);
@@ -1577,7 +1584,8 @@ async function pushRequestToShopvox(env, id, origin) {
     return { error: err };
   }
   await env.DB.prepare(`UPDATE requests SET shopvox_id = ?, shopvox_error = '' WHERE id = ?`).bind(String(leadId), id).run();
-  return { ok: true, id: String(leadId) };
+  return { ok: true, id: String(leadId),
+           ...(env.SHOPVOX_SALES_REP && !repUsed ? { note: `shopVOX didn't recognize the sales rep "${env.SHOPVOX_SALES_REP}", so the lead isn't assigned. Check SHOPVOX_SALES_REP matches her name in shopVOX exactly.` } : {}) };
 }
 
 const listOf = (d, key) => Array.isArray(d) ? d : (d && (d[key] || d.data)) || [];

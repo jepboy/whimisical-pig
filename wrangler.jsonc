@@ -32,7 +32,9 @@
     // shopVOX: website orders become Sales Leads in this pipeline, starting in this stage
     // (the Account ID and API Token are Secrets in the Cloudflare dashboard)
     "SHOPVOX_PIPELINE": "Sales Pipeline",
-    "SHOPVOX_STAGE": "Assigned"
+    "SHOPVOX_STAGE": "Assigned",
+    // Every website lead is assigned to this shopVOX user (her name exactly as in shopVOX)
+    "SHOPVOX_SALES_REP": "Katarina"
     // Add once the domain is verified in Resend, to email customers from the admin page:
     // "MAIL_FROM": "The Whimsical Pig <orders@thewhimsicalpig.com>"
   },

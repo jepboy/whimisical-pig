@@ -66,7 +66,7 @@ come out of the same stock count, and Square adds sales tax at checkout.
 
 | Tab | What it's for |
 | --- | --- |
-| Order Requests | Everything from the Start an Order form, with photos. Soonest due first: red = past due, amber = due within 3 days. Status (new → quoted → waiting on items → in production → ready → done), private notes, search, reply by email or call. |
+| Order Backup | A backup copy of every Start an Order request, with photos (orders are worked in shopVOX). Search, see whether each one reached shopVOX ("In shopVOX ✓"), resend one that didn't, email or call, delete. |
 | Online Orders | Paid shop orders: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
 | Shop Items | Every item in Square. **+ Add Item** (name, event or partner, sizes, price, a higher 2XL-and-up price, tax, photo). Edit name, description, event and price; turn "On the website" on or off; click the picture box to add or change a photo; count stock with + and −. Everything is saved in Square, so the register matches. |
 | Banners | Notices on the website: a thin **top bar** or a big **feature banner** with a photo and a button. Pick the pages, the colors, and start/stop dates (a holiday deadline banner turns itself off after the date). Ready-made starters for holiday deadlines, closures and events. |
@@ -128,6 +128,11 @@ email, needed-by date, every answer, and links to their photos. The admin page s
    - `SHOPVOX_SALES_REP` ("Katarina", in `wrangler.jsonc`) is the sales rep every website lead
      is assigned to. It must match her name in shopVOX exactly. The lead's expected close date
      is the customer's "needed by" date, and the first photo goes into the lead's Assets.
+   - Lead sources name the order type ("Website – Military Framing"), falling back to "Website".
+   - So Katarina hears about each new website order: shopVOX **Settings → Notifications →
+     Sales Leads → Created → Sales Rep**.
+   - Customers get a "We got your order!" email with everything they sent, once `MAIL_FROM`
+     is set (see Email below).
 3. `/admin` → **Setup → Test shopVOX**.
 
 To see customer emails on each order, connect the shop's inbox inside shopVOX (its email

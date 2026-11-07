@@ -719,6 +719,14 @@ async function saveOrderRequest(request, env, ctx) {
   }
   // Copy it into shopVOX as a sales lead (after the customer gets their reply)
   const origin = new URL(request.url).origin;
+  // "We got your order" email to the customer (once email is set up; see README)
+  if (canMailCustomers(env) && ctx && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field("email"))) {
+    ctx.waitUntil(sendMail(env, {
+      to: field("email"), replyTo: shopEmail(env),
+      subject: `We got your order! (${ref})`,
+      text: `Hi ${field("name").split(/\s+/)[0] || "there"},\n\nThanks for your order with The Whimsical Pig. We'll look everything over and reach out with a quote.\n\nYour order number is ${ref}. Here's what you sent us:\n\n${summary}\n\nQuestions or something to add? Just reply to this email or call 315-773-3758.\n\nThe Whimsical Pig\n50 Public Square, Suite E1, Watertown, NY · Mon–Fri 9am–5pm\n`,
+    }).catch(e => console.error("Confirmation email failed", e)));
+  }
   // A test order from the admin page waits for shopVOX so the result shows right away
   if (form.get("test") === "1" && await isAdmin(request, env)) {
     const sv = shopvoxReady(env) ? await pushRequestToShopvox(env, row.id, origin) : { error: "shopVOX isn't set up (see Setup)." };
@@ -1544,7 +1552,7 @@ async function pushRequestToShopvox(env, id, origin) {
     ...(who.companyId ? { companyId: who.companyId } : { companyName: r.name || "Website customer" }),
     email: r.email || "",
     phoneNumber: r.phone || "",
-    leadSourceName: "Website",
+    leadSourceName: leadSource(r.type),
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
     ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
     ...(/^\d{4}-\d{2}-\d{2}$/.test(r.needed_by || "") ? { expectedCloseDate: r.needed_by } : {}),
@@ -1566,9 +1574,18 @@ async function pushRequestToShopvox(env, id, origin) {
   // then wrapped in its name (some shopVOX endpoints want that)
   // Assign the sales rep (SHOPVOX_SALES_REP); if shopVOX doesn't know that name,
   // the lead still goes in, unassigned
-  const rep = env.SHOPVOX_SALES_REP ? { ...lead, salesRepName: env.SHOPVOX_SALES_REP } : null;
+  // The lead source names the kind of order ("Website – Military Framing"); if shopVOX
+  // won't take a new source name, fall back to plain "Website"
+  const plainSource = { ...lead, leadSourceName: "Website" };
+  const variants = [];
+  if (env.SHOPVOX_SALES_REP) variants.push({ l: { ...lead, salesRepName: env.SHOPVOX_SALES_REP }, rep: true },
+                                          { l: { ...plainSource, salesRepName: env.SHOPVOX_SALES_REP }, rep: true });
+  variants.push({ l: lead, rep: false }, { l: plainSource, rep: false });
   const tries = [];
-  for (const l of [rep, lead].filter(Boolean)) tries.push(...[photoRow && asForm(l), l, { salesLead: l }].filter(Boolean).map(body => ({ body, rep: l === rep })));
+  for (const v of variants) {
+    if (photoRow) tries.push({ body: asForm(v.l), rep: v.rep });
+    tries.push({ body: v.l, rep: v.rep });
+  }
   let res = null, repUsed = false;
   for (const t of tries) {
     const r = await shopvoxCall(env, "POST", "/sales_leads", t.body);
@@ -1616,6 +1633,12 @@ async function findShopvoxCustomer(env, r) {
   } catch (e) { console.error("shopVOX lookup failed", e); }
   return { contactId: null, companyId: null };
 }
+
+// "Website – Military Framing" (test orders and unknown types are just "Website")
+const leadSource = type => {
+  const t = cleanText(String(type || "").replace(/\(test\)/i, ""), 60);
+  return t ? `Website – ${t}` : "Website";
+};
 
 async function sendRequestToShopvox(env, id, origin) {
   if (!shopvoxReady(env)) return json({ error: "Add the shopVOX Account ID and API Token in Cloudflare first (see Setup)." }, 503);

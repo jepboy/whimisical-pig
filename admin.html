@@ -213,7 +213,7 @@
 
   <div id="app" hidden>
     <div class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-tab="requests">Order Requests <span class="count" id="n-requests"></span></button>
+      <button role="tab" aria-selected="true" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
       <button role="tab" aria-selected="false" data-tab="orders">Online Orders <span class="count" id="n-orders"></span></button>
       <button role="tab" aria-selected="false" data-tab="items">Shop Items <span class="warn" id="n-low"></span></button>
       <button role="tab" aria-selected="false" data-tab="banners">Banners</button>
@@ -221,12 +221,12 @@
       <button role="tab" aria-selected="false" data-tab="setup">Setup <span class="warn" id="n-setup"></span></button>
     </div>
 
-    <!-- Order requests from the Start an Order form -->
+    <!-- Backup copy of every Start an Order request (they're worked in shopVOX) -->
     <section id="tab-requests">
       <div class="toolbar">
         <div>
-          <h2>Order Requests</h2>
-          <p class="hint">From the Start an Order form. Soonest due first. Red = past due, amber = due within 3 days.</p>
+          <h2>Order Backup</h2>
+          <p class="hint">A backup copy of every order from the Start an Order form, with photos. Orders are worked in shopVOX. Newest first.</p>
         </div>
         <div class="tools">
           <input type="search" id="req-search" placeholder="Search name, unit, order #…" aria-label="Search requests">
@@ -494,21 +494,18 @@
     };
   }
 
-  // ---------- order requests ----------
-  let requests = [], reqStatuses = [];
+  // ---------- order backup ----------
+  let requests = [];
   async function loadRequests() {
     const box = $("requests");
-    try {
-      const data = await api("/api/admin/requests");
-      requests = data.requests; reqStatuses = data.statuses;
-    } catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
-    const filter = $("req-filter"), keep = filter.value || "open";
-    const n = s => requests.filter(r => r.status === s).length;
-    filter.innerHTML = [["open", `Open (${requests.filter(r => r.status !== "done").length})`], ["all", `All (${requests.length})`],
-      ...reqStatuses.map(s => [s, `${s[0].toUpperCase() + s.slice(1)} (${n(s)})`])]
+    try { requests = (await api("/api/admin/requests")).requests; }
+    catch (err) { box.innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+    const missing = requests.filter(r => !r.shopvox_id).length;
+    const filter = $("req-filter"), keep = filter.value || "all";
+    filter.innerHTML = [["all", `All (${requests.length})`], ...(shopvoxOn ? [["missing", `Not in shopVOX (${missing})`]] : [])]
       .map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
-    filter.value = keep;
-    $("n-requests").textContent = n("new") || "";
+    filter.value = [...filter.options].some(o => o.value === keep) ? keep : "all";
+    $("n-requests").textContent = shopvoxOn && missing ? "●" : "";
     drawRequests();
   }
   function drawRequests() {
@@ -516,23 +513,22 @@
     const want = $("req-filter").value;
     const q = $("req-search").value.trim().toLowerCase();
     const list = requests
-      .filter(r => want === "all" ? true : want === "open" ? r.status !== "done" : r.status === want)
-      .filter(r => !q || [r.ref, r.name, r.email, r.phone, r.type, r.summary, r.note].join(" ").toLowerCase().includes(q))
-      .sort((a, b) => (daysUntil(a.needed_by) ?? 9999) - (daysUntil(b.needed_by) ?? 9999) || b.id - a.id);
+      .filter(r => want !== "missing" || !r.shopvox_id)
+      .filter(r => !q || [r.ref, r.name, r.email, r.phone, r.type, r.summary].join(" ").toLowerCase().includes(q))
+      .sort((a, b) => b.id - a.id);
     if (!list.length) { box.innerHTML = '<div class="empty">Nothing here. New orders from the website show up here.</div>'; return; }
-    box.innerHTML = list.map(r => {
-      const due = dueText(r.needed_by);
-      const cls = r.status === "done" ? "done" : due.cls;
-      return `<article class="card ${cls}" data-id="${r.id}">
+    box.innerHTML = list.map(r => `<article class="card" data-id="${r.id}">
         <header>
           <div>
-            <span class="tag ${r.status === "new" ? "new" : r.status === "done" ? "done" : ""}">${esc(r.status)}</span>
+            ${r.shopvox_id ? '<span class="tag paid">In shopVOX ✓</span>'
+              : shopvoxOn ? '<span class="tag low">Not in shopVOX</span>' : ""}
             <h3>${esc(r.type || "Order")} · ${esc(r.name || "No name")}</h3>
-            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}${r.shopvox_id ? ' · <span class="told">In shopVOX ✓</span>'
-              : shopvoxOn ? ` · <span class="low">Not in shopVOX yet${r.shopvox_error ? " (" + esc(r.shopvox_error) + ")" : ""}</span> <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button>` : ""}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
+            <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}</p>
+            ${!r.shopvox_id && shopvoxOn ? `<p class="meta low">${r.shopvox_error ? esc(r.shopvox_error) : "Not sent yet."}
+              <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button></p>` : ""}
           </div>
           <div class="facts">
-            <div><span class="k">Needed by</span><span class="due ${r.status === "done" ? "" : due.cls}">${due.text}</span></div>
+            <div><span class="k">Needed by</span>${dueText(r.needed_by).text}</div>
             <div><span class="k">Pick up / ship</span>${esc(r.fulfill || "—")}</div>
           </div>
         </header>
@@ -543,32 +539,13 @@
             ? `<a href="/api/admin/request-files/${f.id}" target="_blank" rel="noopener"><img src="/api/admin/request-files/${f.id}" alt="${esc(f.name)}" loading="lazy"></a>`
             : `<a class="file" href="/api/admin/request-files/${f.id}" target="_blank" rel="noopener">${esc(f.name)}</a>`).join("")}</div>` : ""}
         </details>
-        <textarea class="note-box" data-act="note" placeholder="Shop notes (only you see these): quote amount, items received, shopVOX #…">${esc(r.note)}</textarea><span class="saved"></span>
         <footer>
-          <label>Status
-            <select data-act="status">${reqStatuses.map(s => `<option${s === r.status ? " selected" : ""}>${s}</option>`).join("")}</select>
-          </label>
-          ${r.email ? `<a class="btn sm" href="mailto:${esc(r.email)}?subject=${encodeURIComponent("Your Whimsical Pig order " + r.ref)}">Reply by Email</a>` : ""}
+          ${r.email ? `<a class="btn ghost sm" href="mailto:${esc(r.email)}?subject=${encodeURIComponent("Your Whimsical Pig order " + r.ref)}">Email</a>` : ""}
           ${r.phone ? `<a class="btn ghost sm" href="tel:${esc(r.phone)}">Call ${esc(r.phone)}</a>` : ""}
-          <button class="link-btn" type="button" data-act="delete">Delete</button>
+          <button class="link-btn" type="button" data-act="delete" style="margin-left:auto">Delete</button>
         </footer>
-      </article>`;
-    }).join("");
+      </article>`).join("");
   }
-  const saveReqNote = noteSaver(el => `/api/admin/requests/${el.closest(".card").dataset.id}`);
-  $("requests").oninput = e => { if (e.target.dataset.act === "note") saveReqNote(e.target); };
-  $("requests").onchange = async e => {
-    if (e.target.dataset.act !== "status") return;
-    const id = +e.target.closest(".card").dataset.id;
-    try {
-      await send(`/api/admin/requests/${id}`, "PUT", { status: e.target.value });
-      const r = requests.find(r => r.id === id);
-      r.status = e.target.value;
-      loadRequests();
-      const msg = requestMessage(r);
-      if (msg) openNotify({ kind: "request", id, email: r.email, phone: r.phone, name: r.name, ...msg }, loadRequests);
-    } catch (err) { alert(err.message); }
-  };
   $("requests").onclick = async e => {
     if (e.target.dataset.act === "shopvox") {
       const id = +e.target.closest(".card").dataset.id;
@@ -580,7 +557,7 @@
     if (e.target.dataset.act !== "delete") return;
     const card = e.target.closest(".card");
     const r = requests.find(x => x.id === +card.dataset.id);
-    if (!confirm(`Delete ${r.ref} from ${r.name || "this customer"}, with its photos? This can't be undone.`)) return;
+    if (!confirm(`Delete the backup of ${r.ref} from ${r.name || "this customer"}, with its photos? This can't be undone, and the photo links in shopVOX will stop working.`)) return;
     try { await api(`/api/admin/requests/${r.id}`, { method: "DELETE" }); loadRequests(); }
     catch (err) { alert(err.message); }
   };
@@ -609,7 +586,7 @@
   }
   $("test-order").onclick = async e => {
     const b = e.target;
-    if (!confirm("Send a test order? It goes to Order Requests and to shopVOX just like a real one. Delete it from both afterward.")) return;
+    if (!confirm("Send a test order? It goes to shopVOX (and the Order Backup) just like a real one. Delete it from both afterward.")) return;
     b.disabled = true; b.textContent = "Sending…";
     const ref = "WP-TEST-" + Date.now().toString(36).slice(-5).toUpperCase();
     const summary = [
@@ -992,7 +969,7 @@
     dashboard = data.dashboard;
     mail = data.mail || mail;
     shopvoxOn = !!data.shopvox;
-    if (requests.length) drawRequests();
+    if (requests.length) loadRequests();
     const bad = data.checks.filter(c => !c.ok).length;
     $("n-setup").textContent = bad ? "●" : "";
     if (countOnly) return;
@@ -1020,19 +997,6 @@
   const first = n => String(n || "").trim().split(/\s+/)[0] || "there";
   const SIGN = "\n\nQuestions? Just reply to this email or call 315-773-3758.\n\nThank you!\nThe Whimsical Pig\n50 Public Square, Suite E1, Watertown, NY · Mon–Fri 9am–5pm";
   const FILL = "[add it here]";
-  function requestMessage(r) {
-    const what = (r.type || "custom").toLowerCase();
-    const ship = /ship|mail/i.test(r.fulfill || "");
-    if (r.status === "in production") return { label: "Started",
-      subject: `We've started on your order (${r.ref})`,
-      text: `Hi ${first(r.name)},\n\nJust a note that we've started on your ${what} order (${r.ref}). We'll let you know as soon as it's ready.` + SIGN };
-    if (r.status === "ready") return { label: "Ready",
-      subject: `Your order is ready! (${r.ref})`,
-      text: ship
-        ? `Hi ${first(r.name)},\n\nGood news: your ${what} order (${r.ref}) is finished and will be on its way soon. We'll send the tracking number when it ships.` + SIGN
-        : `Hi ${first(r.name)},\n\nGood news: your ${what} order (${r.ref}) is ready to pick up!\n\nCome by 50 Public Square, Suite E1 in Watertown, Monday to Friday, 9am to 5pm.` + SIGN };
-    return null;
-  }
   function orderMessage(o) {
     if (o.status !== "paid") return null;
     const ref = "WP-" + o.id;

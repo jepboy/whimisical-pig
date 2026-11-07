@@ -27,20 +27,16 @@
     "SHIPPING_FEE": "5",
     // The Square app's Application ID (public). Turns on paying by card on our own page.
     "SQUARE_APPLICATION_ID": "sq0idp-4rtvDyFQUMdpIpsfpkZOMA",
-    // Where low-stock alerts go, and where customers' replies to order updates go
-    "SHOP_EMAIL": "WhimsicalPig@hotmail.com",
     // shopVOX: website orders become Sales Leads in this pipeline, starting in this stage
     // (the Account ID and API Token are Secrets in the Cloudflare dashboard)
     "SHOPVOX_PIPELINE": "Sales Pipeline",
     "SHOPVOX_STAGE": "Assigned",
     // Every website lead is assigned to this shopVOX user (her name exactly as in shopVOX)
     "SHOPVOX_SALES_REP": "Katarina"
-    // Add once the domain is verified in Resend, to email customers from the admin page:
-    // "MAIL_FROM": "The Whimsical Pig <orders@thewhimsicalpig.com>"
   },
-  // Daily low-stock check at 13:00 UTC (8am New York in winter, 9am in summer)
+  // No scheduled jobs (an empty list also removes the old daily one)
   "triggers": {
-    "crons": ["0 13 * * *"]
+    "crons": []
   },
   // Shop database. Cloudflare creates it automatically on the first deploy.
   "d1_databases": [

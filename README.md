@@ -71,12 +71,12 @@ come out of the same stock count, and Square adds sales tax at checkout.
 | Shop Items | Every item in Square. **+ Add Item** (name, event or partner, sizes, price, a higher 2XL-and-up price, tax, photo). Edit name, description, event and price; turn "On the website" on or off; click the picture box to add or change a photo; count stock with + and −. Everything is saved in Square, so the register matches. |
 | Banners | Notices on the website: a thin **top bar** or a big **feature banner** with a photo and a button. Pick the pages, the colors, and start/stop dates (a holiday deadline banner turns itself off after the date). Ready-made starters for holiday deadlines, closures and events. |
 | Site Photos | Add photos to **Our Work** (in any group, or a new one), change captions, **replace** any photo, or **remove** gallery photos (they can be put back). Photos that are part of a page's design (logo, storefront, painting…) can be replaced. |
-| Setup | A checklist of what's connected, with anything missing in red. **Send a Test Email** checks email. |
+| Setup | A checklist of what's connected, with anything missing in red. **Test shopVOX** checks the shopVOX connection. |
 
 **More on the shop tools**
 
-- **Low-stock emails:** when an online sale leaves an item at 2 or fewer (change with the `LOW_STOCK` variable), the shop gets an email. Every morning the site also checks everything, including in-store sales. Each item is emailed once until it's restocked. Running-low items also show in red on Shop Items.
-- **Telling customers:** when an order request is set to *in production* or *ready*, or a shop order to *ready* (pickup) or *picked up / shipped* (shipping), a message pops up already written. Edit it, then **Send Email** (once set up, below), **Open in My Email**, or **Text Them** (opens Messages on a phone). The card then shows "Told: Ready · email · Nov 5".
+- **Low stock:** items at 2 or fewer (change with the `LOW_STOCK` variable) show in red on Shop Items, with a dot on the tab.
+- **Telling customers (shop orders):** when a shop order is set to *ready* (pickup) or *picked up / shipped* (shipping), a message pops up already written. Edit it, then **Open in My Email** (your own email app, with it filled in) or **Text Them** (opens Messages on a phone). The card then shows "Told: Ready for pickup · text · Nov 5".
 - **Pre-orders:** tick *Pre-order* on an item to sell it before it's made (event shirts). Stock doesn't limit it, customers see "Pre-order · Ready by …", and it stops on the last day you set. **Online Orders** shows a running "Pre-orders to make" count by size.
 - **Partner pages:** Shop Items → **Partner Pages** lists a link for each event or partner, like `/shop.html?c=lewis-county-ren-faire`, which opens the shop on just their merch with an "Official merch" header. **QR Sign** opens a printable sign for their table.
 
@@ -131,24 +131,11 @@ email, needed-by date, every answer, and links to their photos. The admin page s
    - Lead sources name the order type ("Website – Military Framing"), falling back to "Website".
    - So Katarina hears about each new website order: shopVOX **Settings → Notifications →
      Sales Leads → Created → Sales Rep**.
-   - Customers get a "We got your order!" email with everything they sent, once `MAIL_FROM`
-     is set (see Email below).
 3. `/admin` → **Setup → Test shopVOX**.
 
 To see customer emails on each order, connect the shop's inbox inside shopVOX (its email
 integration links emails to quotes and orders), and send order updates from shopVOX.
 
-**Email (low-stock alerts and customer updates)** uses [Resend](https://resend.com), free for 3,000 emails a month.
-
-1. Sign up at resend.com **with WhimsicalPig@hotmail.com** (alerts can go to that address right away).
-2. In Resend: **API Keys → Create API key** (sending access). In Cloudflare add it as a **Secret** named
-   `RESEND_API_KEY`. Then `/admin` → **Setup → Send a Test Email**.
-3. To send customers their order updates from the admin page: in Resend, **Domains → Add domain**
-   `thewhimsicalpig.com` and add the DNS records it shows wherever that domain's DNS is managed. Once
-   it says *Verified*, set `MAIL_FROM` in `wrangler.jsonc` (`"The Whimsical Pig <orders@thewhimsicalpig.com>"`).
-   Until then, use **Open in My Email** or **Text Them**, which need no setup.
-
-`SHOP_EMAIL` in `wrangler.jsonc` is where alerts go and where customer replies land.
 
 Until Square is connected, the shop shows the items in `shop-items.js` with "Call to Order" buttons
 (or a payment link pasted into `buyUrl`).

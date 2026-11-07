@@ -384,7 +384,6 @@
           <button class="btn ghost sm" type="button" data-close>Skip</button>
           <a class="btn ghost sm" id="notify-sms" href="#">Text Them</a>
           <a class="btn ghost sm" id="notify-mailto" href="#">Open in My Email</a>
-          <button class="btn sm" type="submit" id="notify-send">Send Email</button>
         </div>
       </form>
     </dialog>
@@ -407,7 +406,6 @@
         </div>
         <div class="tools">
           <button class="btn ghost sm" id="test-shopvox" type="button">Test shopVOX</button>
-          <button class="btn ghost sm" id="test-email" type="button">Send a Test Email</button>
           <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
         </div>
       </div>
@@ -423,7 +421,6 @@
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const when = t => t ? new Date(t.replace(" ", "T") + "Z").toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
   let dashboard = "https://app.squareup.com/dashboard";
-  let mail = { alerts: false, customers: false };
   let shopvoxOn = false;
   // The shop's pages keep a copy of banners and photos for a minute; drop it so changes show here right away
   const freshSite = () => { try { sessionStorage.removeItem("wp-site"); } catch (e) {} };
@@ -967,7 +964,6 @@
     try { data = await api("/api/admin/status"); }
     catch (err) { $("checks").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
     dashboard = data.dashboard;
-    mail = data.mail || mail;
     shopvoxOn = !!data.shopvox;
     if (requests.length) loadRequests();
     const bad = data.checks.filter(c => !c.ok).length;
@@ -985,14 +981,6 @@
     b.disabled = false;
     loadSetup();
   };
-  $("test-email").onclick = async e => {
-    const b = e.target;
-    b.disabled = true;
-    try { const r = await send("/api/admin/test-email", "POST", {}); alert(`Sent a test email to ${r.to}. Check that inbox (and its junk folder).`); }
-    catch (err) { alert(err.message); }
-    b.disabled = false;
-  };
-
   // ---------- telling customers about their order ----------
   const first = n => String(n || "").trim().split(/\s+/)[0] || "there";
   const SIGN = "\n\nQuestions? Just reply to this email or call 315-773-3758.\n\nThank you!\nThe Whimsical Pig\n50 Public Square, Suite E1, Watertown, NY · Mon–Fri 9am–5pm";
@@ -1018,8 +1006,7 @@
     $("notify-to").textContent = [n.email, n.phone].filter(Boolean).join(" · ");
     f.subject.value = n.subject;
     f.message.value = n.text;
-    $("notify-msg").textContent = mail.customers ? "" : "Pick how to send it. (To send straight from here, see Setup.)";
-    $("notify-send").hidden = !mail.customers || !n.email;
+    $("notify-msg").textContent = "Pick how to send it.";
     $("notify-mailto").hidden = !n.email;
     $("notify-sms").hidden = !n.phone;
     $("notify-dlg").showModal();
@@ -1035,15 +1022,7 @@
     if (notifying.after) notifying.after();
     return r;
   }
-  $("notify-form").onsubmit = async e => {
-    e.preventDefault();
-    const t = notifyText();
-    if (!t) return;
-    $("notify-send").disabled = true;
-    $("notify-msg").textContent = "Sending…";
-    try { await recordNotify(t); } catch (err) { $("notify-msg").textContent = err.message; }
-    $("notify-send").disabled = false;
-  };
+  $("notify-form").onsubmit = e => e.preventDefault();
   // Opens Kat's own email app (or Messages on a phone) with the message filled in
   $("notify-mailto").onclick = e => {
     const t = notifyText();

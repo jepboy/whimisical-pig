@@ -123,6 +123,12 @@
   .field input[type="date"] { color-scheme: dark; }
   .field.bad input, .field.bad select, .field.bad textarea { border-color: #d77a6f; }
   .field .err { display: none; color: #e59a90; font-size: 0.85rem; margin-top: 6px; }
+  .field .hint-note { color: var(--pink); font-size: 0.85rem; margin-top: 6px; }
+  .field .hint-note button { border: 0; background: none; padding: 0; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+  .draft-note { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center; margin-bottom: 18px;
+    padding: 10px 14px; border: 1px dashed var(--rule); border-radius: 12px; color: var(--muted); font-size: 0.9rem; text-align: center; }
+  .draft-note button { border: 0; background: none; padding: 0; color: var(--pink); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+  .file-msg { color: #e59a90; font-size: 0.85rem; margin-top: 8px; }
   .field.bad .err { display: block; }
   .opts { display: flex; flex-wrap: wrap; gap: 8px; }
   .opt { position: relative; }
@@ -650,11 +656,27 @@
   const photoInput = document.getElementById("photos");
   const drop = document.getElementById("drop");
   const thumbs = document.getElementById("thumbs");
+  // Same limits as the server: up to 8 files; photos are shrunk before sending,
+  // but PDFs and iPhone HEIC photos are sent as they are, so they must be small enough
+  const MAX_FILES = 8, MAX_SEND_BYTES = 1_900_000;
+  const fileMsg = document.createElement("p");
+  fileMsg.className = "file-msg";
+  fileMsg.setAttribute("role", "alert");
   function addFiles(list) {
+    const problems = [];
     for (const f of list) {
-      if (!files.some(x => x.name === f.name && x.size === f.size)) files.push(f);
+      const shrinkable = /^image\/(jpeg|png|webp)$/.test(f.type);
+      const ok = /^image\//.test(f.type) || f.type === "application/pdf" || /\.(heic|heif|pdf)$/i.test(f.name);
+      if (!ok) { problems.push(`"${f.name}" isn't a photo or PDF.`); continue; }
+      if (!shrinkable && f.size > MAX_SEND_BYTES) { problems.push(`"${f.name}" is too big to send (over 1.9 MB). Try a screenshot of it, or a JPG.`); continue; }
+      if (f.size > 40_000_000) { problems.push(`"${f.name}" is too big. Please choose a smaller photo.`); continue; }
+      if (files.some(x => x.name === f.name && x.size === f.size)) continue;
+      if (files.length >= MAX_FILES) { problems.push(`You can send up to ${MAX_FILES} files. Remove one to add another.`); break; }
+      files.push(f);
     }
+    fileMsg.textContent = problems.join(" ");
     drawThumbs();
+    savePhotos();
   }
   function drawThumbs() {
     thumbs.innerHTML = "";
@@ -676,11 +698,12 @@
       x.type = "button";
       x.textContent = "×";
       x.setAttribute("aria-label", "Remove " + f.name);
-      x.onclick = () => { files.splice(i, 1); drawThumbs(); };
+      x.onclick = () => { files.splice(i, 1); fileMsg.textContent = ""; drawThumbs(); savePhotos(); };
       d.appendChild(x);
       thumbs.appendChild(d);
     });
   }
+  thumbs.after(fileMsg);
   photoInput.onchange = () => { addFiles(photoInput.files); photoInput.value = ""; };
   ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
@@ -729,6 +752,57 @@
   }
 
   // ---------- Validation ----------
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const phoneDigits = v => { const d = String(v).replace(/\D/g, ""); return d.length === 11 && d[0] === "1" ? d.slice(1) : d; };
+  const STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR VI GU AS MP AA AE AP".split(" ");
+  const EMAIL_OK = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[A-Za-z]{2,}$/;
+  // Common email typos, so "Did you mean …?" can catch them
+  const DOMAIN_FIX = { "gmial.com": "gmail.com", "gmai.com": "gmail.com", "gamil.com": "gmail.com", "gnail.com": "gmail.com", "gmail.co": "gmail.com",
+    "gmail.con": "gmail.com", "gmail.cmo": "gmail.com", "gmaill.com": "gmail.com", "yaho.com": "yahoo.com", "yahooo.com": "yahoo.com",
+    "yahoo.co": "yahoo.com", "yahoo.con": "yahoo.com", "hotmial.com": "hotmail.com", "hotmal.com": "hotmail.com", "hotmail.co": "hotmail.com",
+    "hotmail.con": "hotmail.com", "outlok.com": "outlook.com", "outlook.con": "outlook.com", "iclod.com": "icloud.com", "icoud.com": "icloud.com",
+    "icloud.con": "icloud.com", "aol.con": "aol.com", "comcast.ner": "comcast.net", "verizon.ner": "verizon.net" };
+  function emailFix(v) {
+    const m = String(v).trim().match(/^([^@\s]+)@([^@\s]+)$/);
+    if (!m) return "";
+    const dom = m[2].toLowerCase();
+    const fixed = DOMAIN_FIX[dom] || (/\.(con|cmo|ocm|vom|comm)$/.test(dom) ? dom.replace(/\.\w+$/, ".com") : "");
+    return fixed && fixed !== dom ? `${m[1]}@${fixed}` : "";
+  }
+  // A problem with an answer, in plain words, or "" if it's fine
+  function problemWith(input) {
+    const v = input.value.trim();
+    if (!v) return "";
+    switch (input.name) {
+      case "c_name": return v.length < 2 ? "Please add your full name." : "";
+      case "c_phone": return phoneDigits(v).length !== 10 ? "Please use a 10-digit phone number, like 315-773-3758." : "";
+      case "c_email": return EMAIL_OK.test(v) ? "" : "That email doesn't look right. Please check it for typos.";
+      case "c_date":
+        if (v < today()) return "That date has already passed. Please pick a date coming up.";
+        if (v > addDays(today(), 3 * 365)) return "Please check the year on that date.";
+        return "";
+    }
+    if (input.type === "number" && input.closest("[data-composite]") === null) {
+      const n = Number(v), min = Number(input.min || 0);
+      if (!Number.isFinite(n) || n < min || (input.inputMode === "numeric" && !Number.isInteger(n))) return min >= 1 ? `Please enter a whole number of ${min} or more.` : "Please enter a whole number.";
+    }
+    return "";
+  }
+  function addressProblem() {
+    const g = k => form.elements["c_addr_" + k].value.trim();
+    if (!g("street") || !g("city") || !g("state") || !g("zip")) return "Please fill in the street, city, state and ZIP.";
+    if (!STATES.includes(g("state").toUpperCase())) return "Please use the 2-letter state, like NY.";
+    if (!/^\d{5}(-?\d{4})?$/.test(g("zip"))) return "Please check the ZIP code (5 digits).";
+    return "";
+  }
+  function setErr(f, msg) {
+    const e = f.querySelector(".err");
+    if (!e) return;
+    if (!e.dataset.base) e.dataset.base = e.textContent;
+    e.textContent = msg || e.dataset.base;
+  }
+
   function validate(n) {
     const panel = panels[n];
     let ok = true;
@@ -737,11 +811,20 @@
     panel.querySelectorAll("[data-req]").forEach(f => {
       if (!isShown(f)) { f.classList.remove("bad"); return; }
       const input = f.querySelector("input, select, textarea");
-      let v = input ? valueOf(input.name) : "";
-      let good = !!v;
-      if (good && input.type === "email") good = input.checkValidity();
-      f.classList.toggle("bad", !good);
-      if (!good) ok = false;
+      let msg = "";
+      if (f.classList.contains("addr")) msg = addressProblem();
+      else if (!(input ? valueOf(input.name) : "")) msg = " ";
+      else msg = problemWith(input);
+      setErr(f, msg.trim());
+      f.classList.toggle("bad", !!msg);
+      if (msg) ok = false;
+    });
+    // Optional answers that were filled in still have to make sense
+    panel.querySelectorAll(".field:not([data-req]) input[type=number]").forEach(input => {
+      const f = input.closest(".field");
+      if (!isShown(f) || !input.value.trim()) return;
+      const msg = problemWith(input);
+      if (msg) { ok = false; f.classList.add("bad"); let e = f.querySelector(".err"); if (!e) { e = document.createElement("p"); e.className = "err"; f.appendChild(e); } e.textContent = msg; }
     });
     if (!ok) {
       statusEl.textContent = "A couple of things still need filling in.";
@@ -750,6 +833,38 @@
     }
     return ok;
   }
+  // Tidy the phone number and offer email fixes when they leave the box
+  form.elements.c_phone.addEventListener("blur", e => {
+    const d = phoneDigits(e.target.value);
+    if (d.length === 10) e.target.value = `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    saveDraft();
+  });
+  function noteFor(input) {
+    const f = input.closest(".field");
+    let n = f.querySelector(".hint-note");
+    if (!n) { n = document.createElement("p"); n.className = "hint-note"; n.setAttribute("aria-live", "polite"); input.after(n); }
+    return n;
+  }
+  form.elements.c_email.addEventListener("blur", e => {
+    const fix = emailFix(e.target.value), n = noteFor(e.target);
+    n.innerHTML = "";
+    if (!fix) return;
+    n.append("Did you mean ");
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = fix;
+    b.onclick = () => { e.target.value = fix; n.innerHTML = ""; saveDraft(); e.target.focus(); };
+    n.append(b, "?");
+  });
+  const dateInput = form.elements.c_date;
+  dateInput.min = today();
+  dateInput.max = addDays(today(), 3 * 365);
+  dateInput.addEventListener("change", () => {
+    const v = dateInput.value, n = noteFor(dateInput);
+    n.textContent = v && v >= today() && v < addDays(today(), 14)
+      ? "That's less than 2 weeks away. We'll do our best, and we'll call you if it's tight. For a rush, call 315-773-3758." : "";
+  });
+  form.elements.c_addr_state.addEventListener("blur", e => { e.target.value = e.target.value.trim().toUpperCase(); });
+
   form.addEventListener("input", e => {
     applyConditions();
     const f = e.target.closest(".field.bad");
@@ -781,6 +896,7 @@
       n = step > 1 ? 0 : 2;
     }
     step = n;
+    if (n < 5) saveDraft();
     panels.forEach((p, i) => p.classList.toggle("on", i === n));
     if (n === 4) buildReview();
     const pct = Math.min(n, 4) / 4 * 100;
@@ -843,8 +959,10 @@
     });
   }
 
+  let orderRef = "";       // made once per order, so a retry can't create a second copy
   async function submit() {
-    const ref = makeRef();
+    if (!orderRef) { orderRef = makeRef(); saveDraft(); }
+    const ref = orderRef;
     const t = currentType();
     const subject = `New order ${ref}: ${t ? t.title : ""} for ${valueOf("c_name")}`;
     nextBtn.disabled = backBtn.disabled = true;
@@ -871,6 +989,18 @@
           if (res.ok && data.ok) saved = true;
           else if (res.status >= 400 && res.status < 500 && data.error) problem = data.error;
         } catch (e) {}
+        // Couldn't reach us: say so and let them try again (their answers are kept)
+        if (!saved && !problem && !CFG.endpoint) {
+          statusEl.innerHTML = "";
+          statusEl.append("Your order didn't go through. Please check your connection and press Try again. ");
+          const a = document.createElement("a");
+          a.href = `mailto:${CFG.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainText(ref))}`;
+          a.textContent = "Or email it to us instead";
+          a.onclick = () => showDone(ref, true);
+          statusEl.append(a);
+          nextBtn.textContent = "Try again";
+          return;
+        }
       }
       if (problem) {
         statusEl.textContent = problem;
@@ -905,6 +1035,7 @@
   }
   function showDone(ref, viaEmail) {
     clearDraft();
+    orderRef = "";
     const box = document.getElementById("done");
     box.innerHTML = `
       <img src="images/logo-mark.webp" alt="" onerror="this.remove()">
@@ -931,48 +1062,101 @@
   }
 
   // ---------- Draft saving (this browser only) ----------
+  const DRAFT_DAYS = 14;
   function saveDraft() {
     try {
-      const data = {};
+      const data = { _at: Date.now(), _step: step, ...(orderRef ? { _ref: orderRef } : {}) };
       for (const el of form.elements) {
-        if (!el.name || el.type === "file") continue;
+        if (!el.name || el.type === "file" || el.name === "website") continue;
         if (el.type === "radio" || el.type === "checkbox") { if (el.checked) (data[el.name] = data[el.name] || []).push(el.value); }
         else if (el.value) data[el.name] = el.value;
       }
       localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
     } catch (e) {}
   }
-  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} }
+  function clearDraft() { try { localStorage.removeItem(DRAFT_KEY); } catch (e) {} clearPhotos(); }
+
+  // Photos are kept in this browser's IndexedDB, so a refresh doesn't lose them
+  const photoDB = () => new Promise((ok, bad) => {
+    const r = indexedDB.open("whimsicalpig-order", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("files");
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => bad(r.error);
+  });
+  const txDone = tx => new Promise((ok, bad) => { tx.oncomplete = ok; tx.onerror = tx.onabort = () => bad(tx.error); });
+  async function savePhotos() {
+    try { const db = await photoDB(), tx = db.transaction("files", "readwrite"); tx.objectStore("files").put(files.slice(), "draft"); await txDone(tx); db.close(); } catch (e) {}
+  }
+  async function loadPhotos() {
+    try {
+      const db = await photoDB(), tx = db.transaction("files", "readonly");
+      const got = await new Promise(ok => { const r = tx.objectStore("files").get("draft"); r.onsuccess = () => ok(r.result); r.onerror = () => ok(null); });
+      db.close();
+      return Array.isArray(got) ? got.filter(f => f instanceof Blob) : [];
+    } catch (e) { return []; }
+  }
+  async function clearPhotos() {
+    try { const db = await photoDB(), tx = db.transaction("files", "readwrite"); tx.objectStore("files").delete("draft"); await txDone(tx); db.close(); } catch (e) {}
+  }
+
   function restoreDraft() {
     let data;
     try { data = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) { data = null; }
-    if (!data || !data.type) return;
+    if (!data || !data.type) return null;
+    if (!data._at || Date.now() - data._at > DRAFT_DAYS * 86400000) { clearDraft(); return null; }   // too old to be useful
     const setChecked = (name, vals) => form.querySelectorAll(`[name="${name}"]`).forEach(el => { el.checked = vals.includes(el.value); });
     setChecked("type", data.type);
     buildExamples();
     buildDetails();
+    if (data._ref) orderRef = data._ref;
     for (const [name, v] of Object.entries(data)) {
-      if (name === "type") continue;
+      if (name === "type" || name.startsWith("_")) continue;
       const el = form.querySelector(`[name="${name}"]`);
       if (!el) continue;
       if (Array.isArray(v)) setChecked(name, v); else el.value = v;
     }
     applyConditions();
+    return data;
   }
 
-  restoreDraft();
+  // "We kept your answers" note, with a way to start fresh
+  function draftNote() {
+    const n = document.createElement("div");
+    n.className = "draft-note";
+    n.innerHTML = '<span>We kept your answers from before.</span>';
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "Start over";
+    b.onclick = async () => {
+      if (!confirm("Clear your answers and photos and start a new order?")) return;
+      clearDraft();
+      await clearPhotos();
+      location.replace(location.pathname);
+    };
+    n.appendChild(b);
+    form.prepend(n);
+  }
+
+  const draft = restoreDraft();
   // Links like order.html?type=shadow-box open with that order type already picked
   const legacy = { "shadow-box": "military", "flag-case": "military" };
   const asked = new URLSearchParams(location.search).get("type") || "";
   const wanted = typeById(legacy[asked] || asked);
   const pick = wanted && form.querySelector(`input[name="type"][value="${wanted.id}"]`);
-  if (pick) {
+  if (pick && (!draft || draft.type[0] !== wanted.id)) {
     pick.checked = true;
     buildExamples();
     buildDetails();
     go(0);
     go(1);
+  } else if (draft) {
+    // Back where they left off (never past the review step), photos too
+    draftNote();
+    go(0);
+    go(Math.min(Math.max(0, +draft._step || 0), 4));
+    loadPhotos().then(list => { if (list.length) { files = list; drawThumbs(); } });
   } else {
+    clearPhotos();
     go(0);
   }
 </script>

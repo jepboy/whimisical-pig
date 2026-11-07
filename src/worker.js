@@ -147,11 +147,6 @@ export default {
       return json({ error: "Something went wrong. Please try again." }, 500);
     }
   },
-  // Once a day (see "triggers" in wrangler.jsonc): email the shop about items
-  // running low, including ones sold in the store
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(ensureSchema(env.DB).then(() => lowStockCheck(env)).catch(e => console.error("Daily stock check failed", e)));
-  },
 };
 
 async function route(request, env, url, path, ctx) {
@@ -186,7 +181,6 @@ async function route(request, env, url, path, ctx) {
     if (im && im[2] && m === "POST") return uploadItemImage(request, env, im[1]);
     if (path === "/api/admin/orders" && m === "GET") return listOrders(env);
     if (path === "/api/admin/notify" && m === "POST") return notifyCustomer(request, env);
-    if (path === "/api/admin/test-email" && m === "POST") return testEmail(env);
     if (path === "/api/admin/site" && m === "GET") return adminSite(env);
     if (path === "/api/admin/site" && m === "PUT") return saveSite(request, env);
     if (path === "/api/admin/photos" && m === "POST") return addPhoto(request, env);
@@ -595,8 +589,6 @@ async function pay(request, env, ctx) {
     `UPDATE shop_orders SET status = 'paid', paid_at = datetime('now'), square_payment_id = ?, paid_cents = ? WHERE id = ?`
   ).bind(payment.id, Number(payment.total_money?.amount) || Number(order.total_money?.amount) || null, pending.id).run();
   await forgetCatalog(env);
-  // Email the shop if this sale left anything running low (after the reply is sent)
-  if (ctx) ctx.waitUntil(lowStockCheck(env, cart.items.map(l => l.variation_id)).catch(e => console.error("Low stock check failed", e)));
   return json({ ok: true, ref, total_cents: Number(order.total_money?.amount) || 0, receipt_url: payment.receipt_url || null });
 }
 
@@ -698,6 +690,9 @@ async function saveOrderRequest(request, env, ctx) {
   const summary = field("summary", 20000);
   const ref = field("ref", 40);
   if (!summary || !ref) return json({ error: "The order was empty." }, 400);
+  // The same order sent twice (a retry, a double tap, a refresh while sending): keep the first
+  const already = await env.DB.prepare(`SELECT id, shopvox_id FROM requests WHERE ref = ?`).bind(ref).first();
+  if (already) return json({ ok: true, id: already.id, ref, duplicate: true, ...(form.get("test") === "1" ? { shopvox: { ok: !!already.shopvox_id, id: already.shopvox_id } } : {}) });
 
   const files = form.getAll("photos").filter(f => f && typeof f === "object" && f.size > 0);
   if (files.length > MAX_REQUEST_FILES) return json({ error: `Please send ${MAX_REQUEST_FILES} files or fewer.` }, 413);
@@ -719,14 +714,6 @@ async function saveOrderRequest(request, env, ctx) {
   }
   // Copy it into shopVOX as a sales lead (after the customer gets their reply)
   const origin = new URL(request.url).origin;
-  // "We got your order" email to the customer (once email is set up; see README)
-  if (canMailCustomers(env) && ctx && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field("email"))) {
-    ctx.waitUntil(sendMail(env, {
-      to: field("email"), replyTo: shopEmail(env),
-      subject: `We got your order! (${ref})`,
-      text: `Hi ${field("name").split(/\s+/)[0] || "there"},\n\nThanks for your order with The Whimsical Pig. We'll look everything over and reach out with a quote.\n\nYour order number is ${ref}. Here's what you sent us:\n\n${summary}\n\nQuestions or something to add? Just reply to this email or call 315-773-3758.\n\nThe Whimsical Pig\n50 Public Square, Suite E1, Watertown, NY · Mon–Fri 9am–5pm\n`,
-    }).catch(e => console.error("Confirmation email failed", e)));
-  }
   // A test order from the admin page waits for shopVOX so the result shows right away
   if (form.get("test") === "1" && await isAdmin(request, env)) {
     const sv = shopvoxReady(env) ? await pushRequestToShopvox(env, row.id, origin) : { error: "shopVOX isn't set up (see Setup)." };
@@ -882,11 +869,6 @@ async function setupStatus(request, env, url) {
       (near.length ? ` It does see ${near.map(k => `"${k}"`).join(", ")}: rename ${near.length > 1 ? "them" : "it"} to exactly ${missing.join(" / ")}.` : "") +
       " Add them in Cloudflare → whimisical-pig → Settings → Variables and Secrets (the token as a Secret), then deploy again.");
   }
-  add("email", mailReady(env), !mailReady(env)
-    ? "Emails are off. Add a Resend API key (RESEND_API_KEY) to get low-stock emails (see README)."
-    : canMailCustomers(env)
-      ? `Emails are on: low-stock alerts go to ${shopEmail(env)}, and order updates can be emailed to customers from ${env.MAIL_FROM}.`
-      : `Low-stock alerts go to ${shopEmail(env)}. To email customers straight from here, verify your domain in Resend and set MAIL_FROM (see README).`);
   const fee = shippingCents(env);
   add("shipping", true, fee === null ? "Shop orders are pick up only (set SHIPPING_FEE to offer shipping)."
                                      : `Shipping is offered for $${(fee / 100).toFixed(2)}.`);
@@ -894,7 +876,6 @@ async function setupStatus(request, env, url) {
     checks,
     dashboard: sandbox ? "https://squareupsandbox.com/dashboard" : "https://app.squareup.com/dashboard",
     category: shopCategory(env),
-    mail: { alerts: mailReady(env), customers: canMailCustomers(env) },
     shopvox: shopvoxReady(env),
   }, 200, { "Cache-Control": "no-store" });
 }
@@ -1246,81 +1227,15 @@ async function savePreorder(env, itemId, p) {
   await kvPut(env, "preorders", all, 0);
 }
 
-// ---------------------------------------------------------------- email
-// Sent through Resend (resend.com, free for 3,000 emails a month).
-//   RESEND_API_KEY (secret)  turns email on. Without a verified domain, Resend only
-//                            sends to the address the Resend account was made with,
-//                            which is enough for low-stock alerts to the shop.
-//   MAIL_FROM (variable)     e.g. "The Whimsical Pig <orders@thewhimsicalpig.com>" once
-//                            that domain is verified in Resend. Needed to email customers.
-//   SHOP_EMAIL (variable)    where alerts go, and where customer replies go.
-
-const mailReady = env => !!env.RESEND_API_KEY;
-const canMailCustomers = env => mailReady(env) && !!env.MAIL_FROM;
-const shopEmail = env => env.SHOP_EMAIL || "WhimsicalPig@hotmail.com";
-
-async function sendMail(env, { to, subject, text, replyTo }) {
-  if (!mailReady(env)) return { ok: false, error: "Email isn't set up yet." };
-  const r = await fetch((env.RESEND_API_BASE || "https://api.resend.com") + "/emails", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: env.MAIL_FROM || "The Whimsical Pig website <onboarding@resend.dev>",
-      to: [to], subject, text, ...(replyTo ? { reply_to: replyTo } : {}),
-    }),
-  });
-  if (r.ok) return { ok: true };
-  const d = await r.json().catch(() => ({}));
-  console.error("Email failed", r.status, JSON.stringify(d));
-  return { ok: false, error: `The email didn't send: ${d.message || r.status}` };
-}
-
-async function testEmail(env) {
-  if (!mailReady(env)) return json({ error: "Add the Resend API key (RESEND_API_KEY) in Cloudflare first." }, 503);
-  const r = await sendMail(env, { to: shopEmail(env), subject: "Test email from your website",
-    text: "This is a test from The Whimsical Pig website. Low-stock alerts will arrive like this." });
-  return r.ok ? json({ ok: true, to: shopEmail(env) }) : json({ error: r.error }, 502);
-}
-
 // ---------------------------------------------------------------- low stock
 
+// Items at or below this count show in red on the admin page
 const lowStockLevel = env => Math.max(0, parseInt(env.LOW_STOCK || "2", 10) || 0);
 
-// Emails the shop about tracked website items at or below the low-stock level.
-// Each one is only emailed once, until it's restocked above the level.
-// `onlyIds` limits the check to some variations (the ones just sold).
-async function lowStockCheck(env, onlyIds) {
-  if (!squareReady(env)) return [];
-  const level = lowStockLevel(env);
-  const catalog = await loadCatalog(env, true);
-  const pre = await activePreorders(env);
-  const flags = ((await kvGet(env, "low_alerted")) || {}).value || {};
-  const fresh = [];
-  for (const it of catalog.items) {
-    if (pre[it.id]) continue;
-    for (const v of it.variations) {
-      if (!v.tracked || (onlyIds && !onlyIds.includes(v.id))) continue;
-      if (v.stock > level) { delete flags[v.id]; continue; }
-      if (!flags[v.id]) fresh.push({ id: v.id, name: it.name + (it.variations.length > 1 && v.name ? ` (${v.name})` : ""), stock: v.stock });
-    }
-  }
-  if (fresh.length && mailReady(env)) {
-    const lines = fresh.map(x => `  • ${x.name}: ${x.stock <= 0 ? "SOLD OUT" : x.stock + " left"}`).join("\n");
-    const sent = await sendMail(env, {
-      to: shopEmail(env),
-      subject: fresh.length === 1 ? `Running low: ${fresh[0].name}` : `${fresh.length} shop items running low`,
-      text: `These website shop items are at ${level} or fewer:\n\n${lines}\n\n` +
-            `Update the counts on the admin page (Shop Items) after restocking.\n`,
-    });
-    if (sent.ok) for (const x of fresh) flags[x.id] = Date.now();
-  }
-  await kvPut(env, "low_alerted", flags, 0);
-  return fresh;
-}
 
 // ---------------------------------------------------------------- customer updates
-// "Your order is ready" messages from the admin page. Sends the email when it can
-// (MAIL_FROM set); either way it records that the customer was told.
+// "Your order is ready" messages from the admin page go out from the shop's own
+// email app or as a text; this records that the customer was told.
 
 async function notifyCustomer(request, env) {
   const b = await readJson(request);
@@ -1331,15 +1246,7 @@ async function notifyCustomer(request, env) {
     table === "requests" ? `SELECT email FROM requests WHERE id = ?` : `SELECT buyer_email AS email FROM shop_orders WHERE id = ?`
   ).bind(id).first();
   if (!row) return json({ error: "Order not found." }, 404);
-  const how = b.manual ? cleanText(b.manual, 20) : "email";
-  if (!b.manual) {
-    if (!canMailCustomers(env)) return json({ error: "Sending from the website isn't set up yet. Use \"Open in my email\" instead." }, 503);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email || "")) return json({ error: "This order has no email address." }, 400);
-    const subject = cleanText(b.subject, 150), text = String(b.message || "").trim().slice(0, 5000);
-    if (!subject || !text) return json({ error: "Write a subject and a message." }, 400);
-    const sent = await sendMail(env, { to: row.email, subject, text, replyTo: shopEmail(env) });
-    if (!sent.ok) return json({ error: sent.error }, 502);
-  }
+  const how = cleanText(b.manual, 20) || "email app";
   const label = `${cleanText(b.label, 40) || "Update"} · ${how} · ${new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric" })}`;
   await env.DB.prepare(`UPDATE ${table} SET notified = ? WHERE id = ?`).bind(label, id).run();
   return json({ ok: true, notified: label });

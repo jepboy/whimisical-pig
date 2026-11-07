@@ -421,7 +421,7 @@
             <legend>Best way to reach you</legend>
             <div class="opts" data-name="c_contact"></div>
           </fieldset>
-          <fieldset class="field">
+          <fieldset class="field" id="delivery-field">
             <legend>Getting your items to us</legend>
             <div class="opts" data-name="c_delivery"></div>
           </fieldset>
@@ -535,7 +535,7 @@
     const ph = q.placeholder ? ` placeholder="${esc(q.placeholder)}"` : "";
     const attrs = `id="${id}" name="${id}"${ph}`;
     const reqAttr = (q.required ? " data-req" : "") +
-      (q.showIf ? ` data-show-if='${esc(JSON.stringify({ name: prefix + q.showIf.q, is: q.showIf.is }))}'` : "");
+      (q.showIf ? ` data-show-if='${esc(JSON.stringify({ name: prefix + q.showIf.q, is: q.showIf.is })).replace(/'/g, "&#39;")}'` : "");
     switch (q.type) {
       case "note":
         return `<p class="note">${esc(q.text)}</p>`;
@@ -576,9 +576,13 @@
   function applyConditions() {
     form.querySelectorAll("[data-show-if]").forEach(f => {
       const c = JSON.parse(f.dataset.showIf);
-      const picked = valueOf(c.name).split(", ");
+      const picked = valuesOf(c.name);
       f.hidden = ![].concat(c.is).some(v => picked.includes(v));
     });
+    // "Getting your items to us" only when this kind of order has items coming in
+    const t = currentType(), need = t && t.itemsIn;
+    document.getElementById("delivery-field").hidden = !(need === true ||
+      (need && [].concat(need.is).some(v => valuesOf("q_" + need.q).includes(v))));
   }
   const isShown = el => !el.closest("[hidden]");
 
@@ -631,6 +635,13 @@
   drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
 
   // ---------- Collecting answers ----------
+  // Every answer picked for a question (a list, so answers with commas stay whole)
+  function valuesOf(name) {
+    const els = [...form.querySelectorAll(`[name="${name}"]`)];
+    if (!els.length) return [];
+    if (els[0].type === "checkbox" || els[0].type === "radio") return els.filter(e => e.checked).map(e => e.value);
+    return [els[0].value.trim()].filter(Boolean);
+  }
   function valueOf(name) {
     const els = form.querySelectorAll(`[name="${name}"]`);
     if (!els.length) return "";
@@ -658,7 +669,7 @@
       ["Needed in hand by", valueOf("c_date")],
       ["Pick up or ship", valueOf("c_fulfill")],
       ["Shipping address", valueOf("c_fulfill") === "Ship it to me" ? valueOf("c_address") : ""],
-      ["Getting items to us", valueOf("c_delivery")],
+      ["Getting items to us", isShown(document.getElementById("delivery-field")) ? valueOf("c_delivery") : ""],
       ["Notes", valueOf("c_notes")],
       ["Photos", files.length ? files.map(f => f.name).join(", ") : ""],
     ]]);

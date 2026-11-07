@@ -1513,7 +1513,7 @@ async function pushRequestToShopvox(env, id, origin) {
   const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
   if (!r) return { error: "Request not found." };
   if (r.shopvox_id) return { ok: true, id: r.shopvox_id };
-  const { results: files } = await env.DB.prepare(`SELECT id, name, share_key FROM request_files WHERE request_id = ?`).bind(id).all();
+  const { results: files } = await env.DB.prepare(`SELECT id, name, mime, share_key FROM request_files WHERE request_id = ?`).bind(id).all();
   for (const f of files) {
     if (!f.share_key) {
       f.share_key = randomKey();
@@ -1547,12 +1547,18 @@ async function pushRequestToShopvox(env, id, origin) {
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
     ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
   };
-  let res = await shopvoxCall(env, "POST", "/sales_leads", lead);
+  // The first photo also goes in as the lead's asset, so it shows in shopVOX
+  const firstPhoto = files.find(f => /^image\//.test(f.mime));
+  const withPhoto = firstPhoto ? { ...lead, asset: `${base}/api/files/${firstPhoto.id}/${firstPhoto.share_key}` } : null;
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
-  // Some shopVOX endpoints want the record wrapped in its name; try that too
-  if (!idOf(res) && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 403) {
-    const wrapped = await shopvoxCall(env, "POST", "/sales_leads", { salesLead: lead });
-    if (idOf(wrapped)) res = wrapped;
+  const retryable = r => r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 403;
+  // Try with the photo, then without it if shopVOX won't take it; plain body first,
+  // then wrapped in its name (some shopVOX endpoints want that)
+  let res = null;
+  for (const body of [withPhoto, withPhoto && { salesLead: withPhoto }, lead, { salesLead: lead }].filter(Boolean)) {
+    const r = await shopvoxCall(env, "POST", "/sales_leads", body);
+    if (!res || idOf(r)) res = r;
+    if (idOf(r) || !retryable(r)) break;
   }
   const leadId = idOf(res);
   if (!leadId) {

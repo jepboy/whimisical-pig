@@ -20,6 +20,8 @@
 //               images/work/; examples without one use `live` (a photo on the
 //               current website) or a plain placeholder.
 //    bring      a short "have these ready" checklist (also on the Help page)
+//    itemsIn    true (or a showIf) when the customer brings us items; only then
+//               does the contact step ask "Getting your items to us"
 //    questions  the details we need. type can be:
 //               text, textarea, number, date, select, radio, checks, note
 //               required: true     makes one mandatory
@@ -35,6 +37,7 @@ window.ORDER = {
   types: [
     {
       id: "military",
+      itemsIn: true,          // asks "Getting your items to us" on the contact step
       title: "Military Framing",
       blurb: "Framed guidons & flags, snowshoes, plaques, slate awards & shadow boxes",
       photo: "military-shadow-boxes_09",
@@ -73,16 +76,18 @@ window.ORDER = {
                     "Non-regulation 13 × 17 in", "Non-regulation 15 × 20 in", "Not sure"] },
         { id: "items", label: "What items do you want to include?", type: "checks",
           options: ["Ranks", "Badges", "Crests", "Branch", "Patches", "Coins", "Photos", "Ribbons / medals", "Folded flag", "Other"] },
-        { id: "items_note", type: "note",
+        { id: "items_note", type: "note", showIf: { q: "items", is: ["Patches", "Coins"] },
           text: "Company-specific coins or patches come from your unit and aren't available from our suppliers, so you'll need to supply those." },
-        { id: "items_source", label: "Where are the items coming from?", type: "radio",
+        { id: "items_source", label: "Where are the items coming from?", type: "radio", showIf: { q: "items", is: ["Ranks", "Badges", "Crests", "Branch", "Patches", "Coins", "Photos", "Ribbons / medals", "Folded flag", "Other"] },
           options: ["I'll bring or ship them", "Please get the ranks / crests for us", "A mix of both"] },
         { id: "frame", label: "Mat and frame colors", type: "text", placeholder: "Optional, e.g. black mat over gray, black frame" },
-        { id: "reorder", label: "Same as a past order?", type: "text", placeholder: "Order # or name on the earlier piece (optional)" },
+        { id: "repeat", label: "Repeat order", type: "checks", options: ["This matches a piece you've made before"] },
+        { id: "reorder", label: "Order # or name on the earlier piece", type: "text", placeholder: "If you have it", showIf: { q: "repeat", is: "This matches a piece you've made before" } },
       ],
     },
     {
       id: "apparel",
+      itemsIn: { q: "garments_from", is: "I'll provide the garments" },
       title: "Embroidery & Apparel",
       blurb: "Shirts, polos, hats, hoodies, scrubs, bags & more",
       photo: "embroidery_07",
@@ -107,10 +112,10 @@ window.ORDER = {
           showIf: { q: "garments_from", is: "Please provide the garments" } },
         { id: "quantity", label: "Total quantity", type: "number", required: true, min: 1 },
         { id: "sizes", label: "Sizes & how many of each", type: "textarea", placeholder: "e.g. S ×4, M ×10, L ×8, XL ×3" },
-        { id: "logo_status", label: "Have we done this logo for you before?", type: "radio", required: true,
-          options: ["No, it's a new logo", "Yes, you have it on file"] },
-        { id: "logo_text", label: "Words you'd like (if there's no logo)", type: "textarea",
-          placeholder: "Exactly as it should read. Upload a photo of your logo in the next step." },
+        { id: "logo_status", label: "Your logo", type: "radio", required: true,
+          options: ["New logo (I'll upload it next)", "You have it on file", "No logo, just words"] },
+        { id: "logo_text", label: "Words you'd like", type: "textarea", showIf: { q: "logo_status", is: "No logo, just words" },
+          placeholder: "Exactly as it should read" },
         { id: "placement", label: "Placement", type: "checks",
           options: ["Left chest", "Full front", "Back", "Sleeve", "Hat front"] },
         { id: "method", label: "Decoration", type: "radio",
@@ -138,7 +143,8 @@ window.ORDER = {
         { id: "size", label: "Plate or plaque size", type: "text", placeholder: "Optional, e.g. 4 1/8 × 1 1/4 in" },
         { id: "engraving", label: "Engraving text", type: "textarea", placeholder: "Exactly as you want it to read. One block per plate if they differ." },
         { id: "logo", label: "Logo or artwork?", type: "radio", options: ["Yes (uploading next)", "No"] },
-        { id: "reorder", label: "Same as a past order?", type: "text", placeholder: "Order # (optional)" },
+        { id: "repeat", label: "Repeat order", type: "checks", options: ["This matches an order you've made before"] },
+        { id: "reorder", label: "Order # from the earlier order", type: "text", placeholder: "If you have it", showIf: { q: "repeat", is: "This matches an order you've made before" } },
       ],
     },
     {
@@ -171,6 +177,7 @@ window.ORDER = {
     },
     {
       id: "framing",
+      itemsIn: true,
       title: "Custom Framing",
       blurb: "Art, photos, jerseys, diplomas & keepsakes",
       photo: "art-framing_06",
@@ -243,7 +250,7 @@ window.ORDER = {
         { id: "partner_type", label: "What kind of partner are you?", type: "radio", required: true,
           options: ["Business", "Event / festival", "Team / club", "School", "Other"] },
         { id: "partner_name", label: "Business or event name", type: "text", required: true },
-        { id: "partner_dates", label: "Event dates (if it's an event)", type: "text", placeholder: "e.g. every July, 3rd weekend" },
+        { id: "partner_dates", label: "Event dates", type: "text", showIf: { q: "partner_type", is: "Event / festival" }, placeholder: "e.g. every July, 3rd weekend" },
         { id: "partner_items", label: "What merch are you interested in?", type: "checks",
           options: ["T-shirts", "Sweatpants", "Hoodies / sweatshirts", "Hats", "Bags", "Patches", "Other"] },
         { id: "partner_qty", label: "Rough quantity", type: "text", placeholder: "e.g. 200 shirts a year, or 100 per event" },
@@ -255,6 +262,7 @@ window.ORDER = {
     },
     {
       id: "other",
+      itemsIn: true,
       title: "Something Else",
       blurb: "Gifts, slate, tumblers, prints & ideas",
       photo: "shop_04",

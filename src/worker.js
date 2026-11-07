@@ -1555,7 +1555,8 @@ async function pushRequestToShopvox(env, id, origin) {
     const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
     withPhoto = new FormData();
     for (const [k, v] of Object.entries(lead)) if (v !== null && v !== undefined) withPhoto.append(k, String(v));
-    withPhoto.append("asset", new Blob([row.data], { type: firstPhoto.mime }), firstPhoto.name);
+    // The database can return the file as a list of numbers; make it real bytes
+    withPhoto.append("asset", new Blob([new Uint8Array(row.data)], { type: firstPhoto.mime }), firstPhoto.name);
   }
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
   const retryable = r => r.status >= 400 && r.status < 500 && r.status !== 401 && r.status !== 403;

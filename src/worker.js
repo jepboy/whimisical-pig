@@ -718,7 +718,13 @@ async function saveOrderRequest(request, env, ctx) {
       .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer(), randomKey()).run();
   }
   // Copy it into shopVOX as a sales lead (after the customer gets their reply)
-  if (shopvoxReady(env) && ctx) ctx.waitUntil(pushRequestToShopvox(env, row.id, new URL(request.url).origin).catch(e => console.error("shopVOX failed", e)));
+  const origin = new URL(request.url).origin;
+  // A test order from the admin page waits for shopVOX so the result shows right away
+  if (form.get("test") === "1" && await isAdmin(request, env)) {
+    const sv = shopvoxReady(env) ? await pushRequestToShopvox(env, row.id, origin) : { error: "shopVOX isn't set up (see Setup)." };
+    return json({ ok: true, id: row.id, ref, shopvox: sv });
+  }
+  if (shopvoxReady(env) && ctx) ctx.waitUntil(pushRequestToShopvox(env, row.id, origin).catch(e => console.error("shopVOX failed", e)));
   return json({ ok: true, id: row.id });
 }
 

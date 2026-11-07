@@ -231,6 +231,7 @@
         <div class="tools">
           <input type="search" id="req-search" placeholder="Search name, unit, order #…" aria-label="Search requests">
           <select id="req-filter" aria-label="Show"></select>
+          <button class="btn ghost sm" id="test-order" type="button">Send a Test Order</button>
           <button class="btn ghost sm" id="req-refresh" type="button">Refresh</button>
         </div>
       </div>
@@ -586,6 +587,54 @@
   $("req-filter").onchange = drawRequests;
   $("req-search").oninput = drawRequests;
   $("req-refresh").onclick = loadRequests;
+
+  // A filled-in order with a test picture, sent the same way a customer's order is
+  async function testPicture() {
+    const c = document.createElement("canvas");
+    c.width = 800; c.height = 600;
+    const g = c.getContext("2d");
+    g.fillStyle = "#f9e4eb"; g.fillRect(0, 0, 800, 600);
+    g.fillStyle = "#e7a3b8"; g.fillRect(40, 40, 720, 520);
+    g.fillStyle = "#141112"; g.textAlign = "center";
+    g.font = "bold 64px Georgia, serif"; g.fillText("TEST PHOTO", 400, 270);
+    g.font = "28px Georgia, serif"; g.fillText("The Whimsical Pig website test order", 400, 330);
+    g.fillText(new Date().toLocaleString(), 400, 380);
+    try {
+      const logo = new Image();
+      logo.src = "images/logo-mark.webp";
+      await logo.decode();
+      g.drawImage(logo, 330, 420, 140, 140 * logo.naturalHeight / logo.naturalWidth);
+    } catch (e) {}
+    return new Promise(ok => c.toBlob(ok, "image/png"));
+  }
+  $("test-order").onclick = async e => {
+    const b = e.target;
+    if (!confirm("Send a test order? It goes to Order Requests and to shopVOX just like a real one. Delete it from both afterward.")) return;
+    b.disabled = true; b.textContent = "Sending…";
+    const ref = "WP-TEST-" + Date.now().toString(36).slice(-5).toUpperCase();
+    const summary = [
+      "*** TEST ORDER from the admin page. Please delete. ***", "",
+      "Order type: Military Framing", "Starting point: Guidon shadow box",
+      "Unit: B Co 2-14 IN, 10th Mountain Division", "Items: guidon, 4 medals, 1 photo",
+      "Background: black velvet", "Frame: dark walnut", "",
+      "Name: Wyatt Wagner", "Phone: 3158166448", "Email: wwagner@yolc.org",
+      "Needed in hand by: " + new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
+      "Pick up or ship: I'll pick it up at the shop", "Photos: test-photo.png",
+    ].join("\n");
+    const fd = new FormData();
+    for (const [k, v] of Object.entries({ test: "1", ref, type: "Military Framing (TEST)", name: "Wyatt Wagner",
+      email: "wwagner@yolc.org", phone: "3158166448",
+      needed_by: new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
+      fulfill: "I'll pick it up at the shop", summary })) fd.append(k, v);
+    fd.append("photos", await testPicture(), "test-photo.png");
+    try {
+      const r = await api("/api/order-request", { method: "POST", body: fd });
+      await loadRequests();
+      if (r.shopvox && r.shopvox.ok) alert(`Test order ${ref} was sent and shopVOX accepted it (lead ${r.shopvox.id}). Look for "${ref}" in shopVOX Sales Leads, then delete it in both places.`);
+      else alert(`Test order ${ref} was saved here, but shopVOX didn't take it:\n\n${(r.shopvox && r.shopvox.error) || "No answer from shopVOX."}\n\nSend me that message.`);
+    } catch (err) { alert(err.message); }
+    b.disabled = false; b.textContent = "Send a Test Order";
+  };
 
   // ---------- online orders ----------
   let orders = [], ordStatuses = [];

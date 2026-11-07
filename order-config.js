@@ -7,16 +7,10 @@
 //  orders (military plaques & framing, then embroidery & apparel, then
 //  plaques & engraving).
 //
-//  tally     the short Tally "send" form (https://tally.so/r/gbeGGM). When set,
-//            customers answer the questions here on the website, and the last
-//            step is that Tally form, already filled in with every answer
-//            (as hidden fields), where they add photos and press Send. Tally
-//            then emails the order to the shop. Leave "" to skip Tally.
-//            (The full stand-alone Tally form, https://tally.so/r/OQDqLA, is
-//            for sharing as a link on Facebook and the like.)
 //  endpoint  optional email copy of each order. Paste a Formspree form URL
 //            (https://formspree.io/f/xxxxxxx), see README. Orders are always
-//            saved to the admin page (/admin → Order Requests) on the live site.
+//            saved to the admin page (/admin → Order Requests) on the live site,
+//            with their photos, and sent to shopVOX as a Sales Lead.
 //  email     where orders go if the site can't save them (the customer's
 //            email app opens with everything filled in)
 //
@@ -35,7 +29,6 @@
 // =====================================================================
 
 window.ORDER = {
-  tally: "https://tally.so/r/gbeGGM",
   endpoint: "",
   email: "WhimsicalPig@hotmail.com",
 

@@ -314,12 +314,6 @@
     .review dd { margin-bottom: 10px; }
     .nav-row .btn { padding: 13px 18px; }
   }
-  /* Last step when photos go through Tally */
-  .tally-card { margin-top: 18px; padding: 24px 22px 8px; background: #fff7fa; border: 2px solid #000; border-radius: 18px; text-align: left; }
-  .tally-card iframe { display: block; width: 100%; border: 0; min-height: 420px; }
-  .tally-alt { margin-top: 14px; color: var(--muted); font-size: 0.9rem; }
-  .tally-alt a { color: var(--pink); }
-  @media (max-width: 640px) { .tally-card { padding: 16px 10px 4px; } }
 </style>
 </head>
 <body data-page="order">
@@ -469,16 +463,6 @@
 <script>
   const CFG = window.ORDER;
   const DRAFT_KEY = "whimsicalpig-order-draft";
-  // With a Tally link set, the last step is a short Tally form that carries
-  // every answer (as hidden fields) and takes the photos, then emails the shop.
-  const TALLY = (String(CFG.tally || "").match(/tally\.so\/(?:r|embed)\/([\w-]+)/) || [])[1] || "";
-  if (TALLY) {
-    document.getElementById("drop").closest(".field").hidden = true;
-    const step4 = document.querySelector('.panel[data-step="3"]');
-    step4.querySelector("h2").textContent = "Contact";
-    step4.querySelector(".sub").textContent = "How to reach you. You'll add photos on the last step.";
-    document.querySelectorAll("#steps li")[3].textContent = "Contact";
-  }
   const form = document.getElementById("order");
   const panels = [...document.querySelectorAll(".panel")];
   const backBtn = document.getElementById("back");
@@ -831,8 +815,6 @@
         return;
       }
 
-      if (TALLY) { showTally(ref); return; }
-
       // 2) Optional email copy through a form service (see order-config.js)
       if (CFG.endpoint) {
         const fd = new FormData();
@@ -858,49 +840,6 @@
       if (nextBtn.textContent === "Sending…") nextBtn.textContent = "Send My Order";
     }
   }
-  // Last step: the Tally form, already filled in with everything they answered
-  function showTally(ref) {
-    const t = currentType();
-    const details = summary().filter(([h]) => h !== "Order" && h !== "Contact")
-      .flatMap(([, rows]) => rows.map(([k, v]) => k + ": " + v)).join("\n").slice(0, 3000);
-    const fields = {
-      Ref: ref, Type: t ? t.title : "", Style: valueOf("example"),
-      Name: valueOf("c_name"), Phone: valueOf("c_phone"), Email: valueOf("c_email"),
-      NeededBy: valueOf("c_date"), Delivery: valueOf("c_fulfill"),
-      ShipTo: valueOf("c_fulfill") === "Ship it to me" ? valueOf("c_address") : "",
-      ItemsIn: valueOf("c_delivery"), ContactBy: valueOf("c_contact"),
-      Details: details, Notes: valueOf("c_notes"),
-    };
-    const query = Object.entries(fields).filter(([, v]) => v).map(([k, v]) => k + "=" + encodeURIComponent(v)).join("&");
-    const src = `https://tally.so/embed/${TALLY}?hideTitle=1&transparentBackground=1&dynamicHeight=1&${query}`;
-    const box = document.getElementById("done");
-    box.innerHTML = `
-      <h2>Last step: add your photos</h2>
-      <span class="ref">${esc(ref)}</span>
-      <p>Add any photos of your logo, items or ideas, then press <strong>Send My Order</strong>.</p>
-      <div class="tally-card"><iframe title="Send your order" width="100%" height="460" frameborder="0"></iframe></div>
-      <p class="tally-alt">Trouble with this step? <a href="https://tally.so/r/${TALLY}?${query}" target="_blank" rel="noopener">Open it in a new tab</a>
-        or call <a href="tel:315-773-3758">315-773-3758</a>.</p>`;
-    const frame = box.querySelector("iframe");
-    frame.dataset.tallySrc = src;
-    const js = document.createElement("script");
-    js.src = "https://tally.so/widgets/embed.js";
-    js.onload = () => window.Tally.loadEmbeds();
-    js.onerror = () => { frame.src = src; };
-    document.head.appendChild(js);
-    // When Tally says the form was sent, show the usual "Order received" screen
-    window.addEventListener("message", function sent(e) {
-      if (e.origin !== "https://tally.so") return;
-      let msg = e.data;
-      try { if (typeof msg === "string") msg = JSON.parse(msg); } catch (err) { return; }
-      if (msg && msg.event === "Tally.FormSubmitted") {
-        window.removeEventListener("message", sent);
-        showDone(ref, false);
-      }
-    });
-    go(5);
-  }
-
   function showDone(ref, viaEmail) {
     clearDraft();
     const box = document.getElementById("done");

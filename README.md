@@ -146,12 +146,8 @@ Until Square is connected, the shop shows the items in `shop-items.js` with "Cal
 
 ## Setting up "Start an Order"
 
-**Tally (in use now):** customers answer the questions on the website. The last
-step is a short Tally form (https://tally.so/forms/gbeGGM/edit) that arrives already
-filled in with every answer (as hidden fields); they add photos and press Send, and
-Tally emails the order, with photos, to the Tally account. Each order is also saved
-to the admin page's Order Requests (without photos). The full stand-alone Tally form
-(https://tally.so/r/OQDqLA) is for sharing as a link; `TALLY-FORM.md` describes it.
+Every order is saved on the admin page (**Order Requests**, with photos) and sent to
+**shopVOX as a Sales Lead** with the photo links (see "shopVOX" above).
 
 Customers pick what they want, choose a starting example, answer that order type's
 questions, add photos and contact info, review, and send. You get one tidy message
@@ -161,7 +157,9 @@ with everything, plus an order reference like `WP-261015-K3QZ`.
 
 - **Admin page (always, on the live site):** every order is saved with its photos and
   shows up at `/admin` → **Order Requests**. Mark each one New → Quoted → In progress → Done,
-  and reply with one click. Customer uploads can only be opened by someone logged in.
+  and reply with one click. Customer uploads open only for someone logged in, or through
+  the private links in the shopVOX lead.
+- **shopVOX:** each order becomes a Sales Lead there (once connected), with links to the photos.
 - **Email copy (optional):** create a free form at https://formspree.io and paste its URL as
   `endpoint` in `order-config.js` to also get each order by email.
 - **Fallback:** if the site can't save (for example a copy opened from a zip), the customer's

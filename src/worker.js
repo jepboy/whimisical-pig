@@ -861,7 +861,12 @@ async function setupStatus(request, env, url) {
       : last.value.ok ? "shopVOX is connected: new website orders become Sales Leads there."
                       : `shopVOX didn't accept the Account ID or token (${last.value.status}). Check both in Cloudflare.`);
   } else {
-    add("shopvox", false, "shopVOX isn't connected. Add SHOPVOX_ACCOUNT_ID and SHOPVOX_API_TOKEN in Cloudflare (see README) to send website orders there.");
+    // Say exactly what's missing, and spot names that are close but not quite right
+    const missing = ["SHOPVOX_ACCOUNT_ID", "SHOPVOX_API_TOKEN"].filter(k => !env[k]);
+    const near = Object.keys(env).filter(k => /shop.?vox/i.test(k) && !["SHOPVOX_ACCOUNT_ID", "SHOPVOX_API_TOKEN", "SHOPVOX_PIPELINE", "SHOPVOX_API_BASE"].includes(k));
+    add("shopvox", false, `shopVOX isn't connected: the site can't find ${missing.join(" or ")}.` +
+      (near.length ? ` It does see ${near.map(k => `"${k}"`).join(", ")}: rename ${near.length > 1 ? "them" : "it"} to exactly ${missing.join(" / ")}.` : "") +
+      " Add them in Cloudflare → whimisical-pig → Settings → Variables and Secrets (the token as a Secret), then deploy again.");
   }
   add("email", mailReady(env), !mailReady(env)
     ? "Emails are off. Add a Resend API key (RESEND_API_KEY) to get low-stock emails (see README)."

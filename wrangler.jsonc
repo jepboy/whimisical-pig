@@ -17,6 +17,9 @@
     // These addresses go to the back end instead of the static files
     "run_worker_first": ["/api/*"]
   },
+  // Keep variables added in the Cloudflare dashboard when the site deploys
+  // (otherwise each deploy from GitHub removes any that aren't listed below)
+  "keep_vars": true,
   // Shop settings that aren't secret. Secrets (ADMIN_PASSWORD, SQUARE_ACCESS_TOKEN)
   // are added in the Cloudflare dashboard: Settings -> Variables and Secrets.
   "vars": {

@@ -1486,7 +1486,8 @@ async function shopvoxCall(env, method, path, body) {
   url.searchParams.set("authToken", env.SHOPVOX_API_TOKEN);
   const r = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    headers: { "Content-Type": "application/json", "Accept": "application/json",
+               "Authorization": `Bearer ${env.SHOPVOX_API_TOKEN}`, "authToken": env.SHOPVOX_API_TOKEN, "accountID": env.SHOPVOX_ACCOUNT_ID },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
   const text = await r.text();
@@ -1543,8 +1544,14 @@ async function pushRequestToShopvox(env, id, origin) {
     leadSourceName: "Website",
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
   };
-  const res = await shopvoxCall(env, "POST", "/sales_leads", lead);
-  const leadId = res.ok && res.data && (res.data.id || (res.data.salesLead || {}).id);
+  let res = await shopvoxCall(env, "POST", "/sales_leads", lead);
+  const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
+  // Some shopVOX endpoints want the record wrapped in its name; try that too
+  if (!idOf(res) && res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 403) {
+    const wrapped = await shopvoxCall(env, "POST", "/sales_leads", { salesLead: lead });
+    if (idOf(wrapped)) res = wrapped;
+  }
+  const leadId = idOf(res);
   if (!leadId) {
     const err = shopvoxError(res);
     console.error("shopVOX lead failed", err);

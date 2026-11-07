@@ -528,7 +528,7 @@
             <span class="tag ${r.status === "new" ? "new" : r.status === "done" ? "done" : ""}">${esc(r.status)}</span>
             <h3>${esc(r.type || "Order")} · ${esc(r.name || "No name")}</h3>
             <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}${r.shopvox_id ? ' · <span class="told">In shopVOX ✓</span>'
-              : shopvoxOn ? ` · <span class="low" title="${esc(r.shopvox_error)}">Not in shopVOX yet</span> <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button>` : ""}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
+              : shopvoxOn ? ` · <span class="low">Not in shopVOX yet${r.shopvox_error ? " (" + esc(r.shopvox_error) + ")" : ""}</span> <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button>` : ""}${r.notified ? ` · <span class="told">Told: ${esc(r.notified)}</span>` : ""}</p>
           </div>
           <div class="facts">
             <div><span class="k">Needed by</span><span class="due ${r.status === "done" ? "" : due.cls}">${due.text}</span></div>

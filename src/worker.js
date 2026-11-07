@@ -1531,21 +1531,16 @@ async function pushRequestToShopvox(env, id, origin) {
     ...files.map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
   ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000);
 
-  // Use the customer's existing shopVOX record when the name matches exactly
-  let companyId = null;
-  if (r.name) {
-    const found = await shopvoxCall(env, "GET", `/companies?name=${encodeURIComponent(r.name)}&active=true`);
-    const list = Array.isArray(found.data) ? found.data : (found.data && (found.data.companies || found.data.data)) || [];
-    const hit = found.ok && list.find(c => String(c.name || "").trim().toLowerCase() === r.name.trim().toLowerCase());
-    if (hit) companyId = hit.id;
-  }
+  // Attach the lead to the customer already in shopVOX, so no duplicate contacts:
+  // same email first, then same name and phone, then a customer with the same name
+  const who = await findShopvoxCustomer(env, r);
   const lead = {
     title: `${r.ref} · ${r.type || "Website order"} · ${r.name || "Customer"}`.slice(0, 200),
     details,
     workflowState: "new",
     nextContactDate: todayNY(),
-    ...(companyId ? { companyId } : { companyName: r.name || "Website customer" }),
-    primaryContactName: r.name || "",
+    ...(who.contactId ? { primaryContactId: who.contactId } : { primaryContactName: r.name || "" }),
+    ...(who.companyId ? { companyId: who.companyId } : { companyName: r.name || "Website customer" }),
     email: r.email || "",
     phoneNumber: r.phone || "",
     leadSourceName: "Website",
@@ -1569,6 +1564,35 @@ async function pushRequestToShopvox(env, id, origin) {
   }
   await env.DB.prepare(`UPDATE requests SET shopvox_id = ?, shopvox_error = '' WHERE id = ?`).bind(String(leadId), id).run();
   return { ok: true, id: String(leadId) };
+}
+
+const listOf = (d, key) => Array.isArray(d) ? d : (d && (d[key] || d.data)) || [];
+const digits = v => String(v || "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+async function findShopvoxCustomer(env, r) {
+  const email = String(r.email || "").trim().toLowerCase();
+  const name = String(r.name || "").trim().toLowerCase();
+  const phone = digits(r.phone);
+  const emailsOf = c => [c.email, ...(c.emails || []).map(e => e && e.email)].filter(Boolean).map(e => String(e).trim().toLowerCase());
+  const phonesOf = c => [c.phone, c.phoneWithExt, ...(c.phones || []).map(p => p && p.phone)].map(digits).filter(Boolean);
+  const pick = c => ({ contactId: c.id, companyId: (c.company && c.company.id) || c.companyId || null });
+  try {
+    if (email) {
+      const got = await shopvoxCall(env, "GET", `/contacts?search=${encodeURIComponent(email)}&active=true`);
+      const hit = got.ok && listOf(got.data, "contacts").find(c => emailsOf(c).includes(email));
+      if (hit) return pick(hit);
+    }
+    if (name && phone.length >= 7) {
+      const got = await shopvoxCall(env, "GET", `/contacts?search=${encodeURIComponent(r.name.trim())}&active=true`);
+      const hit = got.ok && listOf(got.data, "contacts").find(c => String(c.name || "").trim().toLowerCase() === name && phonesOf(c).includes(phone));
+      if (hit) return pick(hit);
+    }
+    if (name) {
+      const got = await shopvoxCall(env, "GET", `/companies?name=${encodeURIComponent(r.name.trim())}&active=true`);
+      const hit = got.ok && listOf(got.data, "companies").find(c => String(c.name || "").trim().toLowerCase() === name);
+      if (hit) return { contactId: null, companyId: hit.id };
+    }
+  } catch (e) { console.error("shopVOX lookup failed", e); }
+  return { contactId: null, companyId: null };
 }
 
 async function sendRequestToShopvox(env, id, origin) {

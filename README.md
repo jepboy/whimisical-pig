@@ -123,7 +123,8 @@ email, needed-by date, every answer, and links to their photos. The admin page s
 2. In Cloudflare (*Workers & Pages → whimisical-pig → Settings → Variables and Secrets*), add:
    - `SHOPVOX_ACCOUNT_ID` (the Account ID)
    - `SHOPVOX_API_TOKEN` as a **Secret** (the API Token)
-   - optional `SHOPVOX_PIPELINE`: the sales-lead pipeline name to put them in
+   - `SHOPVOX_PIPELINE` and `SHOPVOX_STAGE` are already set in `wrangler.jsonc`
+     ("Sales Pipeline", starting in "Assigned"). Change them there if the pipeline is renamed.
 3. `/admin` → **Setup → Test shopVOX**.
 
 To see customer emails on each order, connect the shop's inbox inside shopVOX (its email

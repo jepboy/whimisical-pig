@@ -28,7 +28,11 @@
     // The Square app's Application ID (public). Turns on paying by card on our own page.
     "SQUARE_APPLICATION_ID": "sq0idp-4rtvDyFQUMdpIpsfpkZOMA",
     // Where low-stock alerts go, and where customers' replies to order updates go
-    "SHOP_EMAIL": "WhimsicalPig@hotmail.com"
+    "SHOP_EMAIL": "WhimsicalPig@hotmail.com",
+    // shopVOX: website orders become Sales Leads in this pipeline, starting in this stage
+    // (the Account ID and API Token are Secrets in the Cloudflare dashboard)
+    "SHOPVOX_PIPELINE": "Sales Pipeline",
+    "SHOPVOX_STAGE": "Assigned"
     // Add once the domain is verified in Resend, to email customers from the admin page:
     // "MAIL_FROM": "The Whimsical Pig <orders@thewhimsicalpig.com>"
   },

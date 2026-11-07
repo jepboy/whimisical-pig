@@ -1480,7 +1480,8 @@ async function deletePhoto(env, id) {
 // shop tracks everything in one place. Needs (Cloudflare → Variables and Secrets):
 //   SHOPVOX_ACCOUNT_ID   the Account ID from shopVOX → your profile → API Access
 //   SHOPVOX_API_TOKEN    the API Token from the same place (a Secret)
-//   SHOPVOX_PIPELINE     optional: the sales-lead pipeline name to file them in
+//   SHOPVOX_PIPELINE     the sales-lead pipeline name to file them in (required by shopVOX)
+//   SHOPVOX_STAGE        optional: the stage new leads start in
 // API reference: https://shopvoxapi.docs.apiary.io
 
 const shopvoxReady = env => !!(env.SHOPVOX_ACCOUNT_ID && env.SHOPVOX_API_TOKEN);
@@ -1549,6 +1550,7 @@ async function pushRequestToShopvox(env, id, origin) {
     phoneNumber: r.phone || "",
     leadSourceName: "Website",
     ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}),
+    ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
   };
   let res = await shopvoxCall(env, "POST", "/sales_leads", lead);
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);

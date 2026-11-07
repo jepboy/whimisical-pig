@@ -1559,7 +1559,8 @@ async function pushRequestToShopvox(env, id, origin) {
   }
   const leadId = idOf(res);
   if (!leadId) {
-    const err = shopvoxError(res);
+    let err = shopvoxError(res);
+    if (/pipeline/i.test(err) && !env.SHOPVOX_PIPELINE) err += ". Set SHOPVOX_PIPELINE to the name of your sales-lead pipeline (shopVOX → Settings → Sales Leads).";
     console.error("shopVOX lead failed", err);
     await env.DB.prepare(`UPDATE requests SET shopvox_error = ? WHERE id = ?`).bind(err, id).run();
     return { error: err };

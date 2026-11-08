@@ -9,7 +9,7 @@
 //
 //  endpoint  optional email copy of each order. Paste a Formspree form URL
 //            (https://formspree.io/f/xxxxxxx), see README. Orders are always
-//            saved to the admin page (/admin → Order Requests) on the live site,
+//            saved to the admin page (/admin → Order Backup) on the live site,
 //            with their photos, and sent to shopVOX as a Sales Lead.
 //  email     where orders go if the site can't save them (the customer's
 //            email app opens with everything filled in)

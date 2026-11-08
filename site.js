@@ -266,7 +266,7 @@ function buildHeader(current) {
   el.insertAdjacentHTML("beforebegin", `
     <div class="utility">
       <div class="wrap">
-        <span><a href="${SITE}location.html">50 Public Square, Suite E1 · Watertown, NY</a></span>
+        <span><a href="visit.html">50 Public Square, Suite E1 · Watertown, NY</a></span>
         <span><span class="hours">Mon – Fri 9am – 5pm<span class="sep">|</span></span><a href="tel:315-773-3758">315-773-3758</a></span>
       </div>
     </div>`);
@@ -329,7 +329,7 @@ function buildFooter() {
         </div>
         <div>
           <h3>Visit</h3>
-          <p><a href="${SITE}location.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></p>
+          <p><a href="visit.html">50 Public Square, Suite E1<br>Watertown, New York 13601</a></p>
         </div>
         <div>
           <h3>Hours</h3>

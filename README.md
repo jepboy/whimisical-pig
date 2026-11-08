@@ -145,7 +145,7 @@ Until Square is connected, the shop shows the items in `shop-items.js` with "Cal
 
 ## Setting up "Start an Order"
 
-Every order is saved on the admin page (**Order Requests**, with photos) and sent to
+Every order is saved on the admin page (**Order Backup**, with photos) and sent to
 **shopVOX as a Sales Lead** with the photo links (see "shopVOX" above).
 
 Customers pick what they want, choose a starting example, answer that order type's
@@ -155,8 +155,7 @@ with everything, plus an order reference like `WP-261015-K3QZ`.
 **Where orders go:**
 
 - **Admin page (always, on the live site):** every order is saved with its photos and
-  shows up at `/admin` → **Order Requests**. Mark each one New → Quoted → In progress → Done,
-  and reply with one click. Customer uploads open only for someone logged in, or through
+  shows up at `/admin` → **Order Backup**, and goes to shopVOX as a Sales Lead. Customer uploads open only for someone logged in, or through
   the private links in the shopVOX lead.
 - **shopVOX:** each order becomes a Sales Lead there (once connected), with links to the photos.
 - **Email copy (optional):** create a free form at https://formspree.io and paste its URL as
@@ -182,10 +181,8 @@ The questions and options there are a sensible starting point; adjust them to
 how the shop actually works (for example, your real background and frame choices).
 
 **Example photos:** each order type and example can name a photo from
-`images/work/` with `photo: "<name>"` (the file name without `-sm.webp`).
-Plaques & Engraving, Guidons and Something Else don't have shop photos yet, so
-they still use pictures from the current website (`live:`). Once you have
-photos of those, add them to `images/work/` and set `photo:` instead.
+`images/work/` with `photo: "<name>"` (the file name without `-sm.webp`). Examples
+without a photo show a plain card.
 
 ## Photos of our work
 

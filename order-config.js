@@ -27,6 +27,9 @@
 //               sizes (a box per size; total: "quantity" fills that question in),
 //               dims (width × height in inches),
 //               rankname (a rank list plus the name, e.g. "SFC John A. Smith")
+//               span (from month/year to month/year or "Present")
+//               examples: [...]    on a textarea, a "Need ideas?" button that fills one in
+//               showIf: { q, not } hides a question when that answer IS picked
 //               proof: true        lists the answer under "Check the spelling" on
 //                                  the review step (anything we engrave or print)
 //               required: true     makes one mandatory
@@ -56,18 +59,30 @@ window.ORDER = {
       bring: [
         "The date you need it (we prefer at least 2 weeks)",
         "Your company / unit, and Battalion Colors or Company Guidon",
-        "Rank and name exactly as they should appear, and the plate wording",
+        "The plate wording: rank and name, position or callsign, dates, 2–3 sentences, and a quote",
         "Ranks, badges, crests, branch, patches, coins or photos to include",
         "Company-specific coins or patches: you'll need to supply these",
       ],
       questions: [
         { id: "unit", label: "What company or unit is this for?", type: "text", required: true,
           placeholder: "Start typing, e.g. 1-32 B Co", help: "Pick your unit from the list if it's there. This sets the mat colors." },
-        { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "rankname", proof: true },
-        { id: "position", label: "Position or callsign", type: "text", placeholder: "Optional, e.g. Company Commander, Hydra 6", proof: true },
-        { id: "dates", label: "Dates of service", type: "text", placeholder: "e.g. October 2023 – June 2026" },
-        { id: "inscription", label: "Plate wording / dedication", type: "textarea", proof: true,
-          placeholder: "e.g. From the Officers, NCOs and Soldiers of B Company. Thank you for your leadership." },
+        { id: "plate_note", type: "note",
+          text: "The plate usually reads, top to bottom: rank and name, position or callsign, dates, 2–3 sentences, and a quote. Fill in what you have; we'll email you a proof to approve before we make it." },
+        { id: "plate_later", label: "Plate wording", type: "checks", options: ["I'll send the plate wording later"] },
+        { id: "recipient", label: "1. Rank and name, exactly as it should appear", type: "rankname", proof: true },
+        { id: "position", label: "2. Position title or callsign", type: "text", placeholder: "e.g. Company Commander, or Hydra 6 (leave blank for none)", proof: true,
+          showIf: { q: "plate_later", not: "I'll send the plate wording later" } },
+        { id: "dates", label: "3. Dates", type: "span", proof: true, showIf: { q: "plate_later", not: "I'll send the plate wording later" } },
+        { id: "inscription", label: "4. Thanks, accomplishments or well wishes (2–3 sentences)", type: "textarea", proof: true,
+          placeholder: "e.g. From the Officers, NCOs and Soldiers of B Company. Thank you for your leadership and dedication.",
+          examples: [
+            "From the Officers, NCOs and Soldiers of Bravo Company. Thank you for your leadership, your dedication and the example you set every day. You will be missed.",
+            "In recognition of your outstanding service as First Sergeant. Your care for your Soldiers and their families made this company stronger. Climb to Glory!",
+            "Presented with gratitude for your years of selfless service. Congratulations on your retirement, and best wishes in the next chapter.",
+          ],
+          showIf: { q: "plate_later", not: "I'll send the plate wording later" } },
+        { id: "quote", label: "5. Quote", type: "text", proof: true, placeholder: "A company motto, or a phrase they always said",
+          showIf: { q: "plate_later", not: "I'll send the plate wording later" } },
         { id: "flag_kind", label: "Are you looking for the Battalion Colors or a Company Guidon?", type: "radio", required: true,
           options: ["Battalion Colors", "Company Guidon", "Neither", "Not sure"],
           help: "Battalion Colors are usually the eagle or the large rectangular flag on display at command. Company Guidons are the swallowtail flags." },

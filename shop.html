@@ -175,6 +175,10 @@
   .cart-foot .btn { width: 100%; margin-top: 14px; }
   .cart-err { min-height: 1.2em; margin-top: 8px; color: #e59a90; font-size: 0.88rem; }
   .cart-empty { color: var(--muted); padding: 30px 0; text-align: center; }
+  .soon { max-width: 640px; margin: 10px auto 40px; padding: 40px 28px; text-align: center; border: 1px solid var(--rule); border-radius: 22px; background: var(--panel); }
+  .soon h2 { font-size: clamp(1.9rem, 4vw, 2.5rem); margin: 6px 0 12px; }
+  .soon p { color: var(--muted); }
+  .soon-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
   .cart-in[hidden] { display: none; }
   .cart-head .back { border: 0; background: none; color: var(--pink); font-weight: 700; white-space: nowrap; }
   .pay-view .cart-head h2 { font-size: 1.6rem; }
@@ -687,6 +691,22 @@
     }
   };
 
+  // ---------- Nothing for sale online yet ----------
+  function comingSoon() {
+    $("shop-tools").hidden = true;
+    try { localStorage.removeItem("wp-cart"); } catch (e) {}
+    grid.outerHTML = `<div class="soon">
+      <span class="eyebrow">Coming soon</span>
+      <h2>Our online shop is getting stocked</h2>
+      <p>Event shirts, partner merch and ready-made pieces will be here soon. In the meantime, we're happy to make something just for you.</p>
+      <div class="soon-row">
+        <a class="btn" href="order.html">Start a Custom Order</a>
+        <a class="btn ghost" href="visit.html">Visit the Shop</a>
+        <a class="btn ghost" href="tel:315-773-3758">Call 315-773-3758</a>
+      </div>
+    </div>`;
+  }
+
   // ---------- Fallback list from shop-items.js ----------
   // Used until Square is connected, or when the page is opened as a plain file.
   function renderStatic(items) {
@@ -778,6 +798,9 @@
       buildFilters(renderLive(data.products));
       setupFulfillment();
       renderCart();
+    } else if (live) {
+      // Square is connected but nothing is in the Website category yet
+      comingSoon();
     } else {
       buildFilters(renderStatic(shop.items));
     }

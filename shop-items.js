@@ -1,7 +1,7 @@
 // =====================================================================
 //  THE WHIMSICAL PIG — BACKUP SHOP LIST
-//  Once Square is connected (see README), the shop shows items from Square's
-//  "Website" category instead, and this file isn't used. Until then, edit this
+//  Only used if Square isn't connected at all. With Square connected, the shop
+//  shows Square's "Website" category, or "Coming soon" while that's empty. Until then, edit this
 //  to change what's shown. Keep the quotes and commas in place.
 //
 //  For each item:

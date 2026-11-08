@@ -334,10 +334,13 @@
   @media (max-width: 480px) { .rankname { grid-template-columns: 1fr; } }
   .proof { margin-bottom: 22px; padding: 16px 18px; border: 2px solid var(--pink); border-radius: 14px; background: rgba(231, 163, 184, 0.08); }
   .proof h3 { font-size: 1.25rem; margin-bottom: 4px; }
-  .proof p { color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
-  .proof dl { display: grid; gap: 8px; }
-  .proof dt { font-size: 0.8rem; color: var(--muted); }
+  .proof p { color: #5e4a51; font-size: 0.9rem; margin-bottom: 10px; }
+  .review .proof dl { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .review .proof dt { font: 700 0.7rem/1.6 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: #8a5f6c; }
   .proof dd { font: 600 1.15rem/1.35 var(--serif); white-space: pre-wrap; }
+  .proof-fix { display: inline-block; margin-top: 14px; padding: 8px 16px; border: 1.5px solid var(--rose); border-radius: 999px;
+    background: none; color: var(--rose); font: 700 0.72rem var(--sans); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+  .proof-fix:hover { background: var(--rose); color: #fff; }
   .opt.surprise { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
   .callback { margin-top: 26px; border: 1px dashed var(--rule); border-radius: 14px; padding: 14px 18px; }
   .callback summary { cursor: pointer; font-weight: 700; color: var(--pink); }
@@ -998,7 +1001,7 @@
     const proofHTML = proof.length ? `<div class="proof"><h3>Check the spelling</h3>
       <p>We engrave and print these exactly as written. Names, ranks and units especially! We'll also email you a proof to approve before we make anything.</p>
       <dl>${proof.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
-      <button type="button" class="edit" data-go="2">fix something</button></div>` : "";
+      <button type="button" class="proof-fix" data-go="2">Fix the spelling</button></div>` : "";
     box.innerHTML = proofHTML + summary().map(([h, rows]) => {
       const target = editTarget[h] !== undefined ? editTarget[h] : 2;
       return `<h3>${esc(h)}<button type="button" class="edit" data-go="${target}">edit</button></h3>` +

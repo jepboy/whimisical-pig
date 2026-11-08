@@ -67,10 +67,10 @@ come out of the same stock count, and Square adds sales tax at checkout.
 | Tab | What it's for |
 | --- | --- |
 | Order Backup | A backup copy of every Start an Order request, with photos (orders are worked in shopVOX). Search, see whether each one reached shopVOX ("In shopVOX ✓"), resend one that didn't, email or call, delete. |
-| Online Orders | Paid shop orders: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
+| Shop Orders | Paid orders from the website shop: items, pick up or ship address, buyer email. Mark them ready and picked up / shipped, and add notes like tracking numbers. |
 | Shop Items | Every item in Square. **+ Add Item** (name, event or partner, sizes, price, a higher 2XL-and-up price, tax, photo). Edit name, description, event and price; turn "On the website" on or off; click the picture box to add or change a photo; count stock with + and −. Everything is saved in Square, so the register matches. |
 | Banners | Notices on the website: a thin **top bar** or a big **feature banner** with a photo and a button. Pick the pages, the colors, and start/stop dates (a holiday deadline banner turns itself off after the date). Ready-made starters for holiday deadlines, closures and events. |
-| Site Photos | Add photos to **Our Work** (in any group, or a new one), change captions, **replace** any photo, or **remove** gallery photos (they can be put back). Photos that are part of a page's design (logo, storefront, painting…) can be replaced. |
+| Site Photos | Every photo on the site, grouped by where it shows: Our Work (add, caption, replace, remove), each page (home slideshow, Our Story, Visit…), and the Start an Order cards (replace or add a photo). **Use the original** undoes a change. |
 | Setup | A checklist of what's connected, with anything missing in red. **Test shopVOX** checks the shopVOX connection. |
 
 **More on the shop tools**

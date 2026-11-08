@@ -551,9 +551,10 @@
     return "";
   };
 
-  function choiceCard({ name, value, title, text, src, plain }) {
+  function choiceCard({ name, value, title, text, src, plain, slot }) {
     const label = document.createElement("label");
     label.className = "choice" + (plain ? " plain" : "");
+    if (slot) label.dataset.slot = slot;
     label.innerHTML = `
       <input type="radio" name="${name}" value="${esc(value)}">
       <div class="card">
@@ -564,12 +565,27 @@
     const im = label.querySelector("img");
     if (im && src.endsWith("-sm.webp")) useThumbs(im, src.slice(12, -8), "(max-width: 640px) 45vw, 260px");
     else if (im) loadImg(im, "", src);
+    slotPhoto(label);
     return label;
   }
+  // A photo set for this card on the admin page (Site Photos → Start an Order)
+  function slotPhoto(label) {
+    const id = SITE_CHANGES && label.dataset.slot && SITE_CHANGES.replace[label.dataset.slot];
+    if (!id) return;
+    const pic = label.querySelector(".pic");
+    let im = pic.querySelector("img");
+    if (!im) { im = document.createElement("img"); im.alt = ""; pic.appendChild(im); }
+    im.removeAttribute("srcset");
+    im.removeAttribute("sizes");
+    delete im.dataset.key;
+    im.onerror = null;
+    im.src = `/api/photo/${id}?s=sm`;
+  }
+  document.addEventListener("site-changes", () => document.querySelectorAll("label[data-slot]").forEach(slotPhoto));
 
   const typeBox = document.getElementById("type-choices");
   for (const t of CFG.types) {
-    typeBox.appendChild(choiceCard({ name: "type", value: t.id, title: t.title, text: t.blurb, src: photoOf(t) }));
+    typeBox.appendChild(choiceCard({ name: "type", value: t.id, title: t.title, text: t.blurb, src: photoOf(t), slot: `order-${t.id}` }));
   }
   typeBox.addEventListener("change", () => {
     buildExamples();
@@ -585,7 +601,7 @@
     box.innerHTML = "";
     if (!t) return;
     for (const ex of t.examples) {
-      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, src: photoOf(ex) }));
+      box.appendChild(choiceCard({ name: "example", value: ex.title, title: ex.title, text: ex.text, src: photoOf(ex), slot: `order-${t.id}-${ex.id}` }));
     }
     box.appendChild(choiceCard({ name: "example", value: "Something different", title: "Something different", text: "Describe it in the next step", plain: true }));
     box.onchange = () => { saveDraft(); setTimeout(() => go(2), 180); };
@@ -749,9 +765,9 @@
   const photoInput = document.getElementById("photos");
   const drop = document.getElementById("drop");
   const thumbs = document.getElementById("thumbs");
-  // Same limits as the server: up to 8 files; photos are shrunk before sending,
-  // but PDFs and iPhone HEIC photos are sent as they are, so they must be small enough
-  const MAX_FILES = 8, MAX_SEND_BYTES = 1_900_000;
+  // Same limits as the server: up to 8 files, 15 MB each, 60 MB in all. Photos are sent
+  // full size; a JPG/PNG over 15 MB is resized to fit, but a PDF or HEIC that big can't be
+  const MAX_FILES = 8, MAX_SEND_BYTES = 15_000_000, MAX_TOTAL_BYTES = 60_000_000;
   const fileMsg = document.createElement("p");
   fileMsg.className = "file-msg";
   fileMsg.setAttribute("role", "alert");
@@ -761,10 +777,12 @@
       const shrinkable = /^image\/(jpeg|png|webp)$/.test(f.type);
       const ok = /^image\//.test(f.type) || f.type === "application/pdf" || /\.(heic|heif|pdf)$/i.test(f.name);
       if (!ok) { problems.push(`"${f.name}" isn't a photo or PDF.`); continue; }
-      if (!shrinkable && f.size > MAX_SEND_BYTES) { problems.push(`"${f.name}" is too big to send (over 1.9 MB). Try a screenshot of it, or a JPG.`); continue; }
-      if (f.size > 40_000_000) { problems.push(`"${f.name}" is too big. Please choose a smaller photo.`); continue; }
+      if (!shrinkable && f.size > MAX_SEND_BYTES) { problems.push(`"${f.name}" is too big to send (over 15 MB). Try a JPG of it, or email it to us.`); continue; }
+      if (f.size > 60_000_000) { problems.push(`"${f.name}" is too big. Please choose a smaller photo.`); continue; }
       if (files.some(x => x.name === f.name && x.size === f.size)) continue;
       if (files.length >= MAX_FILES) { problems.push(`You can send up to ${MAX_FILES} files. Remove one to add another.`); break; }
+      const total = files.reduce((n, x) => n + Math.min(x.size, MAX_SEND_BYTES), 0) + Math.min(f.size, MAX_SEND_BYTES);
+      if (total > MAX_TOTAL_BYTES) { problems.push(`That's more than we can take in one order (60 MB). Send the rest by email after.`); break; }
       files.push(f);
     }
     fileMsg.textContent = problems.join(" ");
@@ -1044,8 +1062,10 @@
     ).join("\n");
   }
   // Shrink big phone photos before sending so uploads are quick (PDFs are sent as-is)
-  function shrinkPhoto(file, max = 1800) {
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return Promise.resolve(file);
+  // Photos go as they are, full quality. Only a photo over 15 MB is resized (to 4000 px,
+  // high quality), so it can be sent at all.
+  function shrinkPhoto(file, max = 4000) {
+    if (file.size <= MAX_SEND_BYTES || !/^image\/(jpeg|png|webp)$/.test(file.type)) return Promise.resolve(file);
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => {
@@ -1055,7 +1075,7 @@
         c.height = Math.round(img.height * scale);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
         c.toBlob(b => resolve(b && b.size < file.size ? new File([b], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" }) : file),
-          "image/jpeg", 0.85);
+          "image/jpeg", 0.92);
         URL.revokeObjectURL(img.src);
       };
       img.onerror = () => resolve(file);

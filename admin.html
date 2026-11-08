@@ -129,6 +129,17 @@
   .told { color: #a9c98f; font-size: 0.8rem; }
   .sub-h { font-size: 1.5rem; margin: 26px 0 10px; }
   .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .howto { display: grid; gap: 4px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--bg-2); color: var(--muted); font-size: 0.9rem; }
+  .howto strong, .howto b { color: var(--cream); }
+  .howto em { color: var(--pink); font-style: normal; font-weight: 700; }
+  .jump { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 8px; }
+  .jump a { color: var(--pink); font-weight: 700; font-size: 0.9rem; }
+  .sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-top: 26px; scroll-margin-top: 80px; }
+  .sec-head .sub-h { margin: 0; }
+  .sec-head select { padding: 7px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
+  .sec-head + .pgrid, .sec-head + .hint { margin-top: 10px; }
+  .ph-card .img .none { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 0.8rem; }
+  .ph-card .where b { color: var(--cream); font-weight: 700; }
   .ph-card { display: grid; gap: 8px; padding: 10px; background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; }
   .ph-card.gone { opacity: 0.45; }
   .ph-card .img { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #2a2420; }
@@ -213,43 +224,42 @@
 
   <div id="app" hidden>
     <div class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
-      <button role="tab" aria-selected="false" data-tab="orders">Online Orders <span class="count" id="n-orders"></span></button>
+      <button role="tab" aria-selected="true" data-tab="orders">Shop Orders <span class="count" id="n-orders"></span></button>
       <button role="tab" aria-selected="false" data-tab="items">Shop Items <span class="warn" id="n-low"></span></button>
       <button role="tab" aria-selected="false" data-tab="banners">Banners</button>
       <button role="tab" aria-selected="false" data-tab="photos">Site Photos</button>
+      <button role="tab" aria-selected="false" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
       <button role="tab" aria-selected="false" data-tab="setup">Setup <span class="warn" id="n-setup"></span></button>
     </div>
 
     <!-- Backup copy of every Start an Order request (they're worked in shopVOX) -->
-    <section id="tab-requests">
+    <section id="tab-requests" hidden>
       <div class="toolbar">
         <div>
           <h2>Order Backup</h2>
-          <p class="hint">A backup copy of every order from the Start an Order form, with photos. Orders are worked in shopVOX. Newest first.</p>
+          <p class="hint">A copy of every custom order from the Start an Order form, with full-size photos, in case something didn't reach shopVOX. Work orders in shopVOX; this is just the backup.</p>
         </div>
         <div class="tools">
           <input type="search" id="req-search" placeholder="Search name, unit, order #…" aria-label="Search requests">
           <select id="req-filter" aria-label="Show"></select>
-          <button class="btn ghost sm" id="test-order" type="button">Send a Test Order</button>
           <button class="btn ghost sm" id="req-refresh" type="button">Refresh</button>
         </div>
       </div>
       <div class="list" id="requests"></div>
     </section>
 
-    <!-- Paid online orders -->
-    <section id="tab-orders" hidden>
+    <!-- Paid orders from the website shop -->
+    <section id="tab-orders">
       <div class="toolbar">
         <div>
-          <h2>Online Orders</h2>
-          <p class="hint">Paid orders from the website shop. Receipts, refunds and full details are in Square.</p>
+          <h2>Shop Orders</h2>
+          <p class="hint">Things people bought and paid for in the website shop. Pack them, mark them ready or shipped, and let the customer know. Receipts and refunds are in Square.</p>
         </div>
         <div class="tools">
           <select id="ord-filter" aria-label="Show">
-            <option value="open">To do (not done)</option>
+            <option value="open">To do</option>
+            <option value="done">Done</option>
             <option value="all">All</option>
-            <option value="shop">Shop orders</option>
           </select>
           <button class="btn ghost sm" id="ord-refresh" type="button">Refresh</button>
         </div>
@@ -342,19 +352,34 @@
       <div class="toolbar">
         <div>
           <h2>Site Photos</h2>
-          <p class="hint">Add photos to Our Work, change captions, replace or remove photos. Changes show on the site within a minute.</p>
+          <p class="hint">Every photo on the website, by where it shows. Changes show on the site within a minute.</p>
         </div>
         <div class="tools">
-          <select id="photo-filter" aria-label="Show"></select>
-          <button class="btn sm" id="photo-add" type="button">+ Add Photos</button>
+          <button class="btn sm" id="photo-add" type="button">+ Add Photos to Our Work</button>
         </div>
       </div>
+      <div class="howto">
+        <strong>How to:</strong>
+        <span><b>Change a photo:</b> press <em>Replace</em> under it and pick the new one.</span>
+        <span><b>Go back:</b> <em>Use the original</em> puts the old photo back.</span>
+        <span><b>Our Work:</b> add photos with the button above; <em>Remove</em> takes one off (you can put it back).</span>
+        <span><b>Captions:</b> type in the box under a photo; it saves when you click away.</span>
+      </div>
+      <nav class="jump" aria-label="Sections">
+        <a href="#ph-work">Our Work gallery</a><a href="#ph-pages">Home &amp; other pages</a><a href="#ph-order">Start an Order</a>
+      </nav>
       <p class="hint" id="photos-msg" role="status"></p>
-      <h3 class="sub-h">Our Work gallery</h3>
+
+      <div class="sec-head" id="ph-work"><h3 class="sub-h">Our Work gallery</h3>
+        <select id="photo-filter" aria-label="Show"></select><a class="hint" href="work.html" target="_blank" rel="noopener">See it on the site →</a></div>
       <div class="pgrid" id="gallery-admin"></div>
-      <h3 class="sub-h">Photos on the pages</h3>
-      <p class="hint">These are part of a page's design, so they can be replaced but not removed.</p>
-      <div class="pgrid" id="page-photos"></div>
+
+      <div id="ph-pages"></div>
+
+      <div class="sec-head" id="ph-order"><h3 class="sub-h">Start an Order</h3>
+        <a class="hint" href="order.html" target="_blank" rel="noopener">See it on the site →</a></div>
+      <p class="hint">The cards customers pick from. Changing one here only changes it on the order page.</p>
+      <div class="pgrid" id="order-photos"></div>
       <input type="file" id="replace-pick" accept="image/*" hidden>
     </section>
 
@@ -406,6 +431,7 @@
         </div>
         <div class="tools">
           <a class="btn ghost sm" href="sign.html?review=1" target="_blank" rel="noopener">Print Review Sign</a>
+          <button class="btn ghost sm" id="test-order" type="button">Send a Test Order</button>
           <button class="btn ghost sm" id="test-shopvox" type="button">Test shopVOX</button>
           <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
         </div>
@@ -416,6 +442,7 @@
 </main>
 
 <script src="site.js"></script>
+<script src="order-config.js"></script>
 <script>
   const $ = id => document.getElementById(id);
   const money = c => "$" + (c / 100).toFixed(2);
@@ -424,7 +451,9 @@
   let dashboard = "https://app.squareup.com/dashboard";
   let shopvoxOn = false;
   // The shop's pages keep a copy of banners and photos for a minute; drop it so changes show here right away
-  const freshSite = () => { try { sessionStorage.removeItem("wp-site"); } catch (e) {} };
+  const freshSite = () => {
+    try { sessionStorage.removeItem("wp-site"); localStorage.setItem("wp-site-ver", String(Date.now())); } catch (e) {}
+  };
   // Close buttons inside any dialog
   document.addEventListener("click", e => { if (e.target.matches("[data-close]")) e.target.closest("dialog").close(); });
 
@@ -442,7 +471,7 @@
   function showLogin() { $("app").hidden = true; $("who").hidden = true; $("login-box").hidden = false; $("pw").focus(); }
   function showApp() {
     $("login-box").hidden = true; $("app").hidden = false; $("who").hidden = false;
-    loadRequests(); loadOrders(true); loadSetup(true); loadItems(true);
+    loadOrders(); loadRequests(); loadSetup(true); loadItems(true);
   }
   $("login-box").onsubmit = async e => {
     e.preventDefault();
@@ -634,24 +663,24 @@
     $("pre-totals").innerHTML = rows.length ? `<div class="banner"><strong>Pre-orders to make:</strong>
       ${rows.map(([n, q]) => `<div class="lines-mini"><div><span>${esc(n)}</span><strong>${q}</strong></div></div>`).join("")}</div>` : "";
   }
-  const ORDER_LABELS = { new: "New", ready: "Ready / packed", done: "Picked up / shipped" };
   function drawOrders() {
     const box = $("orders");
     const want = $("ord-filter").value;
-    const list = orders.filter(o => want === "all" ? true : want === "open" ? o.handled !== "done" || o.status !== "paid" : o.kind === want);
-    if (!list.length) { box.innerHTML = '<div class="empty">No online orders here yet.</div>'; return; }
+    const list = orders.filter(o => want === "all" ? true : want === "done" ? o.handled === "done" : o.handled !== "done");
+    if (!list.length) { box.innerHTML = `<div class="empty">${want === "open" ? "Nothing to do. New shop orders show up here." : "No shop orders here yet."}</div>`; return; }
     box.innerHTML = list.map(o => {
-      const paid = o.status === "paid";
-      const qp = o.kind === "quickpay";
-      return `<article class="card ${paid && o.handled === "done" ? "done" : ""}" data-id="${o.id}">
+      const ship = o.fulfillment === "ship";
+      // Plain words for each step, for pickup or shipping
+      const label = { new: "New", ready: ship ? "Packed" : "Ready for pickup", done: ship ? "Shipped" : "Picked up" };
+      return `<article class="card ${o.handled === "done" ? "done" : ""}" data-id="${o.id}">
         <header>
           <div>
-            <span class="tag ${paid ? "paid" : ""}">${paid ? "Paid" : "Checking out now"}</span>
-            <h3>${qp ? "Payment" : o.fulfillment === "ship" ? "Ship order" : "Pickup order"} · WP-${o.id}</h3>
-            <p class="meta">${esc(when(o.paid_at || o.created_at))}${o.buyer_name ? " · " + esc(o.buyer_name) : ""}</p>
+            <span class="tag ${o.handled === "new" ? "new" : o.handled === "done" ? "done" : ""}">${label[o.handled] || o.handled}</span>
+            <h3>${ship ? "Ship" : "Pick up"} · WP-${o.id}${o.buyer_name ? " · " + esc(o.buyer_name) : ""}</h3>
+            <p class="meta">Paid ${esc(when(o.paid_at || o.created_at))}</p>
           </div>
           <div class="facts">
-            <div><span class="k">${paid ? "Paid" : "Subtotal"}</span>${money(paid && o.paid_cents ? o.paid_cents : o.subtotal_cents)}</div>
+            <div><span class="k">Paid</span>${money(o.paid_cents || o.subtotal_cents)}</div>
             ${o.buyer_email ? `<div><span class="k">Email</span><a href="mailto:${esc(o.buyer_email)}">${esc(o.buyer_email)}</a></div>` : ""}
             ${o.buyer_phone ? `<div><span class="k">Phone</span><a href="tel:${esc(o.buyer_phone)}">${esc(o.buyer_phone)}</a></div>` : ""}
           </div>
@@ -659,15 +688,24 @@
         <div class="lines-mini">${o.items.map(l => `<div><span>${l.qty} × ${esc(l.name)}${l.preorder ? ' <span class="tag pre">Pre-order</span>' : ""}</span><span>${money(l.price_cents * l.qty)}</span></div>`).join("")}</div>
         ${o.notified ? `<p class="told">Told: ${esc(o.notified)}</p>` : ""}
         ${o.ship_to ? `<pre>${esc(o.ship_to)}</pre>` : ""}
-        ${paid ? `<textarea class="note-box" data-act="note" placeholder="Notes (tracking number, who picked it up…)">${esc(o.note)}</textarea><span class="saved"></span>
+        <textarea class="note-box" data-act="note" placeholder="Notes (tracking number, who picked it up…)">${esc(o.note)}</textarea><span class="saved"></span>
         <footer>
           <label>Status
-            <select data-act="handled">${ordStatuses.map(s => `<option value="${s}"${s === o.handled ? " selected" : ""}>${qp && s !== "new" ? (s === "done" ? "Recorded" : "Checked") : ORDER_LABELS[s]}</option>`).join("")}</select>
+            <select data-act="handled">${ordStatuses.map(st => `<option value="${st}"${st === o.handled ? " selected" : ""}>${label[st]}</option>`).join("")}</select>
           </label>
-        </footer>` : `<p class="hint" style="margin-top:10px">Held for 30 minutes while they pay.</p>`}
+          <button class="link-btn" type="button" data-act="remove">Remove from list</button>
+        </footer>
       </article>`;
     }).join("");
   }
+  // Take a test or mistaken order off this list (Square keeps its record)
+  $("orders").addEventListener("click", async e => {
+    if (e.target.dataset.act !== "remove") return;
+    const id = +e.target.closest(".card").dataset.id;
+    if (!confirm(`Remove WP-${id} from this list? It stays in Square (refund it there if it was a test).`)) return;
+    try { await api(`/api/admin/orders/${id}`, { method: "DELETE" }); await loadOrders(); }
+    catch (err) { alert(err.message); }
+  });
   const saveOrdNote = noteSaver(el => `/api/admin/orders/${el.closest(".card").dataset.id}`);
   $("orders").oninput = e => { if (e.target.dataset.act === "note") saveOrdNote(e.target); };
   $("orders").onchange = async e => {
@@ -766,18 +804,18 @@
     input.disabled = false;
   }
 
-  // Shrink a photo in the browser so phone pictures (even HEIC on iPhone) upload fast as JPG
+  // Square item photos: sized 2400 px at high quality, as JPG (works for iPhone photos too)
   async function photoBlob(file) {
     const url = URL.createObjectURL(file);
     try {
       const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error("That file isn't a photo this browser can open. Try a JPG or PNG.")); i.src = url; });
-      const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+      const k = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
       const c = document.createElement("canvas");
       c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
       const g = c.getContext("2d");
       g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
       g.drawImage(img, 0, 0, c.width, c.height);
-      return await new Promise(ok => c.toBlob(ok, "image/jpeg", 0.85));
+      return await new Promise(ok => c.toBlob(ok, "image/jpeg", 0.92));
     } finally { URL.revokeObjectURL(url); }
   }
   async function uploadPhoto(id, file) {
@@ -1040,8 +1078,17 @@
     recordNotify({ manual: "text" }).catch(() => {});
   };
 
-  // ---------- shrinking photos before upload ----------
-  async function shrink(file, max, quality) {
+  // ---------- preparing photos for upload ----------
+  // Sized for sharp display (2400 px for the big copy) at high quality. If a copy is over
+  // the storage limit, the quality steps down a little at a time until it fits.
+  async function shrink(file, max, quality, limit = Infinity) {
+    for (let q = quality, m = max; ; ) {
+      const b = await shrinkOnce(file, m, q);
+      if (b.size <= limit || (q <= 0.72 && m <= 1200)) return b;
+      if (q > 0.72) q = Math.round((q - 0.04) * 100) / 100; else m = Math.round(m * 0.85);
+    }
+  }
+  async function shrinkOnce(file, max, quality) {
     const url = URL.createObjectURL(file);
     try {
       const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error(`"${file.name}" isn't a photo this browser can open. Try a JPG or PNG.`)); i.src = url; });
@@ -1056,8 +1103,8 @@
   }
   async function uploadSitePhoto(file, kind, group = "", caption = "") {
     const fd = new FormData();
-    fd.append("full", await shrink(file, 1600, 0.85), "full.jpg");
-    fd.append("small", await shrink(file, 700, 0.8), "small.jpg");
+    fd.append("full", await shrink(file, 2400, 0.92, 1_850_000), "full.jpg");
+    fd.append("small", await shrink(file, 900, 0.88, 650_000), "small.jpg");
     fd.append("kind", kind); fd.append("group", group); fd.append("caption", caption);
     return (await api("/api/admin/photos", { method: "POST", body: fd })).id;
   }
@@ -1182,23 +1229,44 @@
   };
 
   // ---------- site photos ----------
-  // Photos that are part of the pages (replace only). Keys match site.js.
-  const PAGE_PHOTOS = [
-    ["images/logo-full.webp", "Big logo", "Home page"],
-    ["images/flying-pig.webp", "Flying pig", "Top of most pages"],
-    ["images/painting.webp", "Pig painting", "Our Story"],
-    ["shop_04", "Our Shop slide", "Home page slideshow"],
-    ["apparel-printing_05", "Custom shirt", "Home page"],
-    ["shop_02", "Merch booth", "Home page, Design & Merch"],
-    ["apparel-printing_01", "Event shirts", "Design & Merch"],
-    ["shop_05", "Merch on the table", "Design & Merch"],
-    ["shop_03", "Out at local events", "Our Story"],
-    ["shop_06", "Storefront", "Our Story, Visit"],
-    ["shop_07", "Inside the shop", "Our Story, Visit"],
-    ["shop_08", "Hand-painted sign", "Our Story"],
-    ["shop_09", "At the counter", "Visit"],
+  // Where each built-in photo shows. Keys match site.js: a work photo name, or a file in images/.
+  const PAGE_SECTIONS = [
+    { page: "Home page", href: "index.html", photos: [
+      ["images/logo-full.webp", "Big logo"],
+      ["military-shadow-boxes_10", "Slideshow: Battalion Spreads"], ["military-shadow-boxes_11", "Slideshow: Guidon Displays"],
+      ["art-framing_06", "Slideshow: Custom Framing"], ["sports-memorabilia_03", "Slideshow: Sports Memorabilia"],
+      ["embroidery_07", "Slideshow: Embroidery"], ["shop_04", "Slideshow: Our Shop"],
+      ["military-shadow-boxes_09", "Specialties: Military Framing"], ["sports-memorabilia_01", "Specialties: Custom Framing"],
+      ["embroidery_08", "Specialties: Embroidery & Apparel"],
+      ["apparel-printing_05", "Design & merch: custom shirt"], ["shop_02", "Design & merch: merch booth"] ] },
+    { page: "Our Story", href: "story.html", photos: [
+      ["images/painting.webp", "Pig painting"], ["shop_06", "Our storefront"], ["shop_07", "Inside the shop"],
+      ["shop_08", "Our hand-painted sign"], ["shop_03", "Out at local events"] ] },
+    { page: "Design & Merch", href: "design.html", photos: [
+      ["shop_02", "Out at local events"], ["apparel-printing_01", "Event shirts"], ["shop_05", "Merch on the table"] ] },
+    { page: "Visit", href: "visit.html", photos: [
+      ["shop_06", "Look for our storefront (also the map preview)"], ["shop_07", "Step inside"], ["shop_09", "Say hi at the counter"] ] },
+    { page: "Every page", href: "index.html", photos: [
+      ["images/flying-pig.webp", "Flying pig"], ["images/logo-mark.webp", "Small logo in the header"] ] },
   ];
+  const HOME_PEEK = ["military-shadow-boxes_05", "military-shadow-boxes_08", "sports-memorabilia_03", "embroidery_06",
+                     "military-shadow-boxes_17", "art-framing_01", "patches_01", "military-shadow-boxes_14"];
   const builtinSrc = key => key.startsWith("images/") ? key : `images/work/${key}-sm.webp`;
+  // Start an Order cards (window.ORDER from order-config.js): their own keys, "order-<type>[-<example>]"
+  function orderSlots() {
+    const out = [];
+    for (const t of (window.ORDER && ORDER.types) || []) {
+      out.push({ key: `order-${t.id}`, name: `${t.title}`, where: "Order type card", orig: t.photo || "" });
+      for (const ex of t.examples || []) out.push({ key: `order-${t.id}-${ex.id}`, name: ex.title, where: `${t.title} example`, orig: ex.photo || "" });
+    }
+    return out;
+  }
+  // "Also on …" for a gallery photo
+  function alsoOn(key) {
+    const places = PAGE_SECTIONS.filter(sec => sec.photos.some(([k]) => k === key)).map(sec => sec.page);
+    if (HOME_PEEK.includes(key) && !places.includes("Home page")) places.push("Home page");
+    return places;
+  }
   let replaceKey = null;
   async function loadPhotos() {
     try { await loadSite(); } catch (err) { $("photos-msg").textContent = err.message; return; }
@@ -1209,36 +1277,46 @@
     $("photo-filter").value = [...$("photo-filter").options].some(o => o.value === keep) ? keep : "all";
     drawPhotos();
   }
-  function photoCard({ key, id, src, caption, where, gone, replaced, added }) {
+  function photoCard({ key, id, src, caption, where, gone, replaced, added, canRemove, noOriginal }) {
     return `<div class="ph-card${gone ? " gone" : ""}" ${key ? `data-key="${esc(key)}"` : `data-id="${id}"`}>
-      <div class="img"><img src="${esc(src)}" alt="" loading="lazy">${replaced ? '<span class="tag pre">Replaced</span>' : added ? '<span class="tag pre">Added</span>' : ""}</div>
+      <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : '<span class="none">No photo yet</span>'}${replaced ? '<span class="tag pre">Changed</span>' : added ? '<span class="tag pre">Added</span>' : ""}</div>
       ${caption !== null ? `<input value="${esc(caption)}" maxlength="120" aria-label="Caption" data-cap placeholder="Caption">` : ""}
-      <span class="where">${esc(where)}</span>
+      <span class="where">${where}</span>
       <div class="acts">${gone ? '<button type="button" data-p="restore">Put back</button>' : `
-        ${key ? `<button type="button" data-p="replace">Replace</button>` : ""}
-        ${replaced ? '<button type="button" data-p="unreplace">Use the original</button>' : ""}
-        ${caption !== null ? `<button type="button" class="del" data-p="delete">Remove</button>` : ""}`}</div>
+        ${key ? `<button type="button" data-p="replace">${src ? "Replace" : "Add a photo"}</button>` : ""}
+        ${replaced ? `<button type="button" data-p="unreplace">${noOriginal ? "Remove photo" : "Use the original"}</button>` : ""}
+        ${canRemove ? `<button type="button" class="del" data-p="delete">Remove</button>` : ""}`}</div>
     </div>`;
   }
   function drawPhotos() {
     const want = $("photo-filter").value, ph = site.photos;
+    const swap = key => ph.replace[key] ? `/api/photo/${ph.replace[key]}?s=sm` : null;
+    // Our Work gallery
     const cards = [];
-    if (want === "all" || want !== "__gone") {
+    if (want !== "__gone") {
       for (const u of site.uploads.filter(u => u.kind === "gallery" && (want === "all" || u.grp === want))) {
-        cards.push(photoCard({ id: u.id, src: `/api/photo/${u.id}?s=sm`, caption: u.caption, where: u.grp || "More", added: true }));
+        cards.push(photoCard({ id: u.id, src: `/api/photo/${u.id}?s=sm`, caption: u.caption, where: esc(u.grp || "More"), added: true, canRemove: true }));
       }
     }
     for (const [key, group, cap] of WORK) {
       const gone = ph.hidden.includes(key);
       if (want === "__gone" ? !gone : gone || (want !== "all" && group !== want)) continue;
-      const rid = ph.replace[key];
-      cards.push(photoCard({ key, src: rid ? `/api/photo/${rid}?s=sm` : builtinSrc(key), caption: ph.captions[key] ?? cap, where: group, gone, replaced: !!rid }));
+      const also = alsoOn(key);
+      cards.push(photoCard({ key, src: swap(key) || builtinSrc(key), caption: ph.captions[key] ?? cap,
+        where: esc(group) + (also.length ? ` · <b>also on ${esc(also.join(", "))}</b>` : ""), gone, replaced: !!ph.replace[key], canRemove: true }));
     }
     $("gallery-admin").innerHTML = cards.join("") || '<div class="empty">No photos here.</div>';
-    $("page-photos").innerHTML = PAGE_PHOTOS.map(([key, name, where]) => {
-      const rid = ph.replace[key];
-      return photoCard({ key, src: rid ? `/api/photo/${rid}?s=sm` : builtinSrc(key), caption: null, where: `${name} · ${where}`, replaced: !!rid });
-    }).join("");
+    // Each page's own photos
+    $("ph-pages").innerHTML = PAGE_SECTIONS.map(sec => `
+      <div class="sec-head"><h3 class="sub-h">${esc(sec.page)}</h3><a class="hint" href="${sec.href}" target="_blank" rel="noopener">See it on the site →</a></div>
+      <div class="pgrid">${sec.photos.map(([key, name]) => {
+        const shared = WORK.some(w => w[0] === key);
+        return photoCard({ key, src: swap(key) || builtinSrc(key), caption: null, replaced: !!ph.replace[key],
+          where: `<b>${esc(name)}</b>${shared ? " · also in Our Work" : ""}` });
+      }).join("")}</div>`).join("");
+    // Start an Order cards
+    $("order-photos").innerHTML = orderSlots().map(o => photoCard({ key: o.key, src: swap(o.key) || (o.orig ? builtinSrc(o.orig) : ""),
+      caption: null, replaced: !!ph.replace[o.key], noOriginal: !o.orig, where: `<b>${esc(o.name)}</b> · ${esc(o.where)}` })).join("");
   }
   $("photo-filter").onchange = drawPhotos;
   const photoMsg = t => { $("photos-msg").textContent = t; };
@@ -1271,7 +1349,7 @@
       }
     }
   }
-  $("gallery-admin").onclick = $("page-photos").onclick = photoAction;
+  $("gallery-admin").onclick = $("ph-pages").onclick = $("order-photos").onclick = photoAction;
   // Captions save when you leave the box
   $("gallery-admin").addEventListener("change", async e => {
     if (!e.target.matches("[data-cap]")) return;

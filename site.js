@@ -81,12 +81,16 @@ function renderGallery(container, items = WORK) {
 // minute per visit so moving between pages doesn't ask again.
 const siteChanges = (() => {
   if (location.protocol === "file:") return Promise.resolve(null);
+  if (document.body && "noSiteChanges" in document.body.dataset) return Promise.resolve(null);   // the admin page
+  // The admin page bumps "wp-site-ver" after a change, so this browser sees it right away
+  let ver = "";
+  try { ver = localStorage.getItem("wp-site-ver") || ""; } catch (e) {}
   try {
     const c = JSON.parse(sessionStorage.getItem("wp-site"));
-    if (c && Date.now() - c.at < 60000) return Promise.resolve(c.data);
+    if (c && c.ver === ver && Date.now() - c.at < 60000) return Promise.resolve(c.data);
   } catch (e) {}
-  return fetch("/api/site").then(r => r.ok ? r.json() : null).then(d => {
-    try { sessionStorage.setItem("wp-site", JSON.stringify({ at: Date.now(), data: d })); } catch (e) {}
+  return fetch("/api/site" + (ver ? "?v=" + encodeURIComponent(ver) : "")).then(r => r.ok ? r.json() : null).then(d => {
+    try { sessionStorage.setItem("wp-site", JSON.stringify({ at: Date.now(), ver, data: d })); } catch (e) {}
     return d;
   }).catch(() => null);
 })();

@@ -43,7 +43,9 @@ const MAX_CART_LINES = 20;
 const MAX_QTY = 20;
 const LOGIN_TRIES = 8;            // wrong passwords allowed per 15 minutes
 const MAX_REQUEST_FILES = 8;
-const MAX_REQUEST_FILE_BYTES = 1_900_000;   // D1 rows hold up to 2 MB
+const MAX_REQUEST_FILE_BYTES = 15_000_000;  // full-size phone photos; stored in pieces (below)
+const MAX_REQUEST_TOTAL_BYTES = 60_000_000;
+const FILE_PART_BYTES = 1_500_000;          // D1 rows hold up to 2 MB, so files are split into parts
 
 const REQUEST_STATUSES = ["new", "quoted", "waiting on items", "in production", "ready", "done"];
 const ORDER_STATUSES = ["new", "ready", "done"];
@@ -97,6 +99,13 @@ const SCHEMA = [
      expires_at INTEGER NOT NULL DEFAULT 0
    )`,
   `CREATE TABLE IF NOT EXISTS login_fails (ip TEXT NOT NULL, at INTEGER NOT NULL)`,
+  // The rest of a customer's file after its first part (request_files.data)
+  `CREATE TABLE IF NOT EXISTS request_file_parts (
+     file_id INTEGER NOT NULL,
+     idx INTEGER NOT NULL,
+     data BLOB NOT NULL,
+     PRIMARY KEY (file_id, idx)
+   )`,
   // Photos added from the admin page: gallery photos, replacements for the
   // site's own photos, and banner pictures. Each has a big and a small copy.
   `CREATE TABLE IF NOT EXISTS site_photos (
@@ -193,6 +202,7 @@ async function route(request, env, url, path, ctx) {
     if (phm && m === "DELETE") return deletePhoto(env, +phm[1]);
     const om = path.match(/^\/api\/admin\/orders\/(\d+)$/);
     if (om && m === "PUT") return updateOrder(request, env, +om[1]);
+    if (om && m === "DELETE") return removeOrder(env, +om[1]);
     if (path === "/api/admin/requests" && m === "GET") return listRequests(env);
     const rm = path.match(/^\/api\/admin\/requests\/(\d+)$/);
     if (rm && m === "PUT") return updateRequest(request, env, +rm[1]);
@@ -700,8 +710,9 @@ async function saveOrderRequest(request, env, ctx) {
 
   const files = form.getAll("photos").filter(f => f && typeof f === "object" && f.size > 0);
   if (files.length > MAX_REQUEST_FILES) return json({ error: `Please send ${MAX_REQUEST_FILES} files or fewer.` }, 413);
+  if (files.reduce((n, f) => n + f.size, 0) > MAX_REQUEST_TOTAL_BYTES) return json({ error: "Those files are too large all together. Please send fewer, or call us." }, 413);
   for (const f of files) {
-    if (f.size > MAX_REQUEST_FILE_BYTES) return json({ error: `"${f.name}" is too large. Please send a smaller copy.` }, 413);
+    if (f.size > MAX_REQUEST_FILE_BYTES) return json({ error: `"${f.name}" is too large (over 15 MB). Please send a smaller copy.` }, 413);
     if (!/^(image\/(jpeg|png|webp|gif|heic|heif)|application\/pdf)$/.test(f.type)) {
       return json({ error: `"${f.name}" isn't a photo or PDF.` }, 415);
     }
@@ -712,10 +723,7 @@ async function saveOrderRequest(request, env, ctx) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
   ).bind(ref, field("type", 80), field("name"), field("email"), field("phone", 40),
          field("needed_by", 40), field("fulfill", 80), summary, field("unit", 120)).first();
-  for (const f of files) {
-    await env.DB.prepare(`INSERT INTO request_files (request_id, name, mime, data, share_key) VALUES (?, ?, ?, ?, ?)`)
-      .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer(), randomKey()).run();
-  }
+  for (const f of files) await saveRequestFile(env, row.id, f);
   // Copy it into shopVOX as a sales lead (after the customer gets their reply)
   const origin = new URL(request.url).origin;
   // A test order from the admin page waits for shopVOX so the result shows right away
@@ -754,16 +762,37 @@ async function updateRequest(request, env, id) {
 
 async function deleteRequest(env, id) {
   await env.DB.batch([
+    env.DB.prepare(`DELETE FROM request_file_parts WHERE file_id IN (SELECT id FROM request_files WHERE request_id = ?)`).bind(id),
     env.DB.prepare(`DELETE FROM request_files WHERE request_id = ?`).bind(id),
     env.DB.prepare(`DELETE FROM requests WHERE id = ?`).bind(id),
   ]);
   return json({ ok: true });
 }
 
+// A customer's file, kept whole (no shrinking): first part in request_files, the rest in parts
+async function saveRequestFile(env, requestId, file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const row = await env.DB.prepare(
+    `INSERT INTO request_files (request_id, name, mime, data, share_key) VALUES (?, ?, ?, ?, ?) RETURNING id`
+  ).bind(requestId, String(file.name).slice(0, 120), file.type, bytes.slice(0, FILE_PART_BYTES), randomKey()).first();
+  for (let at = FILE_PART_BYTES, i = 1; at < bytes.length; at += FILE_PART_BYTES, i++) {
+    await env.DB.prepare(`INSERT INTO request_file_parts (file_id, idx, data) VALUES (?, ?, ?)`).bind(row.id, i, bytes.slice(at, at + FILE_PART_BYTES)).run();
+  }
+  return row.id;
+}
+async function fileBytes(env, id, first) {
+  const { results } = await env.DB.prepare(`SELECT data FROM request_file_parts WHERE file_id = ? ORDER BY idx`).bind(id).all();
+  const parts = [new Uint8Array(first), ...results.map(r => new Uint8Array(r.data))];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
+}
+
 async function serveRequestFile(env, id) {
   const f = await env.DB.prepare(`SELECT name, mime, data FROM request_files WHERE id = ?`).bind(id).first();
   if (!f) return new Response("Not found", { status: 404 });
-  return new Response(new Uint8Array(f.data), {
+  return new Response(await fileBytes(env, id, f.data), {
     headers: {
       "Content-Type": f.mime,
       "Content-Disposition": `inline; filename="${f.name.replace(/["\\\r\n]/g, "")}"`,
@@ -846,11 +875,7 @@ async function setupStatus(request, env, url) {
   add("card_form", !!env.SQUARE_APPLICATION_ID, env.SQUARE_APPLICATION_ID
     ? "Customers pay by card right on the shop page."
     : "Add the Square Application ID (SQUARE_APPLICATION_ID) so customers can pay on the shop page instead of on Square's.");
-  if (env.SQUARE_APPLICATION_ID) {
-    add("webhook_key", true, env.SQUARE_WEBHOOK_SIGNATURE_KEY
-      ? "Square webhook is set (optional with on-page payments)."
-      : "Square webhook: not needed. Payments on the shop page are recorded right away.");
-  } else {
+  if (!env.SQUARE_APPLICATION_ID) {
     add("webhook_key", !!env.SQUARE_WEBHOOK_SIGNATURE_KEY, env.SQUARE_WEBHOOK_SIGNATURE_KEY
       ? "Square webhook signature key is set."
       : "Add the webhook signature key (SQUARE_WEBHOOK_SIGNATURE_KEY) so paid orders show up here.");
@@ -859,6 +884,12 @@ async function setupStatus(request, env, url) {
       ? `Last notice from Square: ${new Date(last.value.at).toISOString().slice(0, 16).replace("T", " ")} UTC (${last.value.type}).`
       : `No notices from Square yet. Webhook URL: ${env.SQUARE_WEBHOOK_URL || url.origin + "/api/square-webhook"}`);
   }
+  const used = await env.DB.prepare(
+    `SELECT (SELECT COALESCE(SUM(length(data)), 0) FROM request_files) + (SELECT COALESCE(SUM(length(data)), 0) FROM request_file_parts)
+          + (SELECT COALESCE(SUM(length(full) + length(small)), 0) FROM site_photos) AS n`).first();
+  const gb = used.n / 1e9;
+  add("storage", gb < 4, `Photo storage: ${gb < 0.1 ? Math.round(used.n / 1e6) + " MB" : gb.toFixed(2) + " GB"} used of the free 5 GB.` +
+    (gb >= 4 ? " Getting full: delete old orders you no longer need from Order Backup." : ""));
   if (shopvoxReady(env)) {
     const last = await kvGet(env, "shopvox_last");
     add("shopvox", !last || last.value.ok, !last
@@ -1187,11 +1218,18 @@ async function listOrders(env) {
     `SELECT id, kind, items, subtotal_cents, paid_cents, fulfillment, status, handled, note,
             buyer_name, buyer_email, buyer_phone, ship_to, created_at, paid_at, notified
        FROM shop_orders
-      WHERE status = 'paid' OR (status = 'pending' AND created_at > datetime('now', '-${HOLD_MINUTES} minutes'))
+      WHERE status = 'paid'
       ORDER BY id DESC LIMIT 300`
   ).all();
   for (const o of results) o.items = JSON.parse(o.items || "[]");
   return json({ orders: results, statuses: ORDER_STATUSES }, 200, { "Cache-Control": "no-store" });
+}
+
+// Off the admin list (a test or a mistake); Square keeps its own record
+async function removeOrder(env, id) {
+  const r = await env.DB.prepare(`UPDATE shop_orders SET status = 'removed' WHERE id = ? AND status = 'paid'`).bind(id).run();
+  if (!r.meta.changes) return json({ error: "Order not found." }, 404);
+  return json({ ok: true });
 }
 
 async function updateOrder(request, env, id) {
@@ -1475,6 +1513,7 @@ async function pushRequestToShopvox(env, id, origin) {
   // lead form sends it), so it shows under Assets in shopVOX
   const firstPhoto = files.find(f => /^image\//.test(f.mime));
   const photoRow = firstPhoto && await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
+  if (photoRow) photoRow.data = await fileBytes(env, firstPhoto.id, photoRow.data);   // the whole photo, full size
   const asForm = l => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(l)) if (v !== null && v !== undefined) fd.append(k, String(v));
@@ -1615,7 +1654,7 @@ async function shopvoxTest(env) {
 async function serveSharedFile(env, id, key) {
   const f = await env.DB.prepare(`SELECT name, mime, data, share_key FROM request_files WHERE id = ?`).bind(id).first();
   if (!f || !f.share_key || !timingSafeEqual(f.share_key, key)) return new Response("Not found", { status: 404 });
-  return new Response(new Uint8Array(f.data), {
+  return new Response(await fileBytes(env, id, f.data), {
     headers: {
       "Content-Type": f.mime,
       "Content-Disposition": `inline; filename="${f.name.replace(/["\\\r\n]/g, "")}"`,

@@ -5,10 +5,12 @@ open `index.html` in a browser to preview.
 
 ## Hosting (Cloudflare, free)
 
-The site runs on Cloudflare Workers at https://whimisical-pig.jeepboy9478.workers.dev.
+The site runs on the shop's Cloudflare account, as the Worker `whimsical-pig`
+(https://whimsical-pig.whimsicalpig.workers.dev until the domain is connected).
 Every push to `main` deploys automatically (settings in `wrangler.jsonc`), as long as the
-`whimisical-pig` Worker is connected to this repo in Cloudflare (Worker → Settings → Build,
-branch `main`, deploy command `npx wrangler deploy`). Cloudflare's drag-and-drop uploader
+Worker is connected to this repo in Cloudflare (Worker → Settings → Build, branch `main`,
+deploy command `npx wrangler deploy`). The `name` in `wrangler.jsonc` must match the
+Worker's name exactly, or the deploy won't update it. Cloudflare's drag-and-drop uploader
 can't take this repo as-is because of the shop back end; use the Git connection instead.
 
 ## Pages
@@ -100,7 +102,7 @@ Already in the code (`wrangler.jsonc` → `vars`): the Square location ID
    - the **Application ID** (starts with `sq0idp-`, not secret): put it in `wrangler.jsonc` as
      `SQUARE_APPLICATION_ID`, or send it to whoever maintains the site.
    - the **Access token** (secret): add it in Cloudflare as a **Secret** named `SQUARE_ACCESS_TOKEN`
-     (*Workers & Pages → whimisical-pig → Settings → Variables and Secrets → Add*).
+     (*Workers & Pages → whimsical-pig → Settings → Variables and Secrets → Add*).
 2. **Admin password.** Same place: Secret `ADMIN_PASSWORD`. Then open `/admin` and log in.
 3. **Check it.** `/admin` → **Setup**: everything should be green. Then buy one item yourself.
 
@@ -120,7 +122,7 @@ email, needed-by date, every answer, and links to their photos. The admin page s
 
 1. In shopVOX: your name (top right) → **My Profile → API Access → Show**.
    Use **Regenerate** if the token was ever shared anywhere.
-2. In Cloudflare (*Workers & Pages → whimisical-pig → Settings → Variables and Secrets*), add:
+2. In Cloudflare (*Workers & Pages → whimsical-pig → Settings → Variables and Secrets*), add:
    - `SHOPVOX_ACCOUNT_ID` (the Account ID)
    - `SHOPVOX_API_TOKEN` as a **Secret** (the API Token)
    - `SHOPVOX_PIPELINE` and `SHOPVOX_STAGE` are already set in `wrangler.jsonc`

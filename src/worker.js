@@ -902,7 +902,7 @@ async function setupStatus(request, env, url) {
     const near = Object.keys(env).filter(k => /shop.?vox/i.test(k) && !["SHOPVOX_ACCOUNT_ID", "SHOPVOX_API_TOKEN", "SHOPVOX_PIPELINE", "SHOPVOX_API_BASE"].includes(k));
     add("shopvox", false, `shopVOX isn't connected: the site can't find ${missing.join(" or ")}.` +
       (near.length ? ` It does see ${near.map(k => `"${k}"`).join(", ")}: rename ${near.length > 1 ? "them" : "it"} to exactly ${missing.join(" / ")}.` : "") +
-      " Add them in Cloudflare → whimisical-pig → Settings → Variables and Secrets (the token as a Secret), then deploy again.");
+      " Add them in Cloudflare → whimsical-pig → Settings → Variables and Secrets (the token as a Secret), then deploy again.");
   }
   const fee = shippingCents(env);
   add("shipping", true, fee === null ? "Shop orders are pick up only (set SHIPPING_FEE to offer shipping)."

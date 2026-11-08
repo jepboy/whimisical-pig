@@ -1,7 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Must match the Worker's name in Cloudflare (whimisical-pig.jeepboy9478.workers.dev)
-  "name": "whimisical-pig",
+  // Must match the Worker's name in Cloudflare (the shop's account:
+  // whimsical-pig.whimsicalpig.workers.dev), or the deploy won't update it
+  "name": "whimsical-pig",
   // Shop back end: product list, Square checkout, admin API (see src/worker.js)
   "main": "src/worker.js",
   "compatibility_date": "2026-07-21",

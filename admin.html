@@ -459,6 +459,13 @@
 
   async function api(path, opts = {}) {
     const res = await fetch(path, { credentials: "same-origin", ...opts });
+    // Every answer from the back end is JSON; anything else means it isn't running this site's code
+    if (!(res.headers.get("Content-Type") || "").includes("json")) {
+      const msg = "The website's back end isn't running. In Cloudflare, check that the latest deploy of the whimsical-pig Worker succeeded.";
+      const box = $("login-msg");
+      if (box && !$("login-box").hidden) box.textContent = msg;
+      throw new Error(msg);
+    }
     let data = {};
     try { data = await res.json(); } catch (e) {}
     if (res.status === 401 && path !== "/api/admin/login") { showLogin(); throw new Error(data.error || "Please log in."); }
@@ -1411,7 +1418,7 @@
   };
 
   // ---------- start ----------
-  api("/api/admin/me").then(showApp).catch(showLogin);
+  api("/api/admin/me").then(showApp).catch(err => { showLogin(); if (/back end/.test(err.message)) $("login-msg").textContent = err.message; });
 </script>
 </body>
 </html>

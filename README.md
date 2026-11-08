@@ -166,6 +166,12 @@ framing) and the past year of orders: military plaques and framing were most com
 embroidery and apparel, then plaques and engraving. Every order also asks when it's needed
 in hand and whether it will be picked up or shipped (with the address if shipped).
 
+**Made to prevent mistakes:** answers (and photos) survive a refresh, each order is only
+saved once even if sent twice, phone/email/date/ZIP are checked, sizes are a grid, the rank
+is picked from a list, and the review step has a "Check the spelling" box for everything
+we engrave. Customers short on time can use **"Leave your number and we'll call you"** on
+the first step; that comes in as a "Call-back request" lead in shopVOX.
+
 **Changing questions:** each order type in `order-config.js` has a `questions` list.
 Question types are `text`, `textarea`, `number`, `date`, `select`, `radio` (pick one)
 and `checks` (pick several). Add `required: true` to make one mandatory.

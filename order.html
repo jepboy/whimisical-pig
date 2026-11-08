@@ -327,6 +327,21 @@
   .size-grid label { display: grid; gap: 4px; text-align: center; font-weight: 700; font-size: 0.85rem; }
   .size-grid input { text-align: center; }
   .size-total { margin-top: 8px; font-weight: 700; }
+  .rankname { display: grid; grid-template-columns: 150px 1fr; gap: 8px; }
+  @media (max-width: 480px) { .rankname { grid-template-columns: 1fr; } }
+  .proof { margin-bottom: 22px; padding: 16px 18px; border: 2px solid var(--pink); border-radius: 14px; background: rgba(231, 163, 184, 0.08); }
+  .proof h3 { font-size: 1.25rem; margin-bottom: 4px; }
+  .proof p { color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
+  .proof dl { display: grid; gap: 8px; }
+  .proof dt { font-size: 0.8rem; color: var(--muted); }
+  .proof dd { font: 600 1.15rem/1.35 var(--serif); white-space: pre-wrap; }
+  .callback { margin-top: 26px; border: 1px dashed var(--rule); border-radius: 14px; padding: 14px 18px; }
+  .callback summary { cursor: pointer; font-weight: 700; color: var(--pink); }
+  .callback .cb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .callback .cb-grid .wide { grid-column: 1 / -1; }
+  .callback .cb-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  .callback .cb-msg { font-size: 0.9rem; }
+  @media (max-width: 560px) { .callback .cb-grid { grid-template-columns: 1fr; } }
   .dims { display: flex; align-items: center; gap: 10px; }
   .dims input { max-width: 110px; }
   @media (max-width: 480px) { .addr-3 { grid-template-columns: 1fr 64px 96px; } }
@@ -365,6 +380,18 @@
         <h2>What are we making?</h2>
         <p class="sub">Pick the closest match.</p>
         <div class="choices" id="type-choices"></div>
+        <details class="callback" id="callback">
+          <summary>Short on time? Leave your number and we'll call you.</summary>
+          <div class="cb-grid">
+            <div class="field"><label for="cb_name">Your name</label><input type="text" id="cb_name" autocomplete="name"></div>
+            <div class="field"><label for="cb_phone">Phone</label><input type="tel" id="cb_phone" autocomplete="tel"></div>
+            <div class="field"><label for="cb_what">What's it for?</label><select id="cb_what"></select></div>
+            <div class="field"><label for="cb_when">Best time to call</label>
+              <select id="cb_when"><option>Any time</option><option>Morning</option><option>Afternoon</option><option>After 4pm</option></select></div>
+            <div class="field wide"><label for="cb_note">Anything we should know? (optional)</label><input type="text" id="cb_note" maxlength="300" placeholder="e.g. Shadow box for a retirement in March"></div>
+          </div>
+          <div class="cb-row"><button type="button" class="btn sm" id="cb_send">Call Me</button><span class="cb-msg" id="cb_msg" role="status"></span></div>
+        </details>
       </section>
 
       <!-- 2: starting point -->
@@ -437,7 +464,7 @@
               <input type="text" id="c_addr_state" name="c_addr_state" autocomplete="shipping address-level1" placeholder="State" maxlength="2" aria-label="State">
               <input type="text" id="c_addr_zip" name="c_addr_zip" autocomplete="shipping postal-code" inputmode="numeric" placeholder="ZIP" maxlength="10" aria-label="ZIP code">
             </div>
-            <p class="help">Pick your address from the list as you type. So we can get you a shipping quote.</p>
+            <p class="help">Pick your address from the list as you type, so we can get you a shipping quote. APO, FPO and DPO addresses work too: type them in (state AA, AE or AP).</p>
             <p class="err">Please fill in the street, city, state and ZIP.</p>
           </div>
           <fieldset class="field">
@@ -585,6 +612,17 @@
           <div class="size-grid">${sizes.map(z => `<label>${esc(z)}<input type="number" inputmode="numeric" min="0" max="9999" name="${id}__${esc(z)}" data-size="${esc(z)}" placeholder="0"></label>`).join("")}</div>
           <p class="size-total" aria-live="polite"></p>${help}${err}</fieldset>`;
       }
+      // Rank from a list, then the name: "SFC John A. Smith"
+      case "rankname": {
+        const R = { "Enlisted": "PVT PV2 PFC SPC CPL SGT SSG SFC MSG 1SG SGM CSM SMA", "Warrant officer": "WO1 CW2 CW3 CW4 CW5",
+                    "Officer": "2LT 1LT CPT MAJ LTC COL BG MG LTG GEN" };
+        return `<fieldset class="field" data-composite="rankname"${reqAttr}><legend>${esc(q.label)}${req}</legend><input type="hidden" id="${id}" name="${id}">
+          <div class="rankname"><select name="${id}__rank" aria-label="Rank"><option value="">Rank…</option>
+            ${Object.entries(R).map(([g, list]) => `<optgroup label="${g}">${list.split(" ").map(r => `<option>${r}</option>`).join("")}</optgroup>`).join("")}
+            <option value="none">No rank / other branch</option></select>
+          <input type="text" name="${id}__name" placeholder="First, middle initial, last: John A. Smith" aria-label="Name" maxlength="80"></div>
+          <p class="help">Spell it exactly as it should appear.</p>${err}</fieldset>`;
+      }
       // Width × height in inches
       case "dims":
         return `<fieldset class="field" data-composite="dims"${reqAttr}><legend>${esc(q.label)}${req}</legend><input type="hidden" id="${id}" name="${id}">
@@ -619,6 +657,10 @@
       f.querySelector(".size-total").textContent = total ? `Total: ${total}` : "";
       const qty = f.dataset.total && form.querySelector(`[name="${f.dataset.total}"]`);
       if (qty && total) qty.value = total;
+    });
+    form.querySelectorAll('[data-composite="rankname"]').forEach(f => {
+      const r = f.querySelector("select").value, n = f.querySelector('input[type="text"]').value.trim().replace(/\s+/g, " ");
+      f.querySelector('input[type="hidden"]').value = n ? [r && r !== "none" ? r : "", n].filter(Boolean).join(" ") : "";
     });
     form.querySelectorAll('[data-composite="dims"]').forEach(f => {
       const [w, h] = [...f.querySelectorAll('input[type="number"]')].map(i => i.value.trim());
@@ -877,7 +919,16 @@
   const editTarget = { "Order": 0, "Contact": 3 };
   function buildReview() {
     const box = document.getElementById("review");
-    box.innerHTML = summary().map(([h, rows]) => {
+    // Everything we'll engrave or print, together, so spelling gets a second look
+    const t = currentType();
+    const proof = (t ? t.questions : []).filter(q => q.proof)
+      .filter(q => { const el = form.querySelector(`[name="q_${q.id}"]`); return el && isShown(el) && valueOf("q_" + q.id); })
+      .map(q => [q.label, valueOf("q_" + q.id)]);
+    const proofHTML = proof.length ? `<div class="proof"><h3>Check the spelling</h3>
+      <p>We engrave and print these exactly as written. Names, ranks and units especially!</p>
+      <dl>${proof.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+      <button type="button" class="edit" data-go="2">fix something</button></div>` : "";
+    box.innerHTML = proofHTML + summary().map(([h, rows]) => {
       const target = editTarget[h] !== undefined ? editTarget[h] : 2;
       return `<h3>${esc(h)}<button type="button" class="edit" data-go="${target}">edit</button></h3>` +
         (rows.length ? `<dl>${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : "<p>Nothing added.</p>");
@@ -1060,6 +1111,34 @@
       document.getElementById("review").innerHTML.replace(/<button[^>]*>edit<\/button>/g, "");
     go(5);
   }
+
+  // ---------- "Call me" for people who'd rather talk it through ----------
+  const cbWhat = document.getElementById("cb_what");
+  cbWhat.innerHTML = '<option value="">Choose…</option>' + CFG.types.map(t => `<option>${esc(t.title)}</option>`).join("") + "<option>Not sure yet</option>";
+  let cbRef = "";
+  document.getElementById("cb_send").onclick = async e => {
+    const msg = document.getElementById("cb_msg"), btn = e.target;
+    const name = document.getElementById("cb_name").value.trim(), phone = document.getElementById("cb_phone").value.trim();
+    if (name.length < 2) { msg.textContent = "Please add your name."; document.getElementById("cb_name").focus(); return; }
+    if (phoneDigits(phone).length !== 10) { msg.textContent = "Please add a 10-digit phone number."; document.getElementById("cb_phone").focus(); return; }
+    if (!cbRef) cbRef = makeRef();
+    const what = cbWhat.value || "Not sure yet", when = document.getElementById("cb_when").value, note = document.getElementById("cb_note").value.trim();
+    const fd = new FormData();
+    for (const [k, v] of Object.entries({ ref: cbRef, type: "Call-back request", name, phone, email: "",
+      summary: [`Order reference: ${cbRef}`, "", "== Please call this customer back ==", `Name: ${name}`, `Phone: ${phone}`,
+                `What it's for: ${what}`, `Best time to call: ${when}`, note && `Note: ${note}`].filter(Boolean).join("\n") })) fd.append(k, v);
+    btn.disabled = true; msg.textContent = "Sending…";
+    try {
+      const res = await fetch("/api/order-request", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || "");
+      msg.textContent = `Got it, ${name.split(" ")[0]}! We'll give you a call${when === "Any time" ? "" : when === "After 4pm" ? " after 4pm" : " in the " + when.toLowerCase()}.`;
+      btn.style.display = "none";
+    } catch (err) {
+      msg.textContent = (err.message || "That didn't go through.") + " Please try again, or call us at 315-773-3758.";
+      btn.disabled = false;
+    }
+  };
 
   // ---------- Draft saving (this browser only) ----------
   const DRAFT_DAYS = 14;

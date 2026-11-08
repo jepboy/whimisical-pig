@@ -25,7 +25,10 @@
 //    questions  the details we need. type can be:
 //               text, textarea, number, date, select, radio, checks, note,
 //               sizes (a box per size; total: "quantity" fills that question in),
-//               dims (width × height in inches)
+//               dims (width × height in inches),
+//               rankname (a rank list plus the name, e.g. "SFC John A. Smith")
+//               proof: true        lists the answer under "Check the spelling" on
+//                                  the review step (anything we engrave or print)
 //               required: true     makes one mandatory
 //               showIf: { q: "id", is: "answer" }   only asks when another
 //                                  question has that answer (or is: ["a", "b"]
@@ -60,10 +63,10 @@ window.ORDER = {
       questions: [
         { id: "unit", label: "What company or unit is this for?", type: "text", required: true,
           placeholder: "e.g. B Co, 4-31 IN, 10th Mountain Division", help: "This sets the mat colors." },
-        { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "text", placeholder: "e.g. SFC John A. Smith" },
-        { id: "position", label: "Position or callsign", type: "text", placeholder: "Optional, e.g. Company Commander, Hydra 6" },
+        { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "rankname", proof: true },
+        { id: "position", label: "Position or callsign", type: "text", placeholder: "Optional, e.g. Company Commander, Hydra 6", proof: true },
         { id: "dates", label: "Dates of service", type: "text", placeholder: "e.g. October 2023 – June 2026" },
-        { id: "inscription", label: "Plate wording / dedication", type: "textarea",
+        { id: "inscription", label: "Plate wording / dedication", type: "textarea", proof: true,
           placeholder: "e.g. From the Officers, NCOs and Soldiers of B Company. Thank you for your leadership." },
         { id: "flag_kind", label: "Are you looking for the Battalion Colors or a Company Guidon?", type: "radio", required: true,
           options: ["Battalion Colors", "Company Guidon", "Neither", "Not sure"],
@@ -71,7 +74,7 @@ window.ORDER = {
         { id: "guidon_kind", label: "Which kind of company?", type: "radio", showIf: { q: "flag_kind", is: "Company Guidon" },
           options: ["Company of a Battalion (e.g. 4-31/B INF)", "Separate Company, not part of a Battalion (e.g. 152 ENG)",
                     "Letter Company of a Separate Company (e.g. 152/A ENG)", "Not sure"] },
-        { id: "guidon_text", label: "Unit designation exactly as it goes on the guidon", type: "text",
+        { id: "guidon_text", label: "Unit designation exactly as it goes on the guidon", type: "text", proof: true,
           placeholder: "e.g. 4-31/B INF", showIf: { q: "flag_kind", is: "Company Guidon" } },
         { id: "guidon_size", label: "What size guidon?", type: "select", showIf: { q: "flag_kind", is: ["Battalion Colors", "Company Guidon"] },
           options: ["Regulation (20 × 28 in)", "Non-regulation 5 × 7 in", "Non-regulation 8 × 11 in", "Non-regulation 10 × 14 in",
@@ -117,7 +120,7 @@ window.ORDER = {
         { id: "quantity", label: "Total quantity", type: "number", required: true, min: 1 },
         { id: "logo_status", label: "Your logo", type: "radio", required: true,
           options: ["New logo (I'll upload it next)", "You have it on file", "No logo, just words"] },
-        { id: "logo_text", label: "Words you'd like", type: "textarea", showIf: { q: "logo_status", is: "No logo, just words" },
+        { id: "logo_text", label: "Words you'd like", type: "textarea", proof: true, showIf: { q: "logo_status", is: "No logo, just words" },
           placeholder: "Exactly as it should read" },
         { id: "placement", label: "Placement", type: "checks",
           options: ["Left chest", "Full front", "Back", "Sleeve", "Hat front"] },
@@ -144,7 +147,7 @@ window.ORDER = {
         { id: "occasion", label: "What's it for?", type: "text", required: true, placeholder: "e.g. golf league, retirement, appreciation" },
         { id: "quantity", label: "How many?", type: "number", required: true, min: 1 },
         { id: "size", label: "Plate or plaque size", type: "text", placeholder: "Optional, e.g. 4 1/8 × 1 1/4 in" },
-        { id: "engraving", label: "Engraving text", type: "textarea", placeholder: "Exactly as you want it to read. One block per plate if they differ." },
+        { id: "engraving", label: "Engraving text", type: "textarea", proof: true, placeholder: "Exactly as you want it to read. One block per plate if they differ." },
         { id: "logo", label: "Logo or artwork?", type: "radio", options: ["Yes (uploading next)", "No"] },
         { id: "repeat", label: "Repeat order", type: "checks", options: ["This matches an order you've made before"] },
         { id: "reorder", label: "Order # from the earlier order", type: "text", placeholder: "If you have it", showIf: { q: "repeat", is: "This matches an order you've made before" } },
@@ -165,7 +168,7 @@ window.ORDER = {
         "Colors, quantity and the date you need them",
       ],
       questions: [
-        { id: "unit", label: "Unit designation exactly as it goes on the guidon", type: "text", required: true, placeholder: "e.g. 4-31/B INF" },
+        { id: "unit", label: "Unit designation exactly as it goes on the guidon", type: "text", required: true, proof: true, placeholder: "e.g. 4-31/B INF" },
         { id: "quantity", label: "How many?", type: "number", required: true, min: 1 },
         { id: "guidon_kind", label: "Which kind of company?", type: "radio",
           options: ["Company of a Battalion (e.g. 4-31/B INF)", "Separate Company, not part of a Battalion (e.g. 152 ENG)",

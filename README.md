@@ -36,7 +36,7 @@ can't take this repo as-is because of the shop back end; use the Git connection 
 | Setting | What it does |
 | --- | --- |
 | `announcement` | A notice bar at the top of every page, e.g. holiday order deadlines or closures |
-| `reviewsUrl` | Adds a "Leave us a review" link in the footer. Send it to customers at pickup too |
+| `reviewsUrl` | "Leave us a review" in the footer. It's `/review`, which forwards to Google's review box (`REVIEW_URL` in `wrangler.jsonc`). Print a counter sign from `/admin` → Setup → **Print Review Sign** |
 | `giftCardUrl` | Adds a Gift Cards panel to the Shop |
 | `faq` | The questions and answers on the Help page |
 | `localPhotos` | File names of extra photos you've added to `images/` for cards that still use the current website's pictures |

@@ -42,34 +42,57 @@
 </div>
 <main id="sign"></main>
 
+<script src="settings.js"></script>
 <script src="vendor/qrcode.js"></script>
 <script>
   const params = new URLSearchParams(location.search);
-  const name = (params.get("name") || "").slice(0, 80);
-  const slug = (params.get("c") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 80);
-  const box = document.getElementById("sign");
-  if (!slug) {
-    box.innerHTML = '<div class="missing"><h1>Which partner?</h1><p>Open this sign from the admin page: Shop Items → Partner Pages.</p></div>';
-  } else {
-    const link = location.origin + "/shop.html?c=" + slug;
-    document.getElementById("open-shop").href = link;
-    const qr = qrcode(0, "M");
-    qr.addData(link);
-    qr.make();
-    box.innerHTML = `
-      <div class="sheet">
+  // sign.html?review=1: "Leave us a review" sign for the counter or pickup bags
+  if (params.has("review")) {
+    const r = (window.SETTINGS && SETTINGS.reviewsUrl) || "";
+    const link = r && (r.startsWith("/") ? location.origin + r : r);
+    const box0 = document.getElementById("sign");
+    document.getElementById("open-shop").remove();
+    if (!link) {
+      box0.innerHTML = '<div class="missing"><h1>No review link yet</h1><p>Add reviewsUrl in settings.js first.</p></div>';
+    } else {
+      const qr = qrcode(0, "M"); qr.addData(link); qr.make();
+      box0.innerHTML = `<div class="sheet">
         <img class="logo" src="images/logo-full.webp" alt="The Whimsical Pig">
-        <div class="kicker">Official Merch</div>
-        <h1 id="pname"></h1>
-        <p class="sub">Shirts, hoodies and more, made in Watertown. Order any time, all year.</p>
+        <div class="kicker">Thank you!</div>
+        <h1>Loved your piece?</h1>
+        <p class="sub">A quick Google review helps other families and units find us.</p>
         <div class="qr">${qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true })}</div>
-        <div class="scan">Scan to shop</div>
-        <div class="url"></div>
-        <div class="foot">The Whimsical Pig · 50 Public Square, Suite E1 · Watertown, NY · 315-773-3758</div>
-      </div>`;
-    box.querySelector("#pname").textContent = name || slug.replace(/-/g, " ");
-    box.querySelector(".url").textContent = link.replace(/^https?:\/\//, "");
-    document.title = (name || "Partner") + " Sign — The Whimsical Pig";
+        <div class="scan">Scan to leave a review</div>
+        <div class="foot">The Whimsical Pig · 50 Public Square, Suite E1 · Watertown, NY · 315-773-3758</div></div>`;
+      document.title = "Review Sign — The Whimsical Pig";
+    }
+  } else {
+    const name = (params.get("name") || "").slice(0, 80);
+    const slug = (params.get("c") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 80);
+    const box = document.getElementById("sign");
+    if (!slug) {
+      box.innerHTML = '<div class="missing"><h1>Which partner?</h1><p>Open this sign from the admin page: Shop Items → Partner Pages.</p></div>';
+    } else {
+      const link = location.origin + "/shop.html?c=" + slug;
+      document.getElementById("open-shop").href = link;
+      const qr = qrcode(0, "M");
+      qr.addData(link);
+      qr.make();
+      box.innerHTML = `
+        <div class="sheet">
+          <img class="logo" src="images/logo-full.webp" alt="The Whimsical Pig">
+          <div class="kicker">Official Merch</div>
+          <h1 id="pname"></h1>
+          <p class="sub">Shirts, hoodies and more, made in Watertown. Order any time, all year.</p>
+          <div class="qr">${qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true })}</div>
+          <div class="scan">Scan to shop</div>
+          <div class="url"></div>
+          <div class="foot">The Whimsical Pig · 50 Public Square, Suite E1 · Watertown, NY · 315-773-3758</div>
+        </div>`;
+      box.querySelector("#pname").textContent = name || slug.replace(/-/g, " ");
+      box.querySelector(".url").textContent = link.replace(/^https?:\/\//, "");
+      document.title = (name || "Partner") + " Sign — The Whimsical Pig";
+    }
   }
 </script>
 </body>

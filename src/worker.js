@@ -138,6 +138,9 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     try {
+      if (path === "/robots.txt") return robots(url);
+      if (path === "/review") return Response.redirect(env.REVIEW_URL || url.origin + "/", 302);
+      if (path === "/sitemap.xml") return sitemap(url);
       if (path.startsWith("/api/")) {
         await ensureSchema(env.DB);
         return await route(request, env, url, path, ctx);
@@ -1621,6 +1624,20 @@ async function serveSharedFile(env, id, key) {
       "X-Robots-Tag": "noindex",
     },
   });
+}
+
+// ---------------------------------------------------------------- search engines
+// Built for whatever address the site is on (workers.dev now, the shop's own domain later)
+
+const PUBLIC_PAGES = ["", "story.html", "work.html", "design.html", "shop.html", "order.html", "help.html", "visit.html"];
+function robots(url) {
+  return new Response(`User-agent: *\nDisallow: /admin\nDisallow: /admin.html\nDisallow: /api/\nDisallow: /sign.html\n\nSitemap: ${url.origin}/sitemap.xml\n`,
+    { headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=86400" } });
+}
+function sitemap(url) {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    PUBLIC_PAGES.map(p => `  <url><loc>${url.origin}/${p}</loc></url>`).join("\n") + `\n</urlset>\n`;
+  return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=86400" } });
 }
 
 // ---------------------------------------------------------------- helpers

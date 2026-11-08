@@ -15,7 +15,7 @@
     // Unknown addresses show 404.html instead of a blank error
     "not_found_handling": "404-page",
     // These addresses go to the back end instead of the static files
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/sitemap.xml", "/robots.txt", "/review"]
   },
   // Keep variables added in the Cloudflare dashboard when the site deploys
   // (otherwise each deploy from GitHub removes any that aren't listed below)
@@ -32,7 +32,9 @@
     "SHOPVOX_PIPELINE": "Sales Pipeline",
     "SHOPVOX_STAGE": "Assigned",
     // Every website lead is assigned to this shopVOX user (her name exactly as in shopVOX)
-    "SHOPVOX_SALES_REP": "Katarina Carman"
+    "SHOPVOX_SALES_REP": "Katarina Carman",
+    // /review forwards here (Google's "write a review" box), so printed QR signs never go stale
+    "REVIEW_URL": "https://www.google.com/search?q=The+Whimsical+Pig+Watertown+NY&ludocid=3617294177447346575#lrd=0x89d86ffd090e832f:0x323335e39ed6818f,3,,,,"
   },
   // No scheduled jobs (an empty list also removes the old daily one)
   "triggers": {

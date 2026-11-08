@@ -10,7 +10,8 @@ window.SETTINGS = {
   announcement: "",
 
   // Link where customers can leave a review (e.g. your Google review link).
-  reviewsUrl: "",
+  // "Leave us a review": /review forwards to Google's review box (REVIEW_URL in wrangler.jsonc)
+  reviewsUrl: "/review",
 
   // Gift card purchase link (e.g. Square eGift Cards).
   giftCardUrl: "",

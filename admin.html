@@ -604,7 +604,8 @@
     try {
       const r = await api("/api/order-request", { method: "POST", body: fd });
       await loadRequests();
-      if (r.shopvox && r.shopvox.ok) alert(`Test order ${ref} was sent and shopVOX accepted it (lead ${r.shopvox.id}). Look for "${ref}" in shopVOX Sales Leads, then delete it in both places.` + (r.shopvox.note ? `\n\nNote: ${r.shopvox.note}` : ""));
+      if (r.shopvox && r.shopvox.ok) alert(`Test order ${ref} was sent and shopVOX accepted it (lead ${r.shopvox.id}). Look for "${ref}" in shopVOX Sales Leads, then delete it in both places.` +
+        `\n\nAssigned to: ${r.shopvox.assigned_to || "nobody (no sales rep)"}` + (r.shopvox.note ? `\n\nNote: ${r.shopvox.note}` : ""));
       else alert(`Test order ${ref} was saved here, but shopVOX didn't take it:\n\n${(r.shopvox && r.shopvox.error) || "No answer from shopVOX."}\n\nSend me that message.`);
     } catch (err) { alert(err.message); }
     b.disabled = false; b.textContent = "Send a Test Order";

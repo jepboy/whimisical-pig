@@ -1397,7 +1397,9 @@ async function deletePhoto(env, id) {
 //   SHOPVOX_API_TOKEN    the API Token from the same place (a Secret)
 //   SHOPVOX_PIPELINE     the sales-lead pipeline name to file them in (required by shopVOX)
 //   SHOPVOX_STAGE        optional: the stage new leads start in
-//   SHOPVOX_SALES_REP    optional: the shopVOX user every website lead is assigned to
+//   SHOPVOX_SALES_REP    optional: the shopVOX user every website lead is assigned to (her name,
+//                        or the start of it; her user ID is learned from a lead assigned to her)
+//   SHOPVOX_SALES_REP_ID optional: her shopVOX user ID, if you'd rather set it directly
 // API reference: https://shopvoxapi.docs.apiary.io
 
 const shopvoxReady = env => !!(env.SHOPVOX_ACCOUNT_ID && env.SHOPVOX_API_TOKEN);
@@ -1484,9 +1486,12 @@ async function pushRequestToShopvox(env, id, origin) {
   // The lead source names the kind of order ("Website – Military Framing"); if shopVOX
   // won't take a new source name, fall back to plain "Website"
   const plainSource = { ...lead, leadSourceName: "Website" };
+  // The sales rep goes by her shopVOX user ID when we know it (set, or learned from
+  // a lead already assigned to her), otherwise by name
+  const repId = env.SHOPVOX_SALES_REP_ID || ((await kvGet(env, "shopvox_rep")) || {}).value?.id || "";
+  const repField = repId ? { salesRepId: repId } : env.SHOPVOX_SALES_REP ? { salesRepName: env.SHOPVOX_SALES_REP } : null;
   const variants = [];
-  if (env.SHOPVOX_SALES_REP) variants.push({ l: { ...lead, salesRepName: env.SHOPVOX_SALES_REP }, rep: true },
-                                          { l: { ...plainSource, salesRepName: env.SHOPVOX_SALES_REP }, rep: true });
+  if (repField) variants.push({ l: { ...lead, ...repField }, rep: true }, { l: { ...plainSource, ...repField }, rep: true });
   variants.push({ l: lead, rep: false }, { l: plainSource, rep: false });
   const tries = [];
   for (const v of variants) {
@@ -1508,8 +1513,37 @@ async function pushRequestToShopvox(env, id, origin) {
     return { error: err };
   }
   await env.DB.prepare(`UPDATE requests SET shopvox_id = ?, shopvox_error = '' WHERE id = ?`).bind(String(leadId), id).run();
-  return { ok: true, id: String(leadId),
-           ...(env.SHOPVOX_SALES_REP && !repUsed ? { note: `shopVOX didn't recognize the sales rep "${env.SHOPVOX_SALES_REP}", so the lead isn't assigned. Check SHOPVOX_SALES_REP matches her name in shopVOX exactly.` } : {}) };
+
+  // Who did shopVOX assign it to? If not the right rep, look up her ID and fix it
+  let assignedTo = repNameOf(res.data);
+  let note = "";
+  const wanted = String(env.SHOPVOX_SALES_REP || "").trim().toLowerCase();
+  if (wanted && !(assignedTo || "").toLowerCase().includes(wanted)) {
+    const found = await findSalesRep(env, wanted, res.data && res.data.pipelineId);
+    if (found) {
+      await kvPut(env, "shopvox_rep", found, 0);
+      const fix = await shopvoxCall(env, "PUT", `/sales_leads/${encodeURIComponent(leadId)}`, { salesRepId: found.id });
+      if (fix.ok) assignedTo = repNameOf(fix.data) || found.name;
+      note = fix.ok ? `Found ${found.name} in shopVOX; new leads go to her from now on.`
+                    : `Found ${found.name} in shopVOX; new leads go to her from now on (assign this one by hand).`;
+    } else {
+      note = `shopVOX didn't assign it to "${env.SHOPVOX_SALES_REP}". In shopVOX, assign any one lead to her by hand, then send another test order so the site can learn her user ID.`;
+    }
+  }
+  return { ok: true, id: String(leadId), ...(assignedTo ? { assigned_to: assignedTo } : {}), ...(note ? { note } : {}) };
+}
+
+const repNameOf = d => (d && ((d.salesRep && d.salesRep.name) || d.salesRepName)) || "";
+
+// Her shopVOX user ID, from a lead in the pipeline that's already assigned to her
+async function findSalesRep(env, wanted, pipelineId) {
+  const match = rep => rep && rep.id && String(rep.name || "").toLowerCase().includes(wanted);
+  if (pipelineId) {
+    const st = await shopvoxCall(env, "GET", `/sales_leads_stages?pipeline_id=${encodeURIComponent(pipelineId)}`);
+    const stages = (st.ok && st.data && st.data.pipeline && st.data.pipeline.stages) || [];
+    for (const stage of stages) for (const l of stage.salesLeads || []) if (match(l.salesRep)) return { id: l.salesRep.id, name: l.salesRep.name };
+  }
+  return null;
 }
 
 const listOf = (d, key) => Array.isArray(d) ? d : (d && (d[key] || d.data)) || [];

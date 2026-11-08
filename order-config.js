@@ -62,7 +62,7 @@ window.ORDER = {
       ],
       questions: [
         { id: "unit", label: "What company or unit is this for?", type: "text", required: true,
-          placeholder: "e.g. B Co, 4-31 IN, 10th Mountain Division", help: "This sets the mat colors." },
+          placeholder: "Start typing, e.g. 1-32 B Co", help: "Pick your unit from the list if it's there. This sets the mat colors." },
         { id: "recipient", label: "Who is it for? Rank and name as it should appear", type: "rankname", proof: true },
         { id: "position", label: "Position or callsign", type: "text", placeholder: "Optional, e.g. Company Commander, Hydra 6", proof: true },
         { id: "dates", label: "Dates of service", type: "text", placeholder: "e.g. October 2023 – June 2026" },

@@ -32,7 +32,7 @@
     "SHOPVOX_PIPELINE": "Sales Pipeline",
     "SHOPVOX_STAGE": "Assigned",
     // Every website lead is assigned to this shopVOX user (her name exactly as in shopVOX)
-    "SHOPVOX_SALES_REP": "Katarina"
+    "SHOPVOX_SALES_REP": "Katarina Carman"
   },
   // No scheduled jobs (an empty list also removes the old daily one)
   "triggers": {

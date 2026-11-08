@@ -125,9 +125,12 @@ email, needed-by date, every answer, and links to their photos. The admin page s
    - `SHOPVOX_API_TOKEN` as a **Secret** (the API Token)
    - `SHOPVOX_PIPELINE` and `SHOPVOX_STAGE` are already set in `wrangler.jsonc`
      ("Sales Pipeline", starting in "Assigned"). Change them there if the pipeline is renamed.
-   - `SHOPVOX_SALES_REP` ("Katarina", in `wrangler.jsonc`) is the sales rep every website lead
+   - `SHOPVOX_SALES_REP` ("Katarina Carman", in `wrangler.jsonc`) is the sales rep every website lead
      is assigned to. It must match her name in shopVOX exactly. The lead's expected close date
      is the customer's "needed by" date, and the first photo goes into the lead's Assets.
+   - Military orders: the soldier picks their unit from suggestions (`units.js`, built from the
+     shopVOX customer list). When it matches a shopVOX customer, the lead goes on that unit's
+     record; a new unit comes in as a new customer under the unit's name.
    - Lead sources name the order type ("Website – Military Framing"), falling back to "Website".
    - So Katarina hears about each new website order: shopVOX **Settings → Notifications →
      Sales Leads → Created → Sales Rep**.

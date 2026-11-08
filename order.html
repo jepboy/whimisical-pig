@@ -511,6 +511,7 @@
 
 <script src="order-config.js"></script>
 <script src="address.js"></script>
+<script src="units.js"></script>
 <script>
   const CFG = window.ORDER;
   const DRAFT_KEY = "whimsicalpig-order-draft";
@@ -644,6 +645,8 @@
       ? `<span class="eyebrow">Have these ready</span><ul>${t.bring.map(b => `<li>${esc(b)}</li>`).join("")}</ul>`
       : "";
     document.getElementById("details-title").textContent = t.title + " details";
+    // Unit boxes suggest the units we've worked with
+    box.querySelectorAll('[name="q_unit"], [name="q_guidon_text"]').forEach(i => attachUnitSuggest(i));
     applyConditions();
   }
 
@@ -1031,6 +1034,7 @@
         fd.append("phone", valueOf("c_phone"));
         fd.append("needed_by", valueOf("c_date"));
         fd.append("fulfill", valueOf("c_fulfill"));
+        fd.append("unit", valueOf("q_unit"));
         fd.append("summary", plainText(ref));
         fd.append("website", form.elements.website ? form.elements.website.value : "");
         for (const f of await Promise.all(files.map(f => shrinkPhoto(f)))) fd.append("photos", f, f.name);

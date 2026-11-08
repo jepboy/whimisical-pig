@@ -120,6 +120,7 @@ const MIGRATIONS = [
   `ALTER TABLE requests ADD COLUMN shopvox_id TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE requests ADD COLUMN shopvox_error TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE request_files ADD COLUMN share_key TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN unit TEXT NOT NULL DEFAULT ''`,
 ];
 
 let schemaReady = false;
@@ -704,10 +705,10 @@ async function saveOrderRequest(request, env, ctx) {
   }
 
   const row = await env.DB.prepare(
-    `INSERT INTO requests (ref, type, name, email, phone, needed_by, fulfill, summary)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+    `INSERT INTO requests (ref, type, name, email, phone, needed_by, fulfill, summary, unit)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
   ).bind(ref, field("type", 80), field("name"), field("email"), field("phone", 40),
-         field("needed_by", 40), field("fulfill", 80), summary).first();
+         field("needed_by", 40), field("fulfill", 80), summary, field("unit", 120)).first();
   for (const f of files) {
     await env.DB.prepare(`INSERT INTO request_files (request_id, name, mime, data, share_key) VALUES (?, ?, ?, ?, ?)`)
       .bind(row.id, String(f.name).slice(0, 120), f.type, await f.arrayBuffer(), randomKey()).run();
@@ -1441,6 +1442,7 @@ async function pushRequestToShopvox(env, id, origin) {
   const base = env.SITE_URL || origin;
   const details = [
     `Website order ${r.ref}`,
+    r.unit && `Unit: ${r.unit}`,
     r.needed_by && `Needed by: ${r.needed_by}`,
     r.fulfill && `Pick up / ship: ${r.fulfill}`,
     "",
@@ -1458,7 +1460,7 @@ async function pushRequestToShopvox(env, id, origin) {
     workflowState: "new",
     nextContactDate: todayNY(),
     ...(who.contactId ? { primaryContactId: who.contactId } : { primaryContactName: r.name || "" }),
-    ...(who.companyId ? { companyId: who.companyId } : { companyName: r.name || "Website customer" }),
+    ...(who.companyId ? { companyId: who.companyId } : { companyName: r.unit || r.name || "Website customer" }),
     email: r.email || "",
     phoneNumber: r.phone || "",
     leadSourceName: leadSource(r.type),
@@ -1556,16 +1558,27 @@ async function findShopvoxCustomer(env, r) {
   const phonesOf = c => [c.phone, c.phoneWithExt, ...(c.phones || []).map(p => p && p.phone)].map(digits).filter(Boolean);
   const pick = c => ({ contactId: c.id, companyId: (c.company && c.company.id) || c.companyId || null });
   try {
+    let contact = null;
     if (email) {
       const got = await shopvoxCall(env, "GET", `/contacts?search=${encodeURIComponent(email)}&active=true`);
-      const hit = got.ok && listOf(got.data, "contacts").find(c => emailsOf(c).includes(email));
-      if (hit) return pick(hit);
+      contact = (got.ok && listOf(got.data, "contacts").find(c => emailsOf(c).includes(email))) || null;
     }
-    if (name && phone.length >= 7) {
+    if (!contact && name && phone.length >= 7) {
       const got = await shopvoxCall(env, "GET", `/contacts?search=${encodeURIComponent(r.name.trim())}&active=true`);
-      const hit = got.ok && listOf(got.data, "contacts").find(c => String(c.name || "").trim().toLowerCase() === name && phonesOf(c).includes(phone));
-      if (hit) return pick(hit);
+      contact = (got.ok && listOf(got.data, "contacts").find(c => String(c.name || "").trim().toLowerCase() === name && phonesOf(c).includes(phone))) || null;
     }
+    // Military orders: the unit is the customer in shopVOX ("1-32 B Co"), so the lead
+    // goes on that unit's record; the soldier is its contact when they're already on it
+    const unit = String(r.unit || "").trim();
+    if (unit) {
+      const got = await shopvoxCall(env, "GET", `/companies?name=${encodeURIComponent(unit)}&active=true`);
+      const co = got.ok && listOf(got.data, "companies").find(c => String(c.name || "").trim().toLowerCase() === unit.toLowerCase());
+      if (co) {
+        const mine = contact && pick(contact).companyId === co.id;
+        return { contactId: mine ? contact.id : null, companyId: co.id };
+      }
+    }
+    if (contact) return pick(contact);
     if (name) {
       const got = await shopvoxCall(env, "GET", `/companies?name=${encodeURIComponent(r.name.trim())}&active=true`);
       const hit = got.ok && listOf(got.data, "companies").find(c => String(c.name || "").trim().toLowerCase() === name);

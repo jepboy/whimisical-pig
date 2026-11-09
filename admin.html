@@ -136,6 +136,7 @@
   .jump a { color: var(--pink); font-weight: 700; font-size: 0.9rem; }
   .sec-head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-top: 26px; scroll-margin-top: 80px; }
   .sec-head .sub-h { margin: 0; }
+  .ph-card select[data-grp] { width: 100%; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); font: 0.85rem var(--sans); }
   .sec-head select { padding: 7px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); }
   .sec-head + .pgrid, .sec-head + .hint { margin-top: 10px; }
   .ph-card .img .none { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 0.8rem; }
@@ -385,6 +386,7 @@
         <span><b>Go back:</b> <em>Use the original</em> puts the old photo back.</span>
         <span><b>Our Work:</b> add photos with the button above; <em>Remove</em> takes one off (you can put it back).</span>
         <span><b>Captions:</b> type in the box under a photo; it saves when you click away.</span>
+        <span><b>Groups:</b> change the group box under a photo to move it. To rename a whole group, pick it in <em>All groups</em>, then <em>Rename This Group</em>.</span>
       </div>
       <nav class="jump" aria-label="Sections">
         <a href="#ph-work">Our Work gallery</a><a href="#ph-pages">Home &amp; other pages</a><a href="#ph-order">Start an Order</a>
@@ -392,7 +394,7 @@
       <p class="hint" id="photos-msg" role="status"></p>
 
       <div class="sec-head" id="ph-work"><h3 class="sub-h">Our Work gallery</h3>
-        <select id="photo-filter" aria-label="Show"></select><a class="hint" href="work.html" target="_blank" rel="noopener">See it on the site →</a></div>
+        <select id="photo-filter" aria-label="Show"></select><button class="btn ghost sm" id="group-rename" type="button" hidden>Rename This Group</button><a class="hint" href="work.html" target="_blank" rel="noopener">See it on the site →</a></div>
       <div class="pgrid" id="gallery-admin"></div>
 
       <div id="ph-pages"></div>
@@ -1343,20 +1345,28 @@
     if (HOME_PEEK.includes(key) && !places.includes("Home page")) places.push("Home page");
     return places;
   }
+  // Our Work groups: a site photo can be moved to another group (photos.groups)
+  const origGroup = key => (WORK.find(w => w[0] === key) || [])[1] || "";
+  const groupOf = key => (site.photos.groups || {})[key] || origGroup(key);
+  const allGroups = () => [...new Set([...WORK.filter(w => !site.photos.hidden.includes(w[0])).map(w => groupOf(w[0])),
+    ...site.uploads.filter(u => u.kind === "gallery").map(u => u.grp || "More")].filter(Boolean))];
+  const groupPick = cur => `<select data-grp aria-label="Group">${[...new Set([...allGroups(), cur])].map(g =>
+    `<option${g === cur ? " selected" : ""}>${esc(g)}</option>`).join("")}<option value="__new">+ New group…</option></select>`;
   let replaceKey = null;
   async function loadPhotos() {
     try { await loadSite(); } catch (err) { $("photos-msg").textContent = err.message; return; }
-    const groups = [...new Set([...WORK.map(w => w[1]), ...site.uploads.filter(u => u.kind === "gallery").map(u => u.grp)].filter(Boolean))];
+    const groups = allGroups();
     const keep = $("photo-filter").value || "all";
     $("photo-filter").innerHTML = [["all", "All groups"], ...groups.map(g => [g, g]), ["__gone", "Removed photos"]]
       .map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
     $("photo-filter").value = [...$("photo-filter").options].some(o => o.value === keep) ? keep : "all";
     drawPhotos();
   }
-  function photoCard({ key, id, src, caption, where, gone, replaced, added, canRemove, noOriginal }) {
+  function photoCard({ key, id, src, caption, where, group, gone, replaced, added, canRemove, noOriginal }) {
     return `<div class="ph-card${gone ? " gone" : ""}" ${key ? `data-key="${esc(key)}"` : `data-id="${id}"`}>
       <div class="img">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : '<span class="none">No photo yet</span>'}${replaced ? '<span class="tag pre">Changed</span>' : added ? '<span class="tag pre">Added</span>' : ""}</div>
       ${caption !== null ? `<input value="${esc(caption)}" maxlength="120" aria-label="Caption" data-cap placeholder="Caption">` : ""}
+      ${group !== undefined && !gone ? groupPick(group) : ""}
       <span class="where">${where}</span>
       <div class="acts">${gone ? '<button type="button" data-p="restore">Put back</button>' : `
         ${key ? `<button type="button" data-p="replace">${src ? "Replace" : "Add a photo"}</button>` : ""}
@@ -1365,21 +1375,23 @@
     </div>`;
   }
   function drawPhotos() {
+    showRename();
     const want = $("photo-filter").value, ph = site.photos;
     const swap = key => ph.replace[key] ? `/api/photo/${ph.replace[key]}?s=sm` : null;
     // Our Work gallery
     const cards = [];
     if (want !== "__gone") {
-      for (const u of site.uploads.filter(u => u.kind === "gallery" && (want === "all" || u.grp === want))) {
-        cards.push(photoCard({ id: u.id, src: `/api/photo/${u.id}?s=sm`, caption: u.caption, where: esc(u.grp || "More"), added: true, canRemove: true }));
+      for (const u of site.uploads.filter(u => u.kind === "gallery" && (want === "all" || (u.grp || "More") === want))) {
+        cards.push(photoCard({ id: u.id, src: `/api/photo/${u.id}?s=sm`, caption: u.caption, group: u.grp || "More", where: "", added: true, canRemove: true }));
       }
     }
-    for (const [key, group, cap] of WORK) {
+    for (const [key, , cap] of WORK) {
+      const group = groupOf(key);
       const gone = ph.hidden.includes(key);
       if (want === "__gone" ? !gone : gone || (want !== "all" && group !== want)) continue;
       const also = alsoOn(key);
       cards.push(photoCard({ key, src: swap(key) || builtinSrc(key), caption: ph.captions[key] ?? cap,
-        where: esc(group) + (also.length ? ` · <b>also on ${esc(also.join(", "))}</b>` : ""), gone, replaced: !!ph.replace[key], canRemove: true }));
+        group, where: [gone ? esc(group) : "", also.length ? `<b>also on ${esc(also.join(", "))}</b>` : ""].filter(Boolean).join(" · "), gone, replaced: !!ph.replace[key], canRemove: true }));
     }
     $("gallery-admin").innerHTML = cards.join("") || '<div class="empty">No photos here.</div>';
     // Each page's own photos
@@ -1395,6 +1407,7 @@
       caption: null, replaced: !!ph.replace[o.key], noOriginal: !o.orig, where: `<b>${esc(o.name)}</b> · ${esc(o.where)}` })).join("");
   }
   $("photo-filter").onchange = drawPhotos;
+  function showRename() { const v = $("photo-filter").value; $("group-rename").hidden = !v || v === "all" || v === "__gone"; }
   const photoMsg = t => { $("photos-msg").textContent = t; };
   const savePhotos = async (msg = "Saved. The website shows the change within a minute.") => {
     try { await saveSite({ photos: site.photos }); photoMsg(msg); } catch (err) { photoMsg(err.message); }
@@ -1439,6 +1452,48 @@
       catch (err) { photoMsg(err.message); }
     }
   });
+  // Move a photo to another group
+  $("gallery-admin").addEventListener("change", async e => {
+    if (!e.target.matches("[data-grp]")) return;
+    const card = e.target.closest(".ph-card");
+    let g = e.target.value;
+    if (g === "__new") {
+      g = (prompt("Name of the new group (for example: Signs)") || "").trim().slice(0, 60);
+      if (!g) { drawPhotos(); return; }
+    }
+    photoMsg("Moving…");
+    try {
+      await moveToGroup(card.dataset.key, +card.dataset.id, g);
+      freshSite(); await loadPhotos(); photoMsg(`Moved to “${g}”. The website shows the change within a minute.`);
+    } catch (err) { photoMsg(err.message); }
+  });
+  async function moveToGroup(key, id, g) {
+    if (key) {
+      site.photos.groups = site.photos.groups || {};
+      if (g === origGroup(key)) delete site.photos.groups[key]; else site.photos.groups[key] = g;
+      await saveSite({ photos: site.photos });
+    } else await send(`/api/admin/photos/${id}`, "PUT", { group: g });
+  }
+  // Rename the group picked in the filter (moves every photo in it)
+  $("group-rename").onclick = async () => {
+    const old = $("photo-filter").value;
+    if (!old || old === "all" || old === "__gone") return;
+    const g = (prompt(`New name for “${old}”`, old) || "").trim().slice(0, 60);
+    if (!g || g === old) return;
+    photoMsg("Renaming…");
+    site.photos.groups = site.photos.groups || {};
+    for (const [key] of WORK) if (groupOf(key) === old) {
+      if (g === origGroup(key)) delete site.photos.groups[key]; else site.photos.groups[key] = g;
+    }
+    try {
+      await saveSite({ photos: site.photos });
+      for (const u of site.uploads.filter(u => u.kind === "gallery" && (u.grp || "More") === old))
+        await send(`/api/admin/photos/${u.id}`, "PUT", { group: g });
+      freshSite(); await loadPhotos();
+      $("photo-filter").value = g; drawPhotos();
+      photoMsg(`Renamed “${old}” to “${g}”. The website shows the change within a minute.`);
+    } catch (err) { photoMsg(err.message); }
+  };
   $("replace-pick").onchange = async e => {
     const file = e.target.files[0]; e.target.value = "";
     if (!file || !replaceKey) return;
@@ -1454,7 +1509,7 @@
   const addForm = $("addphotos-form");
   $("photo-add").onclick = async () => {
     if (!site) await loadSite();
-    const groups = [...new Set([...WORK.map(w => w[1]), ...site.uploads.filter(u => u.kind === "gallery").map(u => u.grp)].filter(Boolean))];
+    const groups = allGroups();
     addForm.reset();
     addForm.elements.group.innerHTML = groups.map(g => `<option>${esc(g)}</option>`).join("") + '<option value="__new">+ New group…</option>';
     const want = $("photo-filter").value;

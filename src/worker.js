@@ -1295,11 +1295,12 @@ async function notifyCustomer(request, env) {
 }
 
 // ---------------------------------------------------------------- banners and photos
-// Saved in kv "site": { banners: [...], photos: { hidden: [], captions: {}, replace: {} } }
+// Saved in kv "site": { banners: [...], photos: { hidden: [], captions: {}, replace: {}, groups: {} } }
 //   banners   notices shown on the site (a thin bar, or a bigger feature banner)
 //   hidden    keys of the site's own gallery photos taken off the site
 //   captions  new captions for the site's own gallery photos
 //   replace   key -> id of an uploaded photo shown instead of the site's own one
+//   groups    key -> the Our Work group a site photo was moved to
 // A key is a work photo name ("military-shadow-boxes_05") or a file ("images/painting.webp").
 // Photos added from the admin page are in the site_photos table.
 
@@ -1311,7 +1312,7 @@ const MAX_PHOTO_BYTES = 1_900_000, MAX_SMALL_BYTES = 700_000;
 async function siteData(env) {
   const row = await kvGet(env, "site");
   const v = (row && row.value) || {};
-  return { banners: v.banners || [], photos: { hidden: [], captions: {}, replace: {}, ...(v.photos || {}) } };
+  return { banners: v.banners || [], photos: { hidden: [], captions: {}, replace: {}, groups: {}, ...(v.photos || {}) } };
 }
 
 function bannerActive(b, today) {
@@ -1386,6 +1387,7 @@ async function saveSite(request, env) {
       hidden: [...new Set(keys(p.hidden))],
       captions: map(p.captions, v => cleanText(v, 120)),
       replace: Object.fromEntries(Object.entries(map(p.replace, v => parseInt(v, 10))).filter(([, v]) => v > 0)),
+      groups: Object.fromEntries(Object.entries(map(p.groups, v => cleanText(v, 60))).filter(([, v]) => v)),
     };
   }
   await kvPut(env, "site", site, 0);

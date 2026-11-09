@@ -115,6 +115,7 @@ function applyPhoto(img, d) {
     img.src = `/api/photo/${id}${small ? "?s=sm" : ""}`;
     if (tile) tile.href = `/api/photo/${id}`;
   }
+  if (tile && d.groups && d.groups[key]) tile.dataset.group = d.groups[key];
   if (tile && d.captions[key]) {
     tile.querySelector(".cap").textContent = img.alt = d.captions[key];
   }
@@ -190,7 +191,7 @@ function renderBanners(list) {
 
 siteChanges.then(d => {
   if (!d) return;
-  d = { banners: [], hidden: [], captions: {}, replace: {}, added: [], ...d };
+  d = { banners: [], hidden: [], captions: {}, replace: {}, groups: {}, added: [], ...d };
   SITE_CHANGES = d;
   const go = () => {
     if ("noSiteChanges" in document.body.dataset) return;     // the admin page shows the originals

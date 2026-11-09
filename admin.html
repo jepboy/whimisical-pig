@@ -185,6 +185,26 @@
   .check.no .dot { background: #5a2b2b; color: #f3c3c0; }
   .check p { word-break: break-word; }
 
+  /* Facebook posts */
+  .sm-grid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; }
+  .sm-controls, .sm-preview { display: grid; gap: 14px; min-width: 0; }
+  .sm-grid select, .sm-grid textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); font: inherit; }
+  .sm-checks, .sm-cap-tools { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; }
+  .sm-checks { justify-content: flex-start; }
+  .fld-label { margin: 0 0 6px; font-weight: 700; font-size: 0.85rem; }
+  .fld-label .opt { font-weight: 400; color: var(--muted); }
+  .sm-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; max-height: 230px; overflow-y: auto; padding: 6px; border: 1px solid var(--hair); border-radius: 10px; background: var(--bg-2); }
+  .sm-photos button { padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: none; aspect-ratio: 1; }
+  .sm-photos button[aria-pressed="true"] { border-color: var(--pink); }
+  .sm-photos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sm-own { margin-top: 10px; justify-self: start; cursor: pointer; }
+  .sm-sliders { display: grid; gap: 6px; margin-top: 12px; color: var(--muted); font-size: 0.9rem; }
+  .sm-sliders label { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 10px; }
+  .sm-sliders input { accent-color: var(--pink); }
+  .sm-canvas-wrap { display: flex; justify-content: center; padding: 14px; background: var(--bg-2); border: 1px solid var(--hair); border-radius: 14px; }
+  #social-canvas { max-width: 100%; max-height: 66vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .sm-preview .btn { justify-self: start; }
+  @media (max-width: 860px) { .sm-grid { grid-template-columns: 1fr; } }
   @media (max-width: 760px) {
     .var { grid-template-columns: 1fr; }
     .item { grid-template-columns: 56px 1fr; }
@@ -228,6 +248,7 @@
       <button role="tab" aria-selected="false" data-tab="items">Shop Items <span class="warn" id="n-low"></span></button>
       <button role="tab" aria-selected="false" data-tab="banners">Banners</button>
       <button role="tab" aria-selected="false" data-tab="photos">Site Photos</button>
+      <button role="tab" aria-selected="false" data-tab="social">Facebook Posts</button>
       <button role="tab" aria-selected="false" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
       <button role="tab" aria-selected="false" data-tab="setup">Setup <span class="warn" id="n-setup"></span></button>
     </div>
@@ -383,6 +404,54 @@
       <input type="file" id="replace-pick" accept="image/*" hidden>
     </section>
 
+    <!-- Pictures for Facebook posts, made in the browser -->
+    <section id="tab-social" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>Facebook Posts</h2>
+          <p class="hint">Make a picture for a Facebook post with our logo on it. Pick a starting point, change the words, download the picture, then post it with the caption.</p>
+        </div>
+        <div class="tools">
+          <a class="btn ghost sm" href="https://www.facebook.com/TheWhimsicalPig/" target="_blank" rel="noopener">Open Our Facebook</a>
+        </div>
+      </div>
+      <div class="sm-grid">
+        <div class="sm-controls">
+          <label class="fld">What's it for? <select id="sm-preset"></select></label>
+          <label class="fld">Where on Facebook <select id="sm-size"></select></label>
+          <label class="fld">Look <select id="sm-look"></select></label>
+          <label class="fld">Big words <textarea id="sm-head" rows="2" maxlength="90"></textarea></label>
+          <label class="fld">Smaller words <span class="opt">(optional)</span> <textarea id="sm-sub" rows="2" maxlength="160"></textarea></label>
+          <div class="sm-checks">
+            <label><input type="checkbox" id="sm-logo" checked> Our logo</label>
+            <label><input type="checkbox" id="sm-footer" checked> Website &amp; phone</label>
+          </div>
+          <div id="sm-photo-box">
+            <p class="fld-label">Photo <span class="opt">(tap one, or use your own)</span></p>
+            <div class="sm-photos" id="sm-photos"></div>
+            <label class="btn ghost sm sm-own">Use a Photo from My Device <input type="file" id="sm-upload" accept="image/*" hidden></label>
+            <div class="sm-sliders">
+              <label>Zoom <input type="range" id="sm-zoom" min="100" max="250" value="100"></label>
+              <label>Left / right <input type="range" id="sm-px" min="0" max="100" value="50"></label>
+              <label>Up / down <input type="range" id="sm-py" min="0" max="100" value="50"></label>
+            </div>
+          </div>
+        </div>
+        <div class="sm-preview">
+          <div class="sm-canvas-wrap"><canvas id="social-canvas" width="1080" height="1080" aria-label="Preview of the Facebook picture"></canvas></div>
+          <p class="hint" id="social-dims"></p>
+          <button class="btn" id="sm-download" type="button">Download Picture</button>
+          <p class="hint" id="social-msg" role="status"></p>
+          <label class="fld">Caption to paste in Facebook <textarea id="sm-caption" rows="7"></textarea></label>
+          <div class="sm-cap-tools">
+            <label><input type="checkbox" id="sm-tags" checked> Add hashtags</label>
+            <button class="btn ghost sm" id="sm-copy" type="button">Copy Caption</button>
+          </div>
+          <p class="hint">Words in [brackets] are for you to fill in before posting.</p>
+        </div>
+      </div>
+    </section>
+
     <dialog id="addphotos-dlg" class="dlg" aria-labelledby="addphotos-title">
       <form id="addphotos-form" method="dialog" novalidate>
         <h2 id="addphotos-title">Add Photos to Our Work</h2>
@@ -490,7 +559,7 @@
 
   // ---------- tabs ----------
   const loaders = { requests: () => loadRequests(), orders: () => loadOrders(), items: () => loadItems(),
-                    banners: () => loadBanners(), photos: () => loadPhotos(), setup: () => loadSetup() };
+                    banners: () => loadBanners(), photos: () => loadPhotos(), social: () => loadSocial(), setup: () => loadSetup() };
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(o => {
       o.setAttribute("aria-selected", o === b);
@@ -1420,5 +1489,6 @@
   // ---------- start ----------
   api("/api/admin/me").then(showApp).catch(err => { showLogin(); if (/back end/.test(err.message)) $("login-msg").textContent = err.message; });
 </script>
+<script src="social.js"></script>
 </body>
 </html>

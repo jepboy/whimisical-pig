@@ -206,6 +206,25 @@
   #social-canvas { max-width: 100%; max-height: 66vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
   .sm-preview .btn { justify-self: start; }
   @media (max-width: 860px) { .sm-grid { grid-template-columns: 1fr; } }
+  /* holiday looks */
+  .theme.live { border-left-color: var(--pink); }
+  .theme-head { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .theme-head input { flex: 1 1 200px; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--cream); font: 600 1.15rem var(--sans); }
+  .theme-move { display: flex; gap: 12px; margin-left: auto; }
+  .theme-when { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin: 14px 0; font-size: 0.92rem; }
+  .theme-when input { accent-color: var(--pink); }
+  .theme-when .md { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .theme-when select { padding: 6px 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); }
+  .theme-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+  .slot { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--hair); border-radius: 12px; background: var(--bg-2); }
+  .slot-img { position: relative; display: grid; place-items: center; height: 120px; border-radius: 8px; background: #0b090a; overflow: hidden; }
+  .slot-img img { max-width: 86%; max-height: 100px; object-fit: contain; }
+  .slot-img img.normal { opacity: 0.45; }
+  .slot-img .tag { position: absolute; top: 6px; left: 6px; }
+  .slot .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .linkish { padding: 0; border: 0; background: none; color: var(--pink); font: 700 0.85rem var(--sans); text-decoration: underline; cursor: pointer; }
+  .linkish:disabled { opacity: 0.3; cursor: default; }
+  .linkish.del { color: #e59a90; }
   @media (max-width: 760px) {
     .var { grid-template-columns: 1fr; }
     .item { grid-template-columns: 56px 1fr; }
@@ -248,6 +267,7 @@
       <button role="tab" aria-selected="true" data-tab="orders">Shop Orders <span class="count" id="n-orders"></span></button>
       <button role="tab" aria-selected="false" data-tab="items">Shop Items <span class="warn" id="n-low"></span></button>
       <button role="tab" aria-selected="false" data-tab="banners">Banners</button>
+      <button role="tab" aria-selected="false" data-tab="themes">Holiday Looks</button>
       <button role="tab" aria-selected="false" data-tab="photos">Site Photos</button>
       <button role="tab" aria-selected="false" data-tab="social">Facebook Posts</button>
       <button role="tab" aria-selected="false" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
@@ -367,6 +387,24 @@
       <p class="hint" id="banners-msg" role="status"></p>
       <div class="list" id="banners"></div>
       <input type="file" id="banner-photo-pick" accept="image/*" hidden>
+    </section>
+
+    <!-- Holiday versions of the logos and flying pig -->
+    <section id="tab-themes" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>Holiday Looks</h2>
+          <p class="hint">Save holiday versions of our logos and flying pig. Give a look its dates once and it switches on by itself every year, then back to the normal look.</p>
+        </div>
+        <div class="tools">
+          <select id="theme-new" aria-label="Add a holiday look"></select>
+          <button class="btn sm" id="themes-save" type="button">Save Holiday Looks</button>
+        </div>
+      </div>
+      <p class="hint">Tip: use PNG pictures with a see-through background so they sit nicely on the black. Only one look shows at a time; if two have the same dates, the one higher in the list wins.</p>
+      <p class="hint" id="themes-msg" role="status"></p>
+      <div class="list" id="themes"></div>
+      <input type="file" id="theme-pick" accept="image/png,image/webp,image/jpeg" hidden>
     </section>
 
     <!-- Photos on the site -->
@@ -561,7 +599,7 @@
 
   // ---------- tabs ----------
   const loaders = { requests: () => loadRequests(), orders: () => loadOrders(), items: () => loadItems(),
-                    banners: () => loadBanners(), photos: () => loadPhotos(), social: () => loadSocial(), setup: () => loadSetup() };
+                    banners: () => loadBanners(), themes: () => loadThemes(), photos: () => loadPhotos(), social: () => loadSocial(), setup: () => loadSetup() };
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(o => {
       o.setAttribute("aria-selected", o === b);
@@ -1159,14 +1197,14 @@
   // ---------- preparing photos for upload ----------
   // Sized for sharp display (2400 px for the big copy) at high quality. If a copy is over
   // the storage limit, the quality steps down a little at a time until it fits.
-  async function shrink(file, max, quality, limit = Infinity) {
+  async function shrink(file, max, quality, limit = Infinity, clear = false) {
     for (let q = quality, m = max; ; ) {
-      const b = await shrinkOnce(file, m, q);
+      const b = await shrinkOnce(file, m, q, clear);
       if (b.size <= limit || (q <= 0.72 && m <= 1200)) return b;
       if (q > 0.72) q = Math.round((q - 0.04) * 100) / 100; else m = Math.round(m * 0.85);
     }
   }
-  async function shrinkOnce(file, max, quality) {
+  async function shrinkOnce(file, max, quality, clear) {
     const url = URL.createObjectURL(file);
     try {
       const img = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error(`"${file.name}" isn't a photo this browser can open. Try a JPG or PNG.`)); i.src = url; });
@@ -1174,15 +1212,16 @@
       const c = document.createElement("canvas");
       c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
       const g = c.getContext("2d");
-      g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+      // Logos keep their see-through background (WebP, or PNG where WebP can't be made)
+      if (!clear) { g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); }
       g.drawImage(img, 0, 0, c.width, c.height);
-      return await new Promise(ok => c.toBlob(ok, "image/jpeg", quality));
+      return await new Promise(ok => c.toBlob(ok, clear ? "image/webp" : "image/jpeg", quality));
     } finally { URL.revokeObjectURL(url); }
   }
-  async function uploadSitePhoto(file, kind, group = "", caption = "") {
+  async function uploadSitePhoto(file, kind, group = "", caption = "", clear = false) {
     const fd = new FormData();
-    fd.append("full", await shrink(file, 2400, 0.92, 1_850_000), "full.jpg");
-    fd.append("small", await shrink(file, 900, 0.88, 650_000), "small.jpg");
+    fd.append("full", await shrink(file, clear ? 1600 : 2400, 0.92, 1_850_000, clear), "full");
+    fd.append("small", await shrink(file, 900, 0.88, 650_000, clear), "small");
     fd.append("kind", kind); fd.append("group", group); fd.append("caption", caption);
     return (await api("/api/admin/photos", { method: "POST", body: fd })).id;
   }
@@ -1193,7 +1232,9 @@
     site = await api("/api/admin/site");
     return site;
   }
-  const saveSite = body => send("/api/admin/site", "PUT", body).then(r => { freshSite(); site.banners = r.banners; site.photos = r.photos; return r; });
+  const saveSite = body => send("/api/admin/site", "PUT", body).then(r => {
+    freshSite(); site.banners = r.banners; site.photos = r.photos; site.themes = r.themes; site.activeTheme = r.activeTheme; return r;
+  });
 
   // ---------- banners ----------
   const PAGE_NAMES = { all: "Every page", home: "Home", work: "Our Work", shop: "Shop", order: "Start an Order", design: "Design & Merch", visit: "Visit", story: "Our Story", help: "Help" };
@@ -1304,6 +1345,123 @@
       drawBanners();
       $("banners-msg").textContent = "Saved. The website shows the change within a minute.";
     } catch (err) { $("banners-msg").textContent = err.message; }
+  };
+
+  // ---------- holiday looks ----------
+  const THEME_SLOTS = [["images/logo-full.webp", "Big logo", "Home page"], ["images/logo-mark.webp", "Small logo", "Top of every page"],
+                       ["images/flying-pig.webp", "Flying pig", "Around the site"]];
+  const THEME_PRESETS = [["Christmas", "12-01", "12-26"], ["Halloween", "10-01", "10-31"], ["Fourth of July", "06-25", "07-05"],
+    ["Veterans Day", "11-01", "11-11"], ["Thanksgiving", "11-12", "11-28"], ["Valentine's Day", "02-01", "02-14"],
+    ["St. Patrick's Day", "03-10", "03-17"], ["Easter", "", ""], ["Other", "", ""]];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  let themes = [], themeTrash = [], themePick = null;
+  $("theme-new").innerHTML = '<option value="">+ New holiday look…</option>' + THEME_PRESETS.map((p, i) => `<option value="${i}">${esc(p[0])}</option>`).join("");
+  async function loadThemes() {
+    try { await loadSite(); } catch (err) { $("themes").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+    themes = (site.themes || []).map(t => ({ ...t, photos: { ...t.photos } }));
+    themeTrash = [];
+    drawThemes();
+  }
+  const normalSrc = key => site.photos.replace[key] ? `/api/photo/${site.photos.replace[key]}?s=sm` : key + (key.includes("logo-full") ? "?v=2" : "");
+  function mdPick(which, v) {
+    const [m, d] = (v || "-").split("-");
+    return `<select data-md="${which}-m" aria-label="${which === "start" ? "From" : "To"} month"><option value="">Month</option>${MONTHS.map((n, i) =>
+      `<option value="${String(i + 1).padStart(2, "0")}"${m === String(i + 1).padStart(2, "0") ? " selected" : ""}>${n}</option>`).join("")}</select>
+      <select data-md="${which}-d" aria-label="${which === "start" ? "From" : "To"} day"><option value="">Day</option>${Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map(n =>
+      `<option${d === n ? " selected" : ""}>${n}</option>`).join("")}</select>`;
+  }
+  function drawThemes() {
+    if (!themes.length) { $("themes").innerHTML = '<div class="empty">No holiday looks yet. Pick one from “+ New holiday look…” to start.</div>'; return; }
+    $("themes").innerHTML = themes.map((t, i) => `
+      <div class="card theme${t.id && t.id === site.activeTheme ? " live" : ""}" data-i="${i}">
+        <div class="theme-head">
+          <input data-f="name" value="${esc(t.name)}" maxlength="40" aria-label="Name">
+          ${t.id && t.id === site.activeTheme ? '<span class="tag">Showing now</span>' : ""}
+          <span class="theme-move">
+            <button type="button" class="linkish" data-a="up"${i ? "" : " disabled"}>↑</button>
+            <button type="button" class="linkish" data-a="down"${i < themes.length - 1 ? "" : " disabled"}>↓</button>
+            <button type="button" class="linkish del" data-a="delete">Delete</button>
+          </span>
+        </div>
+        <div class="theme-when">
+          <label><input type="radio" name="when-${i}" value="off"${t.when === "off" ? " checked" : ""} data-f="when"> Off (saved for later)</label>
+          <label><input type="radio" name="when-${i}" value="on"${t.when === "on" ? " checked" : ""} data-f="when"> On now</label>
+          <label><input type="radio" name="when-${i}" value="dates"${t.when === "dates" ? " checked" : ""} data-f="when"> Every year from</label>
+          <span class="md">${mdPick("start", t.start)} <span>to</span> ${mdPick("end", t.end)}</span>
+        </div>
+        <div class="theme-slots">${THEME_SLOTS.map(([key, name, where]) => `
+          <div class="slot">
+            <div class="slot-img">${t.photos[key] ? `<img src="/api/photo/${t.photos[key]}?s=sm" alt="">` : `<img class="normal" src="${esc(normalSrc(key))}" alt=""><span class="tag">Normal</span>`}</div>
+            <b>${name}</b><span class="hint">${where}</span>
+            <span class="acts"><button type="button" class="linkish" data-a="pick" data-k="${key}">${t.photos[key] ? "Change" : "Upload holiday version"}</button>
+            ${t.photos[key] ? `<button type="button" class="linkish" data-a="normal" data-k="${key}">Use normal</button>` : ""}</span>
+          </div>`).join("")}
+        </div>
+      </div>`).join("");
+  }
+  const themeMsg = t => { $("themes-msg").textContent = t; };
+  const unsaved = () => themeMsg("Press Save Holiday Looks to keep your changes.");
+  $("theme-new").onchange = e => {
+    const p = THEME_PRESETS[e.target.value]; e.target.value = "";
+    if (!p) return;
+    themes.push({ id: "", name: p[0] === "Other" ? "" : p[0], when: p[1] ? "dates" : "off", start: p[1], end: p[2], photos: {} });
+    drawThemes(); unsaved();
+    $("themes").lastElementChild.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+  $("themes").addEventListener("input", e => {
+    const card = e.target.closest(".theme"); if (!card) return;
+    const t = themes[+card.dataset.i];
+    if (e.target.dataset.f === "name") t.name = e.target.value;
+    if (e.target.dataset.f === "when") {
+      if (e.target.value === "on") themes.forEach(o => { if (o !== t && o.when === "on") o.when = "off"; });
+      t.when = e.target.value; drawThemes();
+    }
+    if (e.target.dataset.md) {
+      const [which] = e.target.dataset.md.split("-");
+      const m = card.querySelector(`[data-md="${which}-m"]`).value, d = card.querySelector(`[data-md="${which}-d"]`).value;
+      t[which] = m && d ? `${m}-${d}` : "";
+      if (t.start && t.end && t.when === "off") { t.when = "dates"; card.querySelector('[value="dates"]').checked = true; }
+    }
+    unsaved();
+  });
+  $("themes").addEventListener("click", e => {
+    const a = e.target.dataset.a; if (!a) return;
+    const i = +e.target.closest(".theme").dataset.i, t = themes[i];
+    if (a === "up" || a === "down") { const j = a === "up" ? i - 1 : i + 1; [themes[i], themes[j]] = [themes[j], themes[i]]; drawThemes(); unsaved(); }
+    if (a === "delete") {
+      if (!confirm(`Delete the “${t.name || "holiday"}” look?`)) return;
+      themeTrash.push(...Object.values(t.photos)); themes.splice(i, 1); drawThemes(); unsaved();
+    }
+    if (a === "normal") { themeTrash.push(t.photos[e.target.dataset.k]); delete t.photos[e.target.dataset.k]; drawThemes(); unsaved(); }
+    if (a === "pick") { themePick = { t, key: e.target.dataset.k }; $("theme-pick").click(); }
+  });
+  $("theme-pick").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file || !themePick) return;
+    themeMsg("Uploading…");
+    try {
+      const id = await uploadSitePhoto(file, "replacement", "", "", true);
+      if (themePick.t.photos[themePick.key]) themeTrash.push(themePick.t.photos[themePick.key]);
+      themePick.t.photos[themePick.key] = id;
+      drawThemes(); unsaved();
+    } catch (err) { themeMsg(err.message); }
+  };
+  $("themes-save").onclick = async () => {
+    for (const t of themes) {
+      if (!t.name.trim()) { themeMsg("Give each holiday look a name."); return; }
+      if (t.when === "dates" && !(t.start && t.end)) { themeMsg(`Pick both dates for “${t.name}”, or set it to Off.`); return; }
+    }
+    $("themes-save").disabled = true;
+    try {
+      await saveSite({ themes });
+      const gone = themeTrash; themeTrash = [];
+      gone.forEach(id => id && api(`/api/admin/photos/${id}`, { method: "DELETE" }).catch(() => {}));
+      themes = site.themes.map(t => ({ ...t, photos: { ...t.photos } }));
+      drawThemes();
+      const live = themes.find(t => t.id === site.activeTheme);
+      themeMsg(live ? `Saved. The “${live.name}” look is showing on the website now (within a minute).` : "Saved. The website shows the normal look right now.");
+    } catch (err) { themeMsg(err.message); }
+    $("themes-save").disabled = false;
   };
 
   // ---------- site photos ----------
@@ -1500,7 +1658,7 @@
     photoMsg("Uploading…");
     try {
       const old = site.photos.replace[replaceKey];
-      site.photos.replace[replaceKey] = await uploadSitePhoto(file, "replacement");
+      site.photos.replace[replaceKey] = await uploadSitePhoto(file, "replacement", "", "", /logo|flying-pig/.test(replaceKey));
       await savePhotos("Photo replaced.");
       if (old) api(`/api/admin/photos/${old}`, { method: "DELETE" }).catch(() => {});
     } catch (err) { photoMsg(err.message); }

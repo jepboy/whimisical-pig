@@ -1301,6 +1301,8 @@ async function notifyCustomer(request, env) {
 //   captions  new captions for the site's own gallery photos
 //   replace   key -> id of an uploaded photo shown instead of the site's own one
 //   groups    key -> the Our Work group a site photo was moved to
+// and themes: holiday looks, each { id, name, when: "off"|"on"|"dates", start, end (MM-DD,
+// every year), photos: { key -> id } } that swap the logos and flying pig while active.
 // A key is a work photo name ("military-shadow-boxes_05") or a file ("images/painting.webp").
 // Photos added from the admin page are in the site_photos table.
 
@@ -1312,7 +1314,16 @@ const MAX_PHOTO_BYTES = 1_900_000, MAX_SMALL_BYTES = 700_000;
 async function siteData(env) {
   const row = await kvGet(env, "site");
   const v = (row && row.value) || {};
-  return { banners: v.banners || [], photos: { hidden: [], captions: {}, replace: {}, groups: {}, ...(v.photos || {}) } };
+  return { banners: v.banners || [], themes: v.themes || [],
+           photos: { hidden: [], captions: {}, replace: {}, groups: {}, ...(v.photos || {}) } };
+}
+
+const THEME_KEYS = ["images/logo-full.webp", "images/logo-mark.webp", "images/flying-pig.webp"];
+// The holiday look showing today: one turned on, else the first whose dates include today
+function activeTheme(themes, today) {
+  const md = today.slice(5);
+  const inDates = t => t.start && t.end && (t.start <= t.end ? md >= t.start && md <= t.end : md >= t.start || md <= t.end);
+  return themes.find(t => t.when === "on") || themes.find(t => t.when === "dates" && inDates(t)) || null;
 }
 
 function bannerActive(b, today) {
@@ -1324,9 +1335,12 @@ async function publicSite(env) {
   const today = todayNY();
   const { results } = await env.DB.prepare(
     `SELECT id, grp, caption FROM site_photos WHERE kind = 'gallery' ORDER BY sort, id`).all();
+  const theme = activeTheme(site.themes, today);
   return json({
     banners: site.banners.filter(b => bannerActive(b, today)).map(({ on, start, end, ...b }) => b),
     ...site.photos,
+    replace: { ...site.photos.replace, ...(theme ? theme.photos : {}) },
+    theme: theme ? theme.name : "",
     added: results.map(r => ({ id: r.id, group: r.grp, caption: r.caption })),
   }, 200, { "Cache-Control": "public, max-age=60" });
 }
@@ -1343,7 +1357,8 @@ async function adminSite(env) {
   const site = await siteData(env);
   const { results } = await env.DB.prepare(
     `SELECT id, kind, grp, caption, sort, created_at FROM site_photos ORDER BY sort, id`).all();
-  return json({ ...site, uploads: results, styles: BANNER_STYLES, pages: PAGES }, 200, { "Cache-Control": "no-store" });
+  const theme = activeTheme(site.themes, todayNY());
+  return json({ ...site, activeTheme: theme ? theme.id : "", uploads: results, styles: BANNER_STYLES, pages: PAGES }, 200, { "Cache-Control": "no-store" });
 }
 
 const safeLink = v => {
@@ -1390,8 +1405,21 @@ async function saveSite(request, env) {
       groups: Object.fromEntries(Object.entries(map(p.groups, v => cleanText(v, 60))).filter(([, v]) => v)),
     };
   }
+  if (b.themes !== undefined) {
+    if (!Array.isArray(b.themes) || b.themes.length > 20) return json({ error: "Up to 20 holiday looks." }, 400);
+    const md = v => /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(v || "") ? v : "";
+    site.themes = b.themes.map(t => ({
+      id: cleanText(t.id, 40) || crypto.randomUUID().slice(0, 8),
+      name: cleanText(t.name, 40) || "Holiday look",
+      when: ["on", "dates"].includes(t.when) ? t.when : "off",
+      start: md(t.start), end: md(t.end),
+      photos: Object.fromEntries(THEME_KEYS.map(k => [k, parseInt((t.photos || {})[k], 10)]).filter(([, v]) => v > 0)),
+    }));
+    if (site.themes.filter(t => t.when === "on").length > 1) return json({ error: "Only one holiday look can be on at a time." }, 400);
+  }
   await kvPut(env, "site", site, 0);
-  return json({ ok: true, ...site });
+  const theme = activeTheme(site.themes, todayNY());
+  return json({ ok: true, ...site, activeTheme: theme ? theme.id : "" });
 }
 
 // A photo from the admin page: the browser sends a big copy and a small copy

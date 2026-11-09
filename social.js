@@ -87,7 +87,8 @@
     return out;
   }
   const logoSrc = () => {
-    const id = site && site.photos && site.photos.replace["images/logo-full.webp"];
+    const live = site && (site.themes || []).find(t => t.id === site.activeTheme);
+    const id = (live && live.photos["images/logo-full.webp"]) || (site && site.photos && site.photos.replace["images/logo-full.webp"]);
     return id ? `/api/photo/${id}` : "images/logo-full.webp?v=2";
   };
 

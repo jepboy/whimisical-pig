@@ -99,7 +99,7 @@ const siteChanges = (() => {
 function photoKeyOf(img) {
   if (img.dataset.key) return img.dataset.key;
   const src = img.getAttribute("src") || "";
-  const m = src.match(/images\/work\/([\w-]+?)(?:-sm|-xs)?\.webp$/) || src.match(/(images\/[\w\-./]+)$/);
+  const m = src.match(/images\/work\/([\w-]+?)(?:-sm|-xs)?\.webp$/) || src.match(/(images\/[\w\-./]+?)(?:\?.*)?$/);
   return m ? (img.dataset.key = m[1]) : null;
 }
 function applyPhoto(img, d) {

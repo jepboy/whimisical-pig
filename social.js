@@ -88,7 +88,7 @@
   }
   const logoSrc = () => {
     const id = site && site.photos && site.photos.replace["images/logo-full.webp"];
-    return id ? `/api/photo/${id}` : "images/logo-full.webp";
+    return id ? `/api/photo/${id}` : "images/logo-full.webp?v=2";
   };
 
   // ---------- text ----------
@@ -168,7 +168,7 @@
       await Promise.all([
         document.fonts.load(serif(40)), document.fonts.load(sans(40)), document.fonts.load(sans(40, 700)),
         pic && loadImg(pic.full).then(i => photo = i),
-        st.logo && loadImg(logoSrc()).then(i => logo = i).catch(() => loadImg("images/logo-full.webp").then(i => logo = i)),
+        st.logo && loadImg(logoSrc()).then(i => logo = i).catch(() => loadImg("images/logo-full.webp?v=2").then(i => logo = i)),
         !look.photo && loadImg("images/flying-pig.webp").then(i => pig = i),
       ]);
     } catch (e) { $("social-msg").textContent = "Couldn't load that photo. Try another one."; }

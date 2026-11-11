@@ -1306,7 +1306,7 @@ async function notifyCustomer(request, env) {
 // A key is a work photo name ("military-shadow-boxes_05") or a file ("images/painting.webp").
 // Photos added from the admin page are in the site_photos table.
 
-const BANNER_STYLES = ["pink", "black", "cream"];
+const BANNER_STYLES = ["pink", "black", "cream", "alert"];
 const PAGES = ["all", "home", "work", "shop", "order", "design", "visit", "story", "help"];
 const PHOTO_KEY = /^(?:[\w-]{1,80}|images\/[\w-]{1,80}\.(?:webp|png|jpg))$/;
 const MAX_PHOTO_BYTES = 1_900_000, MAX_SMALL_BYTES = 700_000;
@@ -1572,10 +1572,10 @@ async function pushRequestToShopvox(env, id, origin) {
     if (photoRow) tries.push({ body: asForm(v.l), rep: v.rep });
     tries.push({ body: v.l, rep: v.rep });
   }
-  let res = null, repUsed = false;
+  let res = null, repUsed = false, photoSent = false;
   for (const t of tries) {
     const r = await shopvoxCall(env, "POST", "/sales_leads", t.body);
-    if (!res || idOf(r)) { res = r; repUsed = t.rep; }
+    if (!res || idOf(r)) { res = r; repUsed = t.rep; photoSent = t.body instanceof FormData; }
     if (idOf(r) || !retryable(r)) break;
   }
   const leadId = idOf(res);
@@ -1604,7 +1604,26 @@ async function pushRequestToShopvox(env, id, origin) {
       note = `shopVOX didn't assign it to "${env.SHOPVOX_SALES_REP}". In shopVOX, assign any one lead to her by hand, then send another test order so the site can learn her user ID.`;
     }
   }
-  return { ok: true, id: String(leadId), ...(assignedTo ? { assigned_to: assignedTo } : {}), ...(note ? { note } : {}) };
+  // A new lead takes one file, so every other photo (and PDF) goes in as an update to
+  // the lead, one at a time, so they all show under Assets
+  const sendable = files.filter(f => /^image\/|^application\/pdf$/.test(f.mime));
+  const extra = sendable.filter(f => !(photoSent && f === firstPhoto));
+  let added = 0, refused = "";
+  for (const f of extra) {
+    const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(f.id).first();
+    if (!row) continue;
+    const fd = new FormData();
+    fd.append("asset", new Blob([await fileBytes(env, f.id, row.data)], { type: f.mime }), f.name);
+    const up = await shopvoxCall(env, "PUT", `/sales_leads/${encodeURIComponent(leadId)}`, fd);
+    if (up.ok) added++; else { refused = shopvoxError(up); break; }
+  }
+  const inLead = (photoSent ? 1 : 0) + added;
+  if (sendable.length > 1 || refused) {
+    const msg = inLead === sendable.length ? `All ${sendable.length} photos/files were sent to the lead's Assets.`
+      : `shopVOX took ${inLead} of ${sendable.length} photos/files${refused ? ` (${refused})` : ""}; links to all of them are in the lead's details.`;
+    note = note ? `${note} ${msg}` : msg;
+  }
+  return { ok: true, id: String(leadId), ...(assignedTo ? { assigned_to: assignedTo } : {}), ...(note ? { note } : {}), photos: { sent: inLead, total: sendable.length } };
 }
 
 const repNameOf = d => (d && ((d.salesRep && d.salesRep.name) || d.salesRepName)) || "";

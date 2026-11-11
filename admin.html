@@ -709,14 +709,14 @@
   $("req-refresh").onclick = loadRequests;
 
   // A filled-in order with a test picture, sent the same way a customer's order is
-  async function testPicture() {
+  async function testPicture(n = 1) {
     const c = document.createElement("canvas");
     c.width = 800; c.height = 600;
     const g = c.getContext("2d");
     g.fillStyle = "#f9e4eb"; g.fillRect(0, 0, 800, 600);
     g.fillStyle = "#e7a3b8"; g.fillRect(40, 40, 720, 520);
     g.fillStyle = "#141112"; g.textAlign = "center";
-    g.font = "bold 64px Georgia, serif"; g.fillText("TEST PHOTO", 400, 270);
+    g.font = "bold 64px Georgia, serif"; g.fillText(`TEST PHOTO ${n}`, 400, 270);
     g.font = "28px Georgia, serif"; g.fillText("The Whimsical Pig website test order", 400, 330);
     g.fillText(new Date().toLocaleString(), 400, 380);
     try {
@@ -739,18 +739,18 @@
       "Background: black velvet", "Frame: dark walnut", "",
       "Name: Wyatt Wagner", "Phone: 3158166448", "Email: wwagner@yolc.org",
       "Needed in hand by: " + new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
-      "Pick up or ship: I'll pick it up at the shop", "Photos: test-photo.png",
+      "Pick up or ship: I'll pick it up at the shop", "Photos: test-photo-1.png, test-photo-2.png, test-photo-3.png",
     ].join("\n");
     const fd = new FormData();
     for (const [k, v] of Object.entries({ test: "1", ref, type: "Military Framing (TEST)", name: "Wyatt Wagner",
       email: "wwagner@yolc.org", phone: "3158166448",
       needed_by: new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
       fulfill: "I'll pick it up at the shop", summary })) fd.append(k, v);
-    fd.append("photos", await testPicture(), "test-photo.png");
+    for (const n of [1, 2, 3]) fd.append("photos", await testPicture(n), `test-photo-${n}.png`);
     try {
       const r = await api("/api/order-request", { method: "POST", body: fd });
       await loadRequests();
-      if (r.shopvox && r.shopvox.ok) alert(`Test order ${ref} was sent and shopVOX accepted it (lead ${r.shopvox.id}). Look for "${ref}" in shopVOX Sales Leads, then delete it in both places.` +
+      if (r.shopvox && r.shopvox.ok) alert(`Test order ${ref} was sent and shopVOX accepted it (lead ${r.shopvox.id}). Look for "${ref}" in shopVOX Sales Leads, check that TEST PHOTO 1, 2 and 3 are all under Assets, then delete it in both places.` +
         `\n\nAssigned to: ${r.shopvox.assigned_to || "nobody (no sales rep)"}` + (r.shopvox.note ? `\n\nNote: ${r.shopvox.note}` : ""));
       else alert(`Test order ${ref} was saved here, but shopVOX didn't take it:\n\n${(r.shopvox && r.shopvox.error) || "No answer from shopVOX."}\n\nSend me that message.`);
     } catch (err) { alert(err.message); }
@@ -1238,7 +1238,7 @@
 
   // ---------- banners ----------
   const PAGE_NAMES = { all: "Every page", home: "Home", work: "Our Work", shop: "Shop", order: "Start an Order", design: "Design & Merch", visit: "Visit", story: "Our Story", help: "Help" };
-  const STYLE_NAMES = { pink: "Pink", black: "Black", cream: "Light pink" };
+  const STYLE_NAMES = { alert: "Red (closures, urgent)", pink: "Pink", black: "Black", cream: "Light pink" };
   let banners = [];
   async function loadBanners() {
     try { await loadSite(); } catch (err) { $("banners").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
@@ -1251,7 +1251,7 @@
     feature: () => ({ kind: "feature", style: "pink", title: "", text: "", pages: ["home"] }),
     holiday: () => ({ kind: "bar", style: "black", text: "Ordering a framed gift for the holidays? Please order by Dec 1 so it's ready in time.",
       button: "Start an Order", link: "order.html", pages: ["all"], end: new Date().getFullYear() + "-12-01" }),
-    closed: () => ({ kind: "bar", style: "black", text: "We're closed this Friday. Back Monday at 9am!", pages: ["all"], end: isoDay(new Date(Date.now() + 7 * 86400000)) }),
+    closed: () => ({ kind: "bar", style: "alert", text: "We're closed this Friday. Back Monday at 9am!", pages: ["all"], end: isoDay(new Date(Date.now() + 7 * 86400000)) }),
     event: () => ({ kind: "feature", style: "pink", title: "Come See Us!", text: "We'll be at the Lewis County Ren Faire with all-new shirts.",
       button: "Shop Ren Faire Merch", link: "shop.html?c=lewis-county-ren-faire", pages: ["home", "shop"] }),
   };

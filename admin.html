@@ -751,8 +751,9 @@
     const ref = "WP-TEST-" + Date.now().toString(36).slice(-5).toUpperCase();
     const summary = [
       "*** TEST ORDER from the admin page. Please delete. ***", "",
-      "Order type: Military Framing", "Starting point: Guidon shadow box",
-      "Unit: B Co 2-14 IN, 10th Mountain Division", "Items: guidon, 4 medals, 1 photo",
+      "Order type: Military Framing", "Starting point: Framed Guidon or Flag",
+      "Unit: B Co 2-14 IN, 10th Mountain Division", "Battalion Colors or Company Guidon: Company Guidon",
+      "Guidon: 2-14/B INF, non-regulation 8 × 11 in", "Items: Ranks, Coins, Photos",
       "Background: black velvet", "Frame: dark walnut", "",
       "Name: Wyatt Wagner", "Phone: 3158166448", "Email: wwagner@yolc.org",
       "Needed in hand by: " + new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
@@ -763,6 +764,8 @@
       email: "wwagner@yolc.org", phone: "3158166448",
       needed_by: new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
       fulfill: "I'll pick it up at the shop", summary })) fd.append(k, v);
+    fd.append("answers", JSON.stringify({ type: "military", example: "Framed Guidon or Flag", q: { unit: ["B Co 2-14 IN, 10th Mountain Division"],
+      flag_kind: ["Company Guidon"], guidon_text: ["2-14/B INF"], guidon_size: ["Non-regulation 8 × 11 in"], items: ["Ranks", "Coins", "Photos"] } }));
     for (const n of [1, 2, 3]) fd.append("photos", await testPicture(n), `test-photo-${n}.png`);
     try {
       const r = await api("/api/order-request", { method: "POST", body: fd });

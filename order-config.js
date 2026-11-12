@@ -35,7 +35,12 @@
 //               required: true     makes one mandatory
 //               showIf: { q: "id", is: "answer" }   only asks when another
 //                                  question has that answer (or is: ["a", "b"]
-//                                  for any of several answers)
+//                                  for any of several answers); q: "example"
+//                                  checks the starting point they picked
+//
+//  The shop's shopVOX products are picked from these answers on the server
+//  (src/shopvox-items.js). Customers never see the product list. If you change
+//  a question's id or options, update that file too.
 // =====================================================================
 
 window.ORDER = {
@@ -64,6 +69,8 @@ window.ORDER = {
         "Company-specific coins or patches: you'll need to supply these",
       ],
       questions: [
+        { id: "snowshoe_size", label: "Snowshoe size", type: "radio", showIf: { q: "example", is: "Snowshoe" },
+          options: ["Mini (5 × 15 in)", "Medium (9 × 29 in)", "Large (11 × 36 in)", "X-Large (12 × 42 in)", "Not sure"] },
         { id: "unit", label: "What company or unit is this for?", type: "text", required: true,
           placeholder: "Start typing, e.g. 1-32 B Co", help: "Pick your unit from the list if it's there. This sets the mat colors." },
         { id: "plate_note", type: "note",

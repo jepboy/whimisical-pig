@@ -619,7 +619,7 @@
     const ph = q.placeholder ? ` placeholder="${esc(q.placeholder)}"` : "";
     const attrs = `id="${id}" name="${id}"${ph}`;
     const reqAttr = (q.required ? " data-req" : "") +
-      (q.showIf ? ` data-show-if='${esc(JSON.stringify({ name: prefix + q.showIf.q, is: q.showIf.is, not: q.showIf.not })).replace(/'/g, "&#39;")}'` : "");
+      (q.showIf ? ` data-show-if='${esc(JSON.stringify({ name: q.showIf.q === "example" ? "example" : prefix + q.showIf.q, is: q.showIf.is, not: q.showIf.not })).replace(/'/g, "&#39;")}'` : "");
     switch (q.type) {
       case "note":
         return `<p class="note">${esc(q.text)}</p>`;
@@ -1109,6 +1109,11 @@
         fd.append("fulfill", valueOf("c_fulfill"));
         fd.append("unit", valueOf("q_unit"));
         fd.append("summary", plainText(ref));
+        // Each answer on its own, so the shop's system can fill in the right items
+        fd.append("answers", JSON.stringify({ type: t ? t.id : "", example: valueOf("example"), q: Object.fromEntries((t ? t.questions : [])
+          .filter(q => q.type !== "note")
+          .filter(q => { const el = form.querySelector(`[name="q_${q.id}"]`); return el && isShown(el); })
+          .map(q => [q.id, valuesOf("q_" + q.id)]).filter(([, v]) => v.length)) }));
         fd.append("website", form.elements.website ? form.elements.website.value : "");
         for (const f of await Promise.all(files.map(f => shrinkPhoto(f)))) fd.append("photos", f, f.name);
         try {

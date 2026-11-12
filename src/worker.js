@@ -1,4 +1,5 @@
 // The Whimsical Pig — website back end (Cloudflare Worker)
+import { suggestItems } from "./shopvox-items.js";
 //
 // Static pages (index.html, shop.html, admin.html, ...) are served from the repo
 // by Cloudflare's asset hosting. This Worker handles:
@@ -132,6 +133,7 @@ const MIGRATIONS = [
   `ALTER TABLE requests ADD COLUMN unit TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE requests ADD COLUMN convert_key TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE requests ADD COLUMN shopvox_order TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN answers TEXT NOT NULL DEFAULT ''`,
 ];
 
 let schemaReady = false;
@@ -732,11 +734,19 @@ async function saveOrderRequest(request, env, ctx) {
     }
   }
 
+  // Each answer on its own (question id -> values), used to pick shopVOX products
+  let answers = "";
+  try {
+    const a = JSON.parse(field("answers", 12000) || "null");
+    if (a && typeof a === "object") answers = JSON.stringify({ type: String(a.type || "").slice(0, 40), example: String(a.example || "").slice(0, 120),
+      q: Object.fromEntries(Object.entries(a.q && typeof a.q === "object" ? a.q : {}).slice(0, 80)
+        .map(([k, v]) => [String(k).slice(0, 60), (Array.isArray(v) ? v : [v]).slice(0, 20).map(x => String(x).slice(0, 2000))])) });
+  } catch (e) { /* the summary still has everything */ }
   const row = await env.DB.prepare(
-    `INSERT INTO requests (ref, type, name, email, phone, needed_by, fulfill, summary, unit)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+    `INSERT INTO requests (ref, type, name, email, phone, needed_by, fulfill, summary, unit, answers)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
   ).bind(ref, field("type", 80), field("name"), field("email"), field("phone", 40),
-         field("needed_by", 40), field("fulfill", 80), summary, field("unit", 120)).first();
+         field("needed_by", 40), field("fulfill", 80), summary, field("unit", 120), answers).first();
   for (const f of files) await saveRequestFile(env, row.id, f);
   // Copy it into shopVOX as a sales lead (after the customer gets their reply)
   const origin = new URL(request.url).origin;
@@ -1512,6 +1522,14 @@ const shopvoxError = r => {
   return `shopVOX said ${r.status}${msg ? ": " + String(msg).slice(0, 200) : ""}`;
 };
 
+// The shopVOX products their answers point to, written out for a quote or order
+function suggestedLines(r) {
+  let items = [];
+  try { items = suggestItems(JSON.parse(r.answers || "null"), r.needed_by, todayNY()); } catch (e) { items = []; }
+  return items.length ? ["", "Suggested shopVOX items (from their answers):",
+    ...items.map(i => `- ${i.product}${i.quantity > 1 ? ` × ${i.quantity}` : ""}${i.check ? ` (CHECK: ${i.check})` : ""}`)] : [];
+}
+
 // The lead: title, every answer, and links to the customer's photos
 async function pushRequestToShopvox(env, id, origin) {
   const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
@@ -1537,6 +1555,7 @@ async function pushRequestToShopvox(env, id, origin) {
     r.fulfill && `Pick up / ship: ${r.fulfill}`,
     "",
     r.summary,
+    ...suggestedLines(r),
     files.length ? "\nPhotos and files from the customer:" : "",
     ...files.map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
   ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 19000) +
@@ -1761,13 +1780,25 @@ async function makeSalesOrder(env, r, origin) {
     ...(contactId ? { primaryContactId: contactId } : {}),
     ...(repId ? { primarySalesRepId: repId } : env.SHOPVOX_SALES_REP ? { salesRepName: env.SHOPVOX_SALES_REP } : {}),
   };
+  // Then the shopVOX products their answers point to (src/shopvox-items.js)
+  let picked = [];
+  try { picked = suggestItems(JSON.parse(r.answers || "null"), due, todayNY()); } catch (e) { picked = []; }
+  const products = picked.map((p, i) => ({ name: p.product, productName: p.product, position: String(i + 2), quantity: `${p.quantity}.0`, uom: "Each",
+    description: p.check ? `CHECK: ${p.check}` : "Picked from the customer's website answers." }));
   const { name, description, quantity } = item;
-  const tries = [{ workOrder: { ...wo, lineItems: [item] } }, { workOrder: { ...wo, lineItems: [{ name, description, quantity }] } }, { workOrder: wo }];
-  let res = null;
-  for (const body of tries) {
-    res = await shopvoxCall(env, "POST", "/sales_orders", body);
+  const slim = products.map(({ name, productName, quantity, description }) => ({ name, productName, quantity, description }));
+  // Fullest first; if shopVOX refuses, try simpler versions so the order still gets made
+  const tries = [
+    ...(products.length ? [{ items: [item, ...products], withProducts: true }, { items: [{ name, description, quantity }, ...slim], withProducts: true }] : []),
+    { items: [item], withProducts: false }, { items: [{ name, description, quantity }], withProducts: false }, { items: null, withProducts: false },
+  ];
+  let res = null, productsIn = false;
+  for (const t of tries) {
+    res = await shopvoxCall(env, "POST", "/sales_orders", { workOrder: t.items ? { ...wo, lineItems: t.items } : wo });
+    productsIn = t.withProducts;
     if ((res.ok && res.data && res.data.id) || !(res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 403)) break;
   }
+  const productError = picked.length && !productsIn && res.ok ? "shopVOX wouldn't take the picked products" : "";
   if (!(res.ok && res.data && res.data.id)) return { error: shopvoxError(res) };
   const made = { id: String(res.data.id), number: String(res.data.txnNumber || "") };
   await env.DB.prepare(`UPDATE requests SET shopvox_order = ? WHERE id = ?`).bind(JSON.stringify(made), r.id).run();
@@ -1782,10 +1813,13 @@ async function makeSalesOrder(env, r, origin) {
       if (fix.ok) { const again = await shopvoxCall(env, "GET", `/sales_orders/${encodeURIComponent(made.id)}`);
         const W2 = again.ok && again.data && (again.data.workOrder || again.data.salesOrder || again.data); if (W2) Object.assign(W, W2); }
     }
+    const lines = Array.isArray(W.lineItems) ? W.lineItems : [];
+    const isPicked = l => picked.some(p => p.product === (l.productName || l.name));
     kept = { customer: !!(W.companyId || (W.company && W.company.id)), notes: !!(W.description || W.specialNotes),
-             item: Array.isArray(W.lineItems) && W.lineItems.length > 0, due: !!W.dueDate };
+             item: lines.length > 0, due: !!W.dueDate,
+             ...(picked.length ? { products: lines.filter(isPicked).length, priced: lines.filter(isPicked).some(l => parseFloat(l.priceInDollars || l.totalPriceInDollars || 0) > 0) } : {}) };
   }
-  return { ok: true, ...made, view, ...(kept ? { kept } : {}) };
+  return { ok: true, ...made, view, picked: picked.map(p => p.product), ...(productError ? { productError } : {}), ...(kept ? { kept } : {}) };
 }
 
 const htmlEsc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -1894,7 +1928,10 @@ async function salesOrderPage(env, id, key, doIt, origin) {
   const res = await makeSalesOrder(env, r, origin);
   if (!res.ok) return salesOrderHtml("Couldn't make it", `<h1 class="bad">shopVOX didn't make it</h1>${facts}<p>${htmlEsc(res.error)}</p><p class="hint">Go back and try again, or make the sales order in shopVOX by hand.</p>`, 502);
   const k = res.kept, mark = v => v ? "✓" : "✗ (not kept by shopVOX)";
-  const keptList = k ? `<ul><li>Customer ${mark(k.customer)}</li><li>Order notes ${mark(k.notes)}</li><li>First item with every answer ${mark(k.item)}</li><li>Due date ${mark(k.due)}</li></ul>` : "";
+  const keptList = (k ? `<ul><li>Customer ${mark(k.customer)}</li><li>Order notes ${mark(k.notes)}</li><li>First item with every answer ${mark(k.item)}</li><li>Due date ${mark(k.due)}</li>
+    ${k.products !== undefined ? `<li>Products added: ${k.products} of ${res.picked.length}${k.products ? (k.priced ? ", with prices" : ", <b>no prices</b> (set them in shopVOX)") : ""}</li>` : ""}</ul>` : "") +
+    (res.picked.length ? `<p class="hint">Picked from their answers: ${res.picked.map(htmlEsc).join(", ")}. Items marked CHECK need a look.</p>` : "") +
+    (res.productError ? `<p class="bad">${htmlEsc(res.productError)}; add the items by hand.</p>` : "");
   return salesOrderHtml("Sales order made", `<h1 class="ok">Sales order made ✓</h1>${facts}<p>Look for sales order <b>${htmlEsc(res.number ? "#" + res.number : res.id)}</b> in shopVOX.
     Its first item has every answer; replace it with the real items and prices.</p>${keptList}
     <p><a class="btn" href="${htmlEsc(res.view.replace(/^https?:\/\/[^/]+/, ""))}">See their photos &amp; answers</a></p>`);

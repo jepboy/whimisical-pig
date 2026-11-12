@@ -181,6 +181,8 @@ async function route(request, env, url, path, ctx) {
   // The "make a sales order" link at the bottom of each shopVOX lead
   const so = path.match(/^\/api\/sales-order\/(\d+)\/([a-f0-9]{32})$/);
   if (so && (m === "GET" || m === "POST")) return salesOrderPage(env, +so[1], so[2], m === "POST", url.origin);
+  const ov = path.match(/^\/api\/order-view\/(\d+)\/([a-f0-9]{32})$/);
+  if (ov && m === "GET") return orderViewPage(env, +ov[1], ov[2], url.origin);
 
   if (path === "/api/admin/login" && m === "POST") return login(request, env);
   if (path === "/api/admin/logout" && m === "POST") return logout();
@@ -1528,6 +1530,7 @@ async function pushRequestToShopvox(env, id, origin) {
     await env.DB.prepare(`UPDATE requests SET convert_key = ? WHERE id = ?`).bind(r.convert_key, id).run();
   }
   const details = [
+    `PHOTOS AND EVERY ANSWER ON ONE PAGE: ${base}/api/order-view/${r.id}/${r.convert_key}`, "",
     `Website order ${r.ref}`,
     r.unit && `Unit: ${r.unit}`,
     r.needed_by && `Needed by: ${r.needed_by}`,
@@ -1712,6 +1715,17 @@ async function sendRequestToShopvox(env, id, origin) {
 // shopVOX's API can make sales orders but not quotes. This makes the sales order from
 // the lead as it is now in shopVOX (its customer, company and rep, even if someone
 // changed them there), with every answer and photo link. Prices are added in shopVOX.
+// One page with everything the customer sent (answers and photos), for whoever builds
+// the quote or sales order. Same key as the sales-order link.
+async function orderKey(env, r) {
+  if (!r.convert_key) {
+    r.convert_key = randomKey();
+    await env.DB.prepare(`UPDATE requests SET convert_key = ? WHERE id = ?`).bind(r.convert_key, r.id).run();
+  }
+  return r.convert_key;
+}
+const orderViewLink = (base, r) => `${base}/api/order-view/${r.id}/${r.convert_key}`;
+
 async function makeSalesOrder(env, r, origin) {
   if (r.shopvox_order) return { ok: true, already: true, ...JSON.parse(r.shopvox_order) };
   if (!shopvoxReady(env)) return { error: "shopVOX isn't set up (see Setup)." };
@@ -1721,28 +1735,34 @@ async function makeSalesOrder(env, r, origin) {
   const who = L.companyId && L.primaryContactId ? {} : await findShopvoxCustomer(env, r);
   const { results: files } = await env.DB.prepare(`SELECT id, name, share_key FROM request_files WHERE request_id = ?`).bind(r.id).all();
   const base = env.SITE_URL || origin;
+  await orderKey(env, r);
+  const view = orderViewLink(base, r);
   const due = /^\d{4}-\d{2}-\d{2}$/.test(r.needed_by || "") ? r.needed_by : "";
   const repId = L.salesRepId || env.SHOPVOX_SALES_REP_ID || ((await kvGet(env, "shopvox_rep")) || {}).value?.id || "";
   const companyId = L.companyId || who.companyId, contactId = L.primaryContactId || who.contactId;
+  const notes = [
+    `PHOTOS AND EVERY ANSWER ON ONE PAGE: ${view}`, "",
+    `Website order ${r.ref}`, r.unit && `Unit: ${r.unit}`, due && `Needed by: ${due}`, r.fulfill && `Pick up / ship: ${r.fulfill}`, "",
+    r.summary,
+    files.length ? "\nPhotos and files from the customer:" : "",
+    ...files.filter(f => f.share_key).map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
+  ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000);
+  // The customer's order goes in as the first line item, where it's seen while picking
+  // the real items: its description has every answer. Change or replace it in shopVOX.
+  const item = { name: `Customer's order from the website (${r.type || "custom order"})`.slice(0, 120),
+    description: notes, position: "1", quantity: "1.0", uom: "Each", priceInDollars: "0.0", totalPriceInDollars: "0.0" };
   const wo = {
     title: String(L.title || `${r.ref} · ${r.type || "Website order"} · ${r.name || "Customer"}`).slice(0, 200),
-    description: [
-      `Website order ${r.ref}`, r.unit && `Unit: ${r.unit}`, due && `Needed by: ${due}`, r.fulfill && `Pick up / ship: ${r.fulfill}`, "",
-      r.summary,
-      files.length ? "\nPhotos and files from the customer:" : "",
-      ...files.filter(f => f.share_key).map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
-    ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000),
+    description: notes,
+    specialNotes: `Website order ${r.ref}. Photos and every answer: ${view}`,
     txnDate: todayNY(),
     ...(due ? { dueDate: due, inHandDate: due } : {}),
     ...(companyId ? { companyId } : { companyName: r.unit || r.name || "Website customer" }),
     ...(contactId ? { primaryContactId: contactId } : {}),
     ...(repId ? { primarySalesRepId: repId } : env.SHOPVOX_SALES_REP ? { salesRepName: env.SHOPVOX_SALES_REP } : {}),
-    specialNotes: `Made from website order ${r.ref} (sales lead ${r.shopvox_id}).`,
   };
-  const item = { lineItems: [{ name: r.type || "Custom order", description: "Add the items and price", position: "1",
-    quantity: "1.0", uom: "Each", priceInDollars: "0.0", totalPriceInDollars: "0.0" }] };
-  // As documented ({ workOrder }), then with a placeholder item in case one is required
-  const tries = [{ workOrder: wo }, { workOrder: { ...wo, ...item } }];
+  const { name, description, quantity } = item;
+  const tries = [{ workOrder: { ...wo, lineItems: [item] } }, { workOrder: { ...wo, lineItems: [{ name, description, quantity }] } }, { workOrder: wo }];
   let res = null;
   for (const body of tries) {
     res = await shopvoxCall(env, "POST", "/sales_orders", body);
@@ -1751,23 +1771,62 @@ async function makeSalesOrder(env, r, origin) {
   if (!(res.ok && res.data && res.data.id)) return { error: shopvoxError(res) };
   const made = { id: String(res.data.id), number: String(res.data.txnNumber || "") };
   await env.DB.prepare(`UPDATE requests SET shopvox_order = ? WHERE id = ?`).bind(JSON.stringify(made), r.id).run();
-  return { ok: true, ...made };
+
+  // Read it back: what did shopVOX keep? If the notes didn't stick, set them again
+  const back = await shopvoxCall(env, "GET", `/sales_orders/${encodeURIComponent(made.id)}`);
+  const W = (back.ok && back.data && (back.data.workOrder || back.data.salesOrder || back.data)) || null;
+  let kept = null;
+  if (W) {
+    if (!W.description && !W.specialNotes) {
+      const fix = await shopvoxCall(env, "PUT", `/sales_orders/${encodeURIComponent(made.id)}`, { workOrder: { description: notes, specialNotes: wo.specialNotes } });
+      if (fix.ok) { const again = await shopvoxCall(env, "GET", `/sales_orders/${encodeURIComponent(made.id)}`);
+        const W2 = again.ok && again.data && (again.data.workOrder || again.data.salesOrder || again.data); if (W2) Object.assign(W, W2); }
+    }
+    kept = { customer: !!(W.companyId || (W.company && W.company.id)), notes: !!(W.description || W.specialNotes),
+             item: Array.isArray(W.lineItems) && W.lineItems.length > 0, due: !!W.dueDate };
+  }
+  return { ok: true, ...made, view, ...(kept ? { kept } : {}) };
 }
 
 const htmlEsc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-function salesOrderHtml(title, body, status = 200) {
+function salesOrderHtml(title, body, status = 200, wide = false) {
   return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow"><title>${htmlEsc(title)} · The Whimsical Pig</title><style>
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:#141112;color:#f6eef0;font:16px/1.5 Lato,Arial,sans-serif;padding:16px;box-sizing:border-box}
 main{width:min(520px,calc(100vw - 32px));box-sizing:border-box;background:#221b1e;border:1px solid rgba(231,163,184,.35);border-radius:18px;padding:28px}
 h1{font:600 1.9rem/1.15 Georgia,serif;margin:0 0 12px}dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:16px 0}
 dt{color:#bba7ae}dd{margin:0}.btn{display:inline-block;margin-top:8px;padding:14px 26px;border:0;border-radius:999px;background:#e7a3b8;color:#141112;
-font:700 1rem Lato,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.hint{color:#bba7ae;font-size:.92rem}
-.ok{color:#9fd8a8}.bad{color:#f0a49a}</style></head><body><main>${body}</main></body></html>`, {
+font:700 1rem Lato,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-decoration:none;text-align:center}.hint{color:#bba7ae;font-size:.92rem}
+.ok{color:#9fd8a8}.bad{color:#f0a49a}
+h2{font:600 1.3rem Georgia,serif;margin:22px 0 10px}pre{white-space:pre-wrap;background:#141112;border:1px solid rgba(246,238,240,.1);border-radius:12px;padding:14px;font:15px/1.55 Lato,Arial,sans-serif}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.pics a{color:#bba7ae;font-size:.8rem;text-decoration:none;word-break:break-all}
+.pics img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid rgba(231,163,184,.35);margin-bottom:4px}.pics .file{color:#e7a3b8}
+main.wide{width:min(960px,calc(100vw - 32px))}</style></head><body><main${wide ? ' class="wide"' : ""}>${body}</main></body></html>`, {
     status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Frame-Options": "DENY",
-      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'", "Referrer-Policy": "no-referrer" },
+      "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'", "Referrer-Policy": "no-referrer" },
   });
 }
+async function orderViewPage(env, id, key, origin) {
+  const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
+  if (!r || !r.convert_key || !timingSafeEqual(r.convert_key, key)) return salesOrderHtml("Link not found", "<h1>This link isn't valid</h1>", 404);
+  const { results: files } = await env.DB.prepare(`SELECT id, name, mime, share_key FROM request_files WHERE request_id = ?`).bind(id).all();
+  for (const f of files) if (!f.share_key) {
+    f.share_key = randomKey();
+    await env.DB.prepare(`UPDATE request_files SET share_key = ? WHERE id = ?`).bind(f.share_key, f.id).run();
+  }
+  const pics = files.map(f => {
+    const src = `/api/files/${f.id}/${f.share_key}`;
+    return /^image\//.test(f.mime) ? `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${htmlEsc(f.name)}"><span>${htmlEsc(f.name)}</span></a>`
+      : `<a class="file" href="${src}" target="_blank" rel="noopener">${htmlEsc(f.name)}</a>`;
+  }).join("");
+  return salesOrderHtml(`${r.ref} order`, `<h1>${htmlEsc(r.type || "Order")} · ${htmlEsc(r.name || "")}</h1>
+    <dl><dt>Order</dt><dd>${htmlEsc(r.ref)}</dd>${r.unit ? `<dt>Unit</dt><dd>${htmlEsc(r.unit)}</dd>` : ""}
+    <dt>Needed by</dt><dd>${htmlEsc(r.needed_by || "—")}</dd><dt>Pick up / ship</dt><dd>${htmlEsc(r.fulfill || "—")}</dd>
+    ${r.phone ? `<dt>Phone</dt><dd>${htmlEsc(r.phone)}</dd>` : ""}${r.email ? `<dt>Email</dt><dd>${htmlEsc(r.email)}</dd>` : ""}</dl>
+    ${files.length ? `<h2>Photos &amp; files (${files.length})</h2><div class="pics">${pics}</div><p class="hint">Click a photo to open it full size.</p>` : ""}
+    <h2>What they asked for</h2><pre>${htmlEsc(r.summary)}</pre>`, 200, true);
+}
+
 async function salesOrderPage(env, id, key, doIt, origin) {
   const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
   if (!r || !r.convert_key || !timingSafeEqual(r.convert_key, key)) return salesOrderHtml("Link not found", "<h1>This link isn't valid</h1><p>Open it from the sales lead in shopVOX.</p>", 404);
@@ -1786,7 +1845,11 @@ async function salesOrderPage(env, id, key, doIt, origin) {
   }
   const res = await makeSalesOrder(env, r, origin);
   if (!res.ok) return salesOrderHtml("Couldn't make it", `<h1 class="bad">shopVOX didn't make it</h1>${facts}<p>${htmlEsc(res.error)}</p><p class="hint">Go back and try again, or make the sales order in shopVOX by hand.</p>`, 502);
-  return salesOrderHtml("Sales order made", `<h1 class="ok">Sales order made ✓</h1>${facts}<p>Look for sales order <b>${htmlEsc(res.number ? "#" + res.number : res.id)}</b> in shopVOX, then check the items and prices.</p><p class="hint">You can close this tab.</p>`);
+  const k = res.kept, mark = v => v ? "✓" : "✗ (not kept by shopVOX)";
+  const keptList = k ? `<ul><li>Customer ${mark(k.customer)}</li><li>Order notes ${mark(k.notes)}</li><li>First item with every answer ${mark(k.item)}</li><li>Due date ${mark(k.due)}</li></ul>` : "";
+  return salesOrderHtml("Sales order made", `<h1 class="ok">Sales order made ✓</h1>${facts}<p>Look for sales order <b>${htmlEsc(res.number ? "#" + res.number : res.id)}</b> in shopVOX.
+    Its first item has every answer; replace it with the real items and prices.</p>${keptList}
+    <p><a class="btn" href="${htmlEsc(res.view.replace(/^https?:\/\/[^/]+/, ""))}">See their photos &amp; answers</a></p>`);
 }
 
 // Read-only check that the Account ID and token work

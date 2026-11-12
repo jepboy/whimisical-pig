@@ -216,6 +216,7 @@
   .svi-tools { grid-column: 2 / -1; display: flex; gap: 12px; flex-wrap: wrap; }
   .svi-tools:empty { display: none; }
   .warn-txt { color: #e59a90; font-size: 0.82rem; }
+  .ok-txt { color: #9fd8a8; font-size: 0.82rem; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   @media (max-width: 700px) { .svi-row { grid-template-columns: 1fr; padding-bottom: 10px; border-bottom: 1px solid var(--hair); } .svi-tools { grid-column: 1; } }
   /* holiday looks */
@@ -553,11 +554,14 @@
             Change a product by typing its name (suggestions come from your shopVOX products). Leave it blank to add nothing.</p>
         </div>
         <div class="tools">
+          <button class="btn ghost sm" id="svp-ids" type="button">Find Product IDs</button>
           <label class="btn ghost sm" style="cursor:pointer">Update Product List <input type="file" id="svp-file" accept=".csv,text/csv" hidden></label>
           <button class="btn sm" id="svi-save" type="button">Save</button>
         </div>
       </div>
       <p class="hint" id="svi-msg" role="status"></p>
+      <p class="hint"><b>Linked</b> items go into shopVOX as your real product, with its price. shopVOX only shares a product's ID through orders that used it,
+        so <em>Find Product IDs</em> reads your recent sales orders and quotes. If an item says <b>not linked yet</b>, put that product on any one sales order in shopVOX, then press Find Product IDs again.</p>
       <p class="hint">The <b>note</b> shows on that item in shopVOX; use it for reminders like "check the size". Product list from <span id="svp-date"></span>.
         To refresh it: in shopVOX, export your products to a CSV, then press <em>Update Product List</em> and pick that file.</p>
       <div id="svi-groups"></div>
@@ -575,6 +579,7 @@
           <a class="btn ghost sm" href="sign.html?review=1" target="_blank" rel="noopener">Print Review Sign</a>
           <button class="btn ghost sm" id="test-order" type="button">Send a Test Order</button>
           <button class="btn ghost sm" id="test-shopvox" type="button">Test shopVOX</button>
+          <button class="btn ghost sm" id="test-photos" type="button">Test Photo Uploads</button>
           <button class="btn ghost sm" id="setup-refresh" type="button">Check Again</button>
         </div>
       </div>
@@ -777,6 +782,19 @@
     } catch (e) {}
     return new Promise(ok => c.toBlob(ok, "image/png"));
   }
+  // Which way does shopVOX keep more than one photo on a lead? (test leads are deleted after)
+  $("test-photos").onclick = async e => {
+    if (!confirm("Test photo uploads? This makes a few test sales leads in shopVOX (titled WEBSITE PHOTO TEST), checks which way keeps more than one photo, then deletes them. Takes about 30 seconds.")) return;
+    const b = e.target; b.disabled = true; b.textContent = "Testing…";
+    try {
+      const r = await send("/api/admin/shopvox-photo-test", "POST", {});
+      const lines = r.results.map(x => `${x.label}: ${x.error ? "error (" + x.error + ")" : x.kept === null ? "couldn't count" : x.kept + " kept"}`).join("\n");
+      alert(r.winner ? `Found it: "${r.winner}" keeps every photo. From now on, every photo on a website order goes to the shopVOX lead.\n\n${lines}`
+        : r.countWorks ? `None of the ways kept more than one photo, so orders keep sending the first photo (links to all are in the lead and on the photos page).\n\n${lines}\n\nSend this to Claude.`
+        : `shopVOX doesn't report photo counts through its API, so the test leads were left in Sales Leads (titled WEBSITE PHOTO TEST). Open each one, see which has 2 photos, and tell Claude.\n\n${lines}`);
+    } catch (err) { alert(err.message); }
+    b.disabled = false; b.textContent = "Test Photo Uploads";
+  };
   $("test-order").onclick = async e => {
     const b = e.target;
     if (!confirm("Send a test order? It goes to shopVOX (and the Order Backup) just like a real one. Delete it from both afterward.")) return;
@@ -1407,6 +1425,29 @@
     sviDirty = false; drawSvItems();
   }
   const productSet = () => new Set(svi.products.map(p => p[0]));
+  function linkTag(name) {
+    const l = (svi.linked || {})[name] || {}, price = l.price ? ` · $${(+l.price).toFixed(2)}` : " · price set in shopVOX";
+    return l.id ? `<span class="ok-txt">Linked${price}</span>` : `<span class="warn-txt">Not linked yet${l.price ? ` (list price $${(+l.price).toFixed(2)})` : ""}</span>`;
+  }
+  // Read recent sales orders, then quotes, a page at a time, for product IDs
+  $("svp-ids").onclick = async e => {
+    const b = e.target; b.disabled = true;
+    let read = 0, found = 0, known = 0;
+    try {
+      for (const [kind, max] of [["sales_orders", 25], ["quotes", 10]]) {
+        for (let page = 1, n = 0; page && n < max; n++) {
+          $("svi-msg").textContent = `Reading your shopVOX ${kind === "quotes" ? "quotes" : "sales orders"}… (${read} read, ${known} products found)`;
+          let r;
+          try { r = await send("/api/admin/shopvox-product-ids", "POST", { kind, page }); }
+          catch (err) { if (kind === "quotes" || read) break; throw err; }   // quotes are a bonus
+          read += r.read; found += r.found; known = r.known; page = r.next;
+        }
+      }
+      await loadSvItems();
+      $("svi-msg").textContent = `Done: read ${read} orders and quotes; ${known} products are linked (${found} new).`;
+    } catch (err) { $("svi-msg").textContent = err.message; }
+    b.disabled = false;
+  };
   function drawSvItems() {
     $("svp-date").textContent = svi.productsDate + ` (${svi.products.length} products)`;
     $("sv-products").innerHTML = svi.products.map(([n, c]) => `<option value="${esc(n)}">${esc(c)}</option>`).join("");
@@ -1420,6 +1461,7 @@
             <label><span class="sr">Product</span><input list="sv-products" data-f="product" value="${esc(s.product)}" placeholder="Nothing added" maxlength="150"></label>
             <label><span class="sr">Note</span><input data-f="note" value="${esc(s.note)}" placeholder="Note (optional)" maxlength="200"></label>
             <span class="svi-tools">${s.product && !known.has(s.product) ? '<span class="warn-txt">Not in your product list: check the spelling</span>' : ""}
+              ${s.product && known.has(s.product) ? linkTag(s.product) : ""}
               ${s.product !== s.defaultProduct || s.note !== s.defaultNote ? '<button type="button" class="linkish" data-reset>Use starting match</button>' : ""}</span>
           </div>`).join("")}</div>
       </div>`).join("");
@@ -1462,12 +1504,13 @@
     const rows = parseCsv((await file.text()).replace(/^\uFEFF/, ""));
     const head = rows.shift() || [], col = n => head.indexOf(n);
     const iName = col("Product Name"), iType = col("Type"), iCat = col("Category"), iAct = col("Active"), iPub = col("Published");
+    const iPrice = col("Price ($)"), iPricing = col("Pricing Type"), iUnits = col("Units"), iTax = col("Taxable"), iSale = col("Default Sale Type");
     if (iName < 0) { $("svi-msg").textContent = "That file doesn't look like a shopVOX product export (no Product Name column)."; return; }
     const seen = new Set(), products = [];
     for (const r of rows) {
       const n = (r[iName] || "").trim();
       if (!n || seen.has(n) || (iAct >= 0 && r[iAct] !== "Yes") || (iPub >= 0 && r[iPub] !== "Yes")) continue;
-      seen.add(n); products.push([n, [r[iType], r[iCat]].filter(Boolean).join(" · ")]);
+      seen.add(n); products.push([n, [r[iType], r[iCat]].filter(Boolean).join(" · "), parseFloat(r[iPrice]) || 0, r[iPricing] || "", r[iUnits] || "Each", r[iTax] || "", r[iSale] || ""]);
     }
     try {
       const keep = svi.groups;

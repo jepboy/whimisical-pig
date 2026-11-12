@@ -230,6 +230,8 @@ async function route(request, env, url, path, ctx) {
     if (path === "/api/admin/shopvox-items" && m === "GET") return shopvoxItemsInfo(env);
     if (path === "/api/admin/shopvox-items" && m === "PUT") return saveShopvoxItems(request, env);
     if (path === "/api/admin/shopvox-products" && m === "PUT") return saveShopvoxProducts(request, env);
+    if (path === "/api/admin/shopvox-product-ids" && m === "POST") return findProductIds(request, env);
+    if (path === "/api/admin/shopvox-photo-test" && m === "POST") return photoTest(env);
     const fm = path.match(/^\/api\/admin\/request-files\/(\d+)$/);
     if (fm && m === "GET") return serveRequestFile(env, +fm[1]);
   }
@@ -1522,7 +1524,8 @@ async function shopvoxCall(env, method, path, body) {
 }
 const shopvoxError = r => {
   const d = r.data || {};
-  const msg = d.error || d.message || (Array.isArray(d.errors) ? d.errors.join(", ") : d.errors && JSON.stringify(d.errors)) || d.raw || "";
+  const str = v => typeof v === "string" ? v : v ? JSON.stringify(v) : "";
+  const msg = str(d.error) || str(d.message) || (Array.isArray(d.errors) ? d.errors.map(str).join(", ") : str(d.errors)) || d.raw || "";
   return `shopVOX said ${r.status}${msg ? ": " + String(msg).slice(0, 200) : ""}`;
 };
 
@@ -1535,6 +1538,8 @@ async function shopvoxItemsInfo(env) {
     groups: ITEM_GROUPS.map(g => ({ title: g.title, hint: g.hint, slots: g.slots.map(([key, label, product, note]) =>
       ({ key, label, product: (slots[key] || ITEM_DEFAULTS[key]).product, note: (slots[key] || ITEM_DEFAULTS[key]).note, defaultProduct: product, defaultNote: note })) })),
     products: list ? list.value.products : SHOPVOX_PRODUCTS, productsDate: list ? list.value.date : "2026-11-12",
+    linked: Object.fromEntries([...(await productInfo(env))].filter(([, v]) => v.id || v.price).map(([n, v]) => [n, { id: !!v.id, price: v.price || 0 }])),
+    photoMode: ((await kvGet(env, "shopvox_asset_mode")) || {}).value || null,
   }, 200, { "Cache-Control": "no-store" });
 }
 async function saveShopvoxItems(request, env) {
@@ -1548,11 +1553,107 @@ async function saveShopvoxItems(request, env) {
   await kvPut(env, "shopvox_items", slots, 0);
   return shopvoxItemsInfo(env);
 }
-// A fresh product list from a shopVOX export (read in the browser): [[name, category], ...]
+// Every product we know: the list (name, price, units…) plus IDs found in past sales orders
+async function productInfo(env) {
+  const list = ((await kvGet(env, "shopvox_products")) || {}).value?.products || SHOPVOX_PRODUCTS;
+  const ids = ((await kvGet(env, "shopvox_product_ids")) || {}).value || {};
+  const out = new Map();
+  for (const [name, , price, , uom, taxable, saleType] of list)
+    out.set(name, { price: +price || 0, uom: uom || "Each", saleType: saleType || "In House", ...(taxable ? { taxable: taxable === "Yes" } : {}) });
+  for (const [name, v] of Object.entries(ids)) {
+    const o = out.get(name) || {};
+    out.set(name, { ...o, id: v.id, productType: v.productType || o.productType, uom: o.uom || v.uom,
+      // a list price of $0 (priced by formula or package): use the last price it sold for
+      price: o.price > 0 ? o.price : (+v.price || 0), lastPrice: +v.price || 0 });
+  }
+  return out;
+}
+// shopVOX's API can't list products, but its sales orders and quotes show the product
+// ID on each line item. Read recent ones (a page at a time) and remember name -> ID.
+async function findProductIds(request, env) {
+  const b = await readJson(request);
+  const kind = b.kind === "quotes" ? "quotes" : "sales_orders";
+  const page = Math.max(1, Math.min(200, parseInt(b.page, 10) || 1));
+  const idx = await shopvoxCall(env, "GET", `/${kind}?page=${page}&per_page=20`);
+  if (!idx.ok) return json({ error: shopvoxError(idx) }, 502);
+  const docs = listOf(idx.data, kind === "quotes" ? "quotes" : "salesOrders").concat(kind === "quotes" ? [] : listOf(idx.data, "sales_orders"), listOf(idx.data, "workOrders")).slice(0, 20);
+  const ids = ((await kvGet(env, "shopvox_product_ids")) || {}).value || {};
+  let found = 0, read = 0;
+  for (const d of docs) {
+    const id = d.id || (d.workOrder || {}).id;
+    let lines = d.lineItems;
+    if (!Array.isArray(lines) && id) {
+      const one = await shopvoxCall(env, "GET", `/${kind}/${encodeURIComponent(id)}`);
+      const w = one.ok && one.data && (one.data.workOrder || one.data.quote || one.data.salesOrder || one.data);
+      lines = w && w.lineItems;
+    }
+    read++;
+    for (const l of Array.isArray(lines) ? lines : []) {
+      const name = String(l.productName || (l.product && l.product.name) || "").trim(), pid = l.productId || (l.product && l.product.id);
+      if (!name || !pid) continue;
+      if (!ids[name]) found++;
+      ids[name] = { id: String(pid), price: parseFloat(l.priceInDollars || l.unitPriceInDollars || 0) || (ids[name] || {}).price || 0,
+                    uom: l.uom || "Each", productType: l.productType || "Product" };
+    }
+  }
+  await kvPut(env, "shopvox_product_ids", ids, 0);
+  const meta = (idx.data && idx.data.meta) || {};
+  const more = docs.length && (meta.nextPage || (meta.totalPages ? page < meta.totalPages : docs.length >= 20));
+  return json({ ok: true, kind, page, read, found, known: Object.keys(ids).length, next: more ? page + 1 : null });
+}
+
+// Which way does shopVOX keep more than one photo on a new lead? Make a few test leads
+// (2 small pictures each, sent different ways), count the photos shopVOX kept, delete
+// them, and use the way that worked for every order after.
+async function photoTest(env) {
+  if (!shopvoxReady(env)) return json({ error: "shopVOX isn't set up." }, 503);
+  const png = n => { const b = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg=="), c => c.charCodeAt(0));
+    return new Blob([b], { type: "image/png" }); };
+  const who = await findShopvoxCustomer(env, { email: "wwagner@yolc.org", name: "Wyatt Wagner", phone: "3158166448" });
+  const base = { workflowState: "new", nextContactDate: todayNY(), leadSourceName: "Website",
+    ...(who.contactId ? { primaryContactId: who.contactId } : { primaryContactName: "Website photo test" }),
+    ...(who.companyId ? { companyId: who.companyId } : { companyName: "Website photo test" }),
+    ...(env.SHOPVOX_PIPELINE ? { pipelineName: env.SHOPVOX_PIPELINE } : {}), ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}) };
+  const count = async id => {
+    const a = await shopvoxCall(env, "GET", `/sales_leads/${encodeURIComponent(id)}/assets`);
+    const d = a.data || {};
+    return a.ok ? ((d.meta && d.meta.totalCount) ?? listOf(d, "assets").length) : null;
+  };
+  const tries = [
+    { key: "one", label: "1 photo (to check the count works)", how: "create-all", field: "asset", n: 1 },
+    { key: "asset[]", label: "2 photos as asset[]", how: "create-all", field: "asset[]", n: 2 },
+    { key: "assets[]", label: "2 photos as assets[]", how: "create-all", field: "assets[]", n: 2 },
+    { key: "asset x2", label: "2 photos, both as asset", how: "create-all", field: "asset", n: 2 },
+    { key: "files[]", label: "2 photos as files[]", how: "create-all", field: "files[]", n: 2 },
+    { key: "put", label: "1 photo, then 1 more as an update", how: "put", field: "asset", n: 2 },
+  ];
+  const results = [];
+  for (const t of tries) {
+    const fd = new FormData();
+    for (const [k, v] of Object.entries({ ...base, title: `WEBSITE PHOTO TEST ${t.key} (delete me)`, details: "Made by the website's photo test. Safe to delete." })) fd.append(k, String(v));
+    for (let i = 1; i <= (t.how === "put" ? 1 : t.n); i++) fd.append(t.field, png(i), `test-${i}.png`);
+    const made = await shopvoxCall(env, "POST", "/sales_leads", fd);
+    const id = made.ok && made.data && (made.data.id || (made.data.salesLead || {}).id);
+    if (!id) { results.push({ ...t, error: shopvoxError(made) }); continue; }
+    if (t.how === "put") { const fd2 = new FormData(); fd2.append("asset", png(2), "test-2.png"); await shopvoxCall(env, "PUT", `/sales_leads/${encodeURIComponent(id)}`, fd2); }
+    results.push({ ...t, id: String(id), kept: await count(id) });
+  }
+  const baseline = results.find(r => r.key === "one");
+  const works = baseline && baseline.kept === 1;
+  const winner = works ? results.find(r => r.n === 2 && r.kept === 2) : null;
+  // Clean up (if the count can't be trusted, leave them so someone can look in shopVOX)
+  if (works) for (const r of results) if (r.id) await shopvoxCall(env, "DELETE", `/sales_leads/${encodeURIComponent(r.id)}`);
+  if (winner) await kvPut(env, "shopvox_asset_mode", { how: winner.how, field: winner.field, at: todayNY() }, 0);
+  return json({ ok: true, countWorks: !!works, winner: winner ? winner.label : "", cleanedUp: !!works,
+    results: results.map(({ label, kept, error, id }) => ({ label, kept, error, id })) });
+}
+
+// A fresh product list from a shopVOX export (read in the browser): [[name, category, price, pricing, units, taxable, sale type], ...]
 async function saveShopvoxProducts(request, env) {
   const b = await readJson(request);
   const list = (Array.isArray(b.products) ? b.products : []).slice(0, 5000)
-    .map(p => [cleanText(Array.isArray(p) ? p[0] : p, 150), cleanText(Array.isArray(p) ? p[1] : "", 120)]).filter(p => p[0]);
+    .map(p => Array.isArray(p) ? [cleanText(p[0], 150), cleanText(p[1], 120), Math.max(0, parseFloat(p[2]) || 0), cleanText(p[3], 30), cleanText(p[4], 20) || "Each", cleanText(p[5], 5), cleanText(p[6], 30)] : [cleanText(p, 150)])
+    .filter(p => p[0]);
   if (!list.length) return json({ error: "No products found in that file." }, 400);
   await kvPut(env, "shopvox_products", { products: list, date: todayNY() }, 0);
   return shopvoxItemsInfo(env);
@@ -1614,16 +1715,25 @@ async function pushRequestToShopvox(env, id, origin) {
     ...(env.SHOPVOX_STAGE ? { pipelineStageName: env.SHOPVOX_STAGE } : {}),
     ...(/^\d{4}-\d{2}-\d{2}$/.test(r.needed_by || "") ? { expectedCloseDate: r.needed_by } : {}),
   };
-  // The first photo goes in as the lead's asset (an uploaded file, like shopVOX's own
-  // lead form sends it), so it shows under Assets in shopVOX
-  const firstPhoto = files.find(f => /^image\//.test(f.mime));
-  const photoRow = firstPhoto && await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(firstPhoto.id).first();
-  if (photoRow) photoRow.data = await fileBytes(env, firstPhoto.id, photoRow.data);   // the whole photo, full size
+  // Photos go in as the lead's assets (uploaded files, like shopVOX's own lead form).
+  // How shopVOX takes more than one was found by the photo test (Admin → Setup):
+  // all in the new lead under one field name, or one at a time as updates.
+  // Until that test has run, only the first photo goes in.
+  const mode = ((await kvGet(env, "shopvox_asset_mode")) || {}).value || null;
+  const sendable = files.filter(f => /^image\/|^application\/pdf$/.test(f.mime));
+  const firstPhoto = files.find(f => /^image\//.test(f.mime)) || sendable[0];
+  const onCreate = !firstPhoto ? [] : mode && mode.how === "create-all" ? sendable : [firstPhoto];
+  for (const f of onCreate) {
+    const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(f.id).first();
+    f.bytes = row ? await fileBytes(env, f.id, row.data) : null;   // the whole file, full size
+  }
+  const toSend = onCreate.filter(f => f.bytes);
+  const photoRow = toSend.length ? true : null;
+  const field = mode && mode.how === "create-all" ? mode.field : "asset";
   const asForm = l => {
     const fd = new FormData();
     for (const [k, v] of Object.entries(l)) if (v !== null && v !== undefined) fd.append(k, String(v));
-    // The database can return the file as a list of numbers; make it real bytes
-    fd.append("asset", new Blob([new Uint8Array(photoRow.data)], { type: firstPhoto.mime }), firstPhoto.name);
+    for (const f of toSend) fd.append(field, new Blob([f.bytes], { type: f.mime }), f.name);
     return fd;
   };
   const idOf = r => r.ok && r.data && (r.data.id || (r.data.salesLead || r.data.sales_lead || {}).id);
@@ -1679,10 +1789,8 @@ async function pushRequestToShopvox(env, id, origin) {
       note = `shopVOX didn't assign it to "${env.SHOPVOX_SALES_REP}". In shopVOX, assign any one lead to her by hand, then send another test order so the site can learn her user ID.`;
     }
   }
-  // A new lead takes one file, so every other photo (and PDF) goes in as an update to
-  // the lead, one at a time, so they all show under Assets
-  const sendable = files.filter(f => /^image\/|^application\/pdf$/.test(f.mime));
-  const extra = sendable.filter(f => !(photoSent && f === firstPhoto));
+  // If the photo test found that updates work, the rest go in one at a time
+  const extra = mode && mode.how === "put" ? sendable.filter(f => !(photoSent && toSend.includes(f))) : [];
   let added = 0, refused = "";
   for (const f of extra) {
     const row = await env.DB.prepare(`SELECT data FROM request_files WHERE id = ?`).bind(f.id).first();
@@ -1692,10 +1800,10 @@ async function pushRequestToShopvox(env, id, origin) {
     const up = await shopvoxCall(env, "PUT", `/sales_leads/${encodeURIComponent(leadId)}`, fd);
     if (up.ok) added++; else { refused = shopvoxError(up); break; }
   }
-  const inLead = (photoSent ? 1 : 0) + added;
+  const inLead = (photoSent ? toSend.length : 0) + added;
   if (sendable.length > 1 || refused) {
     const msg = inLead === sendable.length ? `All ${sendable.length} photos/files were sent to the lead's Assets.`
-      : `shopVOX took ${inLead} of ${sendable.length} photos/files${refused ? ` (${refused})` : ""}; links to all of them are in the lead's details.`;
+      : `${inLead} of ${sendable.length} photos/files went to the lead's Assets${refused ? ` (${refused})` : ""}${!mode ? " (run Test Photo Uploads in Admin → Setup to send them all)" : ""}; links to all of them are in the lead's details.`;
     note = note ? `${note} ${msg}` : msg;
   }
   return { ok: true, id: String(leadId), ...(assignedTo ? { assigned_to: assignedTo } : {}), ...(note ? { note } : {}), photos: { sent: inLead, total: sendable.length } };
@@ -1820,10 +1928,19 @@ async function makeSalesOrder(env, r, origin) {
   let picked = [];
   const slots = await itemSlots(env);
   try { picked = suggestItems(JSON.parse(r.answers || "null"), due, todayNY(), slots); } catch (e) { picked = []; }
-  const products = picked.map((p, i) => ({ name: p.product, productName: p.product, position: String(i + 2), quantity: `${p.quantity}.0`, uom: "Each",
-    description: p.check ? `CHECK: ${p.check}` : "Picked from the customer's website answers." }));
+  // Each product linked by its shopVOX ID (found from past sales orders) with its price
+  const known = await productInfo(env);
+  const products = picked.map((p, i) => {
+    const k = known.get(p.product) || {};
+    const price = k.price > 0 ? k.price : 0;
+    return { name: p.product, productName: p.product, ...(k.id ? { productId: k.id } : {}), position: String(i + 2),
+      quantity: `${p.quantity}.0`, uom: k.uom || "Each", productType: k.productType || "Product", saleType: k.saleType || "In House",
+      ...(k.taxable !== undefined ? { taxable: String(k.taxable) } : {}),
+      priceInDollars: price.toFixed(2), totalPriceInDollars: (price * p.quantity).toFixed(2),
+      description: p.check ? `CHECK: ${p.check}` : (price ? "Picked from the customer's website answers." : "Picked from the customer's website answers. Set the price.") };
+  });
   const { name, description, quantity } = item;
-  const slim = products.map(({ name, productName, quantity, description }) => ({ name, productName, quantity, description }));
+  const slim = products.map(({ name, productName, productId, quantity, priceInDollars, description }) => ({ name, productName, productId, quantity, priceInDollars, description }));
   // Fullest first; if shopVOX refuses, try simpler versions so the order still gets made
   const tries = [
     ...(products.length ? [{ items: [item, ...products], withProducts: true }, { items: [{ name, description, quantity }, ...slim], withProducts: true }] : []),
@@ -1854,7 +1971,8 @@ async function makeSalesOrder(env, r, origin) {
     const isPicked = l => picked.some(p => p.product === (l.productName || l.name));
     kept = { customer: !!(W.companyId || (W.company && W.company.id)), notes: !!(W.description || W.specialNotes),
              item: lines.length > 0, due: !!W.dueDate,
-             ...(picked.length ? { products: lines.filter(isPicked).length, priced: lines.filter(isPicked).some(l => parseFloat(l.priceInDollars || l.totalPriceInDollars || 0) > 0) } : {}) };
+             ...(picked.length ? { products: lines.filter(isPicked).length, linked: lines.filter(l => isPicked(l) && l.productId).length,
+                 priced: lines.filter(isPicked).some(l => parseFloat(l.priceInDollars || l.totalPriceInDollars || 0) > 0) } : {}) };
   }
   return { ok: true, ...made, view, picked: picked.map(p => p.product), ...(productError ? { productError } : {}), ...(kept ? { kept } : {}) };
 }
@@ -1966,7 +2084,7 @@ async function salesOrderPage(env, id, key, doIt, origin) {
   if (!res.ok) return salesOrderHtml("Couldn't make it", `<h1 class="bad">shopVOX didn't make it</h1>${facts}<p>${htmlEsc(res.error)}</p><p class="hint">Go back and try again, or make the sales order in shopVOX by hand.</p>`, 502);
   const k = res.kept, mark = v => v ? "✓" : "✗ (not kept by shopVOX)";
   const keptList = (k ? `<ul><li>Customer ${mark(k.customer)}</li><li>Order notes ${mark(k.notes)}</li><li>First item with every answer ${mark(k.item)}</li><li>Due date ${mark(k.due)}</li>
-    ${k.products !== undefined ? `<li>Products added: ${k.products} of ${res.picked.length}${k.products ? (k.priced ? ", with prices" : ", <b>no prices</b> (set them in shopVOX)") : ""}</li>` : ""}</ul>` : "") +
+    ${k.products !== undefined ? `<li>Products added: ${k.products} of ${res.picked.length}${k.products ? `, ${k.linked} linked to your shopVOX products` + (k.priced ? ", with prices" : ", <b>no prices</b> (set them in shopVOX)") : ""}</li>` : ""}</ul>` : "") +
     (res.picked.length ? `<p class="hint">Picked from their answers: ${res.picked.map(htmlEsc).join(", ")}. Items marked CHECK need a look.</p>` : "") +
     (res.productError ? `<p class="bad">${htmlEsc(res.productError)}; add the items by hand.</p>` : "");
   return salesOrderHtml("Sales order made", `<h1 class="ok">Sales order made ✓</h1>${facts}<p>Look for sales order <b>${htmlEsc(res.number ? "#" + res.number : res.id)}</b> in shopVOX.

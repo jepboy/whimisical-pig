@@ -206,6 +206,18 @@
   #social-canvas { max-width: 100%; max-height: 66vh; width: auto; height: auto; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
   .sm-preview .btn { justify-self: start; }
   @media (max-width: 860px) { .sm-grid { grid-template-columns: 1fr; } }
+  /* shopVOX items */
+  .svi-group { margin-bottom: 14px; }
+  .svi-group h3 { font-size: 1.25rem; margin-bottom: 2px; }
+  .svi-rows { display: grid; gap: 8px; margin-top: 10px; }
+  .svi-row { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(200px, 1.6fr) minmax(160px, 1.2fr); gap: 6px 12px; align-items: center; }
+  .svi-row input { width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg); color: var(--cream); font: 0.9rem var(--sans); }
+  .svi-when { font-weight: 700; font-size: 0.9rem; }
+  .svi-tools { grid-column: 2 / -1; display: flex; gap: 12px; flex-wrap: wrap; }
+  .svi-tools:empty { display: none; }
+  .warn-txt { color: #e59a90; font-size: 0.82rem; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 700px) { .svi-row { grid-template-columns: 1fr; padding-bottom: 10px; border-bottom: 1px solid var(--hair); } .svi-tools { grid-column: 1; } }
   /* holiday looks */
   .theme.live { border-left-color: var(--pink); }
   .theme-head { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
@@ -271,6 +283,7 @@
       <button role="tab" aria-selected="false" data-tab="photos">Site Photos</button>
       <button role="tab" aria-selected="false" data-tab="social">Facebook Posts</button>
       <button role="tab" aria-selected="false" data-tab="requests">Order Backup <span class="warn" id="n-requests"></span></button>
+      <button role="tab" aria-selected="false" data-tab="svitems">shopVOX Items</button>
       <button role="tab" aria-selected="false" data-tab="setup">Setup <span class="warn" id="n-setup"></span></button>
     </div>
 
@@ -531,6 +544,26 @@
       </div>
     </dialog>
 
+    <!-- Which shopVOX products a website order's answers add to its sales order -->
+    <section id="tab-svitems" hidden>
+      <div class="toolbar">
+        <div>
+          <h2>shopVOX Items</h2>
+          <p class="hint">When a website order becomes a shopVOX sales order, these products are added from the customer's answers. Customers never see this list.
+            Change a product by typing its name (suggestions come from your shopVOX products). Leave it blank to add nothing.</p>
+        </div>
+        <div class="tools">
+          <label class="btn ghost sm" style="cursor:pointer">Update Product List <input type="file" id="svp-file" accept=".csv,text/csv" hidden></label>
+          <button class="btn sm" id="svi-save" type="button">Save</button>
+        </div>
+      </div>
+      <p class="hint" id="svi-msg" role="status"></p>
+      <p class="hint">The <b>note</b> shows on that item in shopVOX; use it for reminders like "check the size". Product list from <span id="svp-date"></span>.
+        To refresh it: in shopVOX, export your products to a CSV, then press <em>Update Product List</em> and pick that file.</p>
+      <div id="svi-groups"></div>
+      <datalist id="sv-products"></datalist>
+    </section>
+
     <!-- Setup checklist -->
     <section id="tab-setup" hidden>
       <div class="toolbar">
@@ -599,7 +632,7 @@
 
   // ---------- tabs ----------
   const loaders = { requests: () => loadRequests(), orders: () => loadOrders(), items: () => loadItems(),
-                    banners: () => loadBanners(), themes: () => loadThemes(), photos: () => loadPhotos(), social: () => loadSocial(), setup: () => loadSetup() };
+                    svitems: () => loadSvItems(), banners: () => loadBanners(), themes: () => loadThemes(), photos: () => loadPhotos(), social: () => loadSocial(), setup: () => loadSetup() };
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
     document.querySelectorAll("[data-tab]").forEach(o => {
       o.setAttribute("aria-selected", o === b);
@@ -1365,6 +1398,83 @@
       drawBanners();
       $("banners-msg").textContent = "Saved. The website shows the change within a minute.";
     } catch (err) { $("banners-msg").textContent = err.message; }
+  };
+
+  // ---------- shopVOX items (answers -> products on the sales order) ----------
+  let svi = null, sviDirty = false;
+  async function loadSvItems() {
+    try { svi = await api("/api/admin/shopvox-items"); } catch (err) { $("svi-groups").innerHTML = `<div class="empty">${esc(err.message)}</div>`; return; }
+    sviDirty = false; drawSvItems();
+  }
+  const productSet = () => new Set(svi.products.map(p => p[0]));
+  function drawSvItems() {
+    $("svp-date").textContent = svi.productsDate + ` (${svi.products.length} products)`;
+    $("sv-products").innerHTML = svi.products.map(([n, c]) => `<option value="${esc(n)}">${esc(c)}</option>`).join("");
+    const known = productSet();
+    $("svi-groups").innerHTML = svi.groups.map((g, gi) => `
+      <div class="card svi-group">
+        <h3>${esc(g.title)}</h3>${g.hint ? `<p class="hint">${esc(g.hint)}</p>` : ""}
+        <div class="svi-rows">${g.slots.map((s, si) => `
+          <div class="svi-row" data-g="${gi}" data-s="${si}">
+            <span class="svi-when">${esc(s.label)}</span>
+            <label><span class="sr">Product</span><input list="sv-products" data-f="product" value="${esc(s.product)}" placeholder="Nothing added" maxlength="150"></label>
+            <label><span class="sr">Note</span><input data-f="note" value="${esc(s.note)}" placeholder="Note (optional)" maxlength="200"></label>
+            <span class="svi-tools">${s.product && !known.has(s.product) ? '<span class="warn-txt">Not in your product list: check the spelling</span>' : ""}
+              ${s.product !== s.defaultProduct || s.note !== s.defaultNote ? '<button type="button" class="linkish" data-reset>Use starting match</button>' : ""}</span>
+          </div>`).join("")}</div>
+      </div>`).join("");
+  }
+  $("svi-groups").addEventListener("input", e => {
+    const row = e.target.closest(".svi-row"); if (!row || !e.target.dataset.f) return;
+    svi.groups[row.dataset.g].slots[row.dataset.s][e.target.dataset.f] = e.target.value.trim();
+    sviDirty = true; $("svi-msg").textContent = "Press Save to keep your changes.";
+  });
+  $("svi-groups").addEventListener("change", e => { if (e.target.dataset.f === "product") drawSvItems(); });
+  $("svi-groups").addEventListener("click", e => {
+    if (!("reset" in e.target.dataset)) return;
+    const row = e.target.closest(".svi-row"), s = svi.groups[row.dataset.g].slots[row.dataset.s];
+    s.product = s.defaultProduct; s.note = s.defaultNote; sviDirty = true; drawSvItems();
+    $("svi-msg").textContent = "Press Save to keep your changes.";
+  });
+  $("svi-save").onclick = async () => {
+    const slots = {};
+    for (const g of svi.groups) for (const s of g.slots) slots[s.key] = { product: s.product, note: s.note };
+    try { svi = await send("/api/admin/shopvox-items", "PUT", { slots }); sviDirty = false; drawSvItems(); $("svi-msg").textContent = "Saved. New sales orders use these from now on."; }
+    catch (err) { $("svi-msg").textContent = err.message; }
+  };
+  // A CSV export from shopVOX (Products): keep the active, published ones
+  function parseCsv(text) {
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+  $("svp-file").onchange = async e => {
+    const file = e.target.files[0]; e.target.value = "";
+    if (!file) return;
+    const rows = parseCsv((await file.text()).replace(/^\uFEFF/, ""));
+    const head = rows.shift() || [], col = n => head.indexOf(n);
+    const iName = col("Product Name"), iType = col("Type"), iCat = col("Category"), iAct = col("Active"), iPub = col("Published");
+    if (iName < 0) { $("svi-msg").textContent = "That file doesn't look like a shopVOX product export (no Product Name column)."; return; }
+    const seen = new Set(), products = [];
+    for (const r of rows) {
+      const n = (r[iName] || "").trim();
+      if (!n || seen.has(n) || (iAct >= 0 && r[iAct] !== "Yes") || (iPub >= 0 && r[iPub] !== "Yes")) continue;
+      seen.add(n); products.push([n, [r[iType], r[iCat]].filter(Boolean).join(" · ")]);
+    }
+    try {
+      const keep = svi.groups;
+      svi = await send("/api/admin/shopvox-products", "PUT", { products });
+      if (sviDirty) svi.groups = keep;
+      drawSvItems(); $("svi-msg").textContent = `Product list updated: ${products.length} products.` + (sviDirty ? " Press Save to keep your other changes." : "");
+    } catch (err) { $("svi-msg").textContent = err.message; }
   };
 
   // ---------- holiday looks ----------

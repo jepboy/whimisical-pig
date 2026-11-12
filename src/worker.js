@@ -1,5 +1,6 @@
 // The Whimsical Pig — website back end (Cloudflare Worker)
-import { suggestItems } from "./shopvox-items.js";
+import { suggestItems, ITEM_GROUPS, ITEM_DEFAULTS } from "./shopvox-items.js";
+import { SHOPVOX_PRODUCTS } from "./shopvox-products.js";
 //
 // Static pages (index.html, shop.html, admin.html, ...) are served from the repo
 // by Cloudflare's asset hosting. This Worker handles:
@@ -226,6 +227,9 @@ async function route(request, env, url, path, ctx) {
       return res.ok ? json(res) : json({ error: res.error }, 502);
     }
     if (path === "/api/admin/shopvox-test" && m === "POST") return shopvoxTest(env);
+    if (path === "/api/admin/shopvox-items" && m === "GET") return shopvoxItemsInfo(env);
+    if (path === "/api/admin/shopvox-items" && m === "PUT") return saveShopvoxItems(request, env);
+    if (path === "/api/admin/shopvox-products" && m === "PUT") return saveShopvoxProducts(request, env);
     const fm = path.match(/^\/api\/admin\/request-files\/(\d+)$/);
     if (fm && m === "GET") return serveRequestFile(env, +fm[1]);
   }
@@ -1522,10 +1526,42 @@ const shopvoxError = r => {
   return `shopVOX said ${r.status}${msg ? ": " + String(msg).slice(0, 200) : ""}`;
 };
 
+// Kat's matches of answers -> shopVOX products (admin page: shopVOX Items)
+const itemSlots = async env => ((await kvGet(env, "shopvox_items")) || {}).value || {};
+async function shopvoxItemsInfo(env) {
+  const slots = await itemSlots(env);
+  const list = (await kvGet(env, "shopvox_products")) || null;
+  return json({
+    groups: ITEM_GROUPS.map(g => ({ title: g.title, hint: g.hint, slots: g.slots.map(([key, label, product, note]) =>
+      ({ key, label, product: (slots[key] || ITEM_DEFAULTS[key]).product, note: (slots[key] || ITEM_DEFAULTS[key]).note, defaultProduct: product, defaultNote: note })) })),
+    products: list ? list.value.products : SHOPVOX_PRODUCTS, productsDate: list ? list.value.date : "2026-11-12",
+  }, 200, { "Cache-Control": "no-store" });
+}
+async function saveShopvoxItems(request, env) {
+  const b = await readJson(request);
+  const slots = {};
+  for (const [k, v] of Object.entries(b.slots && typeof b.slots === "object" ? b.slots : {})) {
+    if (!ITEM_DEFAULTS[k] || !v || typeof v !== "object") continue;
+    const s = { product: cleanText(v.product, 150), note: cleanText(v.note, 200) };
+    if (s.product !== ITEM_DEFAULTS[k].product || s.note !== ITEM_DEFAULTS[k].note) slots[k] = s;
+  }
+  await kvPut(env, "shopvox_items", slots, 0);
+  return shopvoxItemsInfo(env);
+}
+// A fresh product list from a shopVOX export (read in the browser): [[name, category], ...]
+async function saveShopvoxProducts(request, env) {
+  const b = await readJson(request);
+  const list = (Array.isArray(b.products) ? b.products : []).slice(0, 5000)
+    .map(p => [cleanText(Array.isArray(p) ? p[0] : p, 150), cleanText(Array.isArray(p) ? p[1] : "", 120)]).filter(p => p[0]);
+  if (!list.length) return json({ error: "No products found in that file." }, 400);
+  await kvPut(env, "shopvox_products", { products: list, date: todayNY() }, 0);
+  return shopvoxItemsInfo(env);
+}
+
 // The shopVOX products their answers point to, written out for a quote or order
-function suggestedLines(r) {
+function suggestedLines(r, slots) {
   let items = [];
-  try { items = suggestItems(JSON.parse(r.answers || "null"), r.needed_by, todayNY()); } catch (e) { items = []; }
+  try { items = suggestItems(JSON.parse(r.answers || "null"), r.needed_by, todayNY(), slots); } catch (e) { items = []; }
   return items.length ? ["", "Suggested shopVOX items (from their answers):",
     ...items.map(i => `- ${i.product}${i.quantity > 1 ? ` × ${i.quantity}` : ""}${i.check ? ` (CHECK: ${i.check})` : ""}`)] : [];
 }
@@ -1555,7 +1591,7 @@ async function pushRequestToShopvox(env, id, origin) {
     r.fulfill && `Pick up / ship: ${r.fulfill}`,
     "",
     r.summary,
-    ...suggestedLines(r),
+    ...suggestedLines(r, await itemSlots(env)),
     files.length ? "\nPhotos and files from the customer:" : "",
     ...files.map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
   ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 19000) +
@@ -1782,7 +1818,8 @@ async function makeSalesOrder(env, r, origin) {
   };
   // Then the shopVOX products their answers point to (src/shopvox-items.js)
   let picked = [];
-  try { picked = suggestItems(JSON.parse(r.answers || "null"), due, todayNY()); } catch (e) { picked = []; }
+  const slots = await itemSlots(env);
+  try { picked = suggestItems(JSON.parse(r.answers || "null"), due, todayNY(), slots); } catch (e) { picked = []; }
   const products = picked.map((p, i) => ({ name: p.product, productName: p.product, position: String(i + 2), quantity: `${p.quantity}.0`, uom: "Each",
     description: p.check ? `CHECK: ${p.check}` : "Picked from the customer's website answers." }));
   const { name, description, quantity } = item;

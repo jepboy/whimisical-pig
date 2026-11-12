@@ -667,6 +667,8 @@
               : shopvoxOn ? '<span class="tag low">Not in shopVOX</span>' : ""}
             <h3>${esc(r.type || "Order")} · ${esc(r.name || "No name")}</h3>
             <p class="meta">${esc(r.ref)} · sent ${esc(when(r.created_at))}</p>
+            ${r.shopvox_order ? `<p class="meta">Sales order ${esc((JSON.parse(r.shopvox_order).number && "#" + JSON.parse(r.shopvox_order).number) || "made")} in shopVOX ✓</p>`
+              : r.shopvox_id && shopvoxOn ? `<p class="meta"><button class="link-btn" type="button" data-act="salesorder">Make Sales Order in shopVOX</button></p>` : ""}
             ${!r.shopvox_id && shopvoxOn ? `<p class="meta low">${r.shopvox_error ? esc(r.shopvox_error) : "Not sent yet."}
               <button class="link-btn" type="button" data-act="shopvox">Send to shopVOX</button></p>` : ""}
           </div>
@@ -695,6 +697,14 @@
       e.target.disabled = true; e.target.textContent = "Sending…";
       try { await send(`/api/admin/requests/${id}/shopvox`, "POST", {}); loadRequests(); }
       catch (err) { alert(err.message); e.target.disabled = false; e.target.textContent = "Send to shopVOX"; }
+      return;
+    }
+    if (e.target.dataset.act === "salesorder") {
+      const card = e.target.closest(".card");
+      if (!confirm("Make a sales order in shopVOX from this lead? Do this once the quote is approved. You'll add or check the items and prices in shopVOX.")) return;
+      e.target.disabled = true; e.target.textContent = "Making it…";
+      try { const r = await send(`/api/admin/requests/${card.dataset.id}/sales-order`, "POST", {}); alert(`Sales order ${r.number ? "#" + r.number : ""} made in shopVOX.`); loadRequests(); }
+      catch (err) { alert(err.message); e.target.disabled = false; e.target.textContent = "Make Sales Order in shopVOX"; }
       return;
     }
     if (e.target.dataset.act !== "delete") return;

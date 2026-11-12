@@ -239,3 +239,8 @@ Install HTTrack from https://www.httrack.com, start a new project, enter
 
 Open each page, press Ctrl+S (Cmd+S on Mac), and choose "Webpage, Complete".
 Save the files into `original/`.
+
+
+### Sales lead → quote → sales order
+
+shopVOX's API can't make quotes, so quotes are made in shopVOX as usual. Once a quote is approved, the **link at the bottom of the sales lead's details** ("Quoted and approved? Turn this lead into a shopVOX sales order") opens a page with a **Create Sales Order** button. It makes the sales order for the customer, company and sales rep on the lead (as they are in shopVOX now), with every answer, photo link and the needed-by date. Add or check the items and prices in shopVOX. Pressing it again never makes a second order. The same button is in Admin → Order Backup ("Make Sales Order in shopVOX").

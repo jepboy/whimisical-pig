@@ -130,6 +130,8 @@ const MIGRATIONS = [
   `ALTER TABLE requests ADD COLUMN shopvox_error TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE request_files ADD COLUMN share_key TEXT NOT NULL DEFAULT ''`,
   `ALTER TABLE requests ADD COLUMN unit TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN convert_key TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE requests ADD COLUMN shopvox_order TEXT NOT NULL DEFAULT ''`,
 ];
 
 let schemaReady = false;
@@ -176,6 +178,9 @@ async function route(request, env, url, path, ctx) {
   if (path === "/api/order-request" && m === "POST") return saveOrderRequest(request, env, ctx);
   const sf = path.match(/^\/api\/files\/(\d+)\/([a-f0-9]{32})$/);
   if (sf && m === "GET") return serveSharedFile(env, +sf[1], sf[2]);
+  // The "make a sales order" link at the bottom of each shopVOX lead
+  const so = path.match(/^\/api\/sales-order\/(\d+)\/([a-f0-9]{32})$/);
+  if (so && (m === "GET" || m === "POST")) return salesOrderPage(env, +so[1], so[2], m === "POST", url.origin);
 
   if (path === "/api/admin/login" && m === "POST") return login(request, env);
   if (path === "/api/admin/logout" && m === "POST") return logout();
@@ -209,6 +214,13 @@ async function route(request, env, url, path, ctx) {
     if (rm && m === "DELETE") return deleteRequest(env, +rm[1]);
     const rsv = path.match(/^\/api\/admin\/requests\/(\d+)\/shopvox$/);
     if (rsv && m === "POST") return sendRequestToShopvox(env, +rsv[1], url.origin);
+    const rso = path.match(/^\/api\/admin\/requests\/(\d+)\/sales-order$/);
+    if (rso && m === "POST") {
+      const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(+rso[1]).first();
+      if (!r) return json({ error: "Request not found." }, 404);
+      const res = await makeSalesOrder(env, r, url.origin);
+      return res.ok ? json(res) : json({ error: res.error }, 502);
+    }
     if (path === "/api/admin/shopvox-test" && m === "POST") return shopvoxTest(env);
     const fm = path.match(/^\/api\/admin\/request-files\/(\d+)$/);
     if (fm && m === "GET") return serveRequestFile(env, +fm[1]);
@@ -1511,6 +1523,10 @@ async function pushRequestToShopvox(env, id, origin) {
     }
   }
   const base = env.SITE_URL || origin;
+  if (!r.convert_key) {
+    r.convert_key = randomKey();
+    await env.DB.prepare(`UPDATE requests SET convert_key = ? WHERE id = ?`).bind(r.convert_key, id).run();
+  }
   const details = [
     `Website order ${r.ref}`,
     r.unit && `Unit: ${r.unit}`,
@@ -1520,7 +1536,8 @@ async function pushRequestToShopvox(env, id, origin) {
     r.summary,
     files.length ? "\nPhotos and files from the customer:" : "",
     ...files.map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
-  ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000);
+  ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 19000) +
+    `\n\nQuoted and approved? Turn this lead into a shopVOX sales order:\n${base}/api/sales-order/${r.id}/${r.convert_key}`;
 
   // Attach the lead to the customer already in shopVOX, so no duplicate contacts:
   // same email first, then same name and phone, then a customer with the same name
@@ -1689,6 +1706,87 @@ async function sendRequestToShopvox(env, id, origin) {
   if (!shopvoxReady(env)) return json({ error: "Add the shopVOX Account ID and API Token in Cloudflare first (see Setup)." }, 503);
   const r = await pushRequestToShopvox(env, id, origin);
   return r.ok ? json(r) : json({ error: r.error }, r.error === "Request not found." ? 404 : 502);
+}
+
+// ---------------------------------------------------------------- lead -> sales order
+// shopVOX's API can make sales orders but not quotes. This makes the sales order from
+// the lead as it is now in shopVOX (its customer, company and rep, even if someone
+// changed them there), with every answer and photo link. Prices are added in shopVOX.
+async function makeSalesOrder(env, r, origin) {
+  if (r.shopvox_order) return { ok: true, already: true, ...JSON.parse(r.shopvox_order) };
+  if (!shopvoxReady(env)) return { error: "shopVOX isn't set up (see Setup)." };
+  if (!r.shopvox_id) return { error: "This order isn't in shopVOX as a sales lead yet. Send it to shopVOX first." };
+  const got = await shopvoxCall(env, "GET", `/sales_leads/${encodeURIComponent(r.shopvox_id)}`);
+  const L = (got.ok && got.data && (got.data.salesLead || got.data.sales_lead || got.data)) || {};
+  const who = L.companyId && L.primaryContactId ? {} : await findShopvoxCustomer(env, r);
+  const { results: files } = await env.DB.prepare(`SELECT id, name, share_key FROM request_files WHERE request_id = ?`).bind(r.id).all();
+  const base = env.SITE_URL || origin;
+  const due = /^\d{4}-\d{2}-\d{2}$/.test(r.needed_by || "") ? r.needed_by : "";
+  const repId = L.salesRepId || env.SHOPVOX_SALES_REP_ID || ((await kvGet(env, "shopvox_rep")) || {}).value?.id || "";
+  const companyId = L.companyId || who.companyId, contactId = L.primaryContactId || who.contactId;
+  const wo = {
+    title: String(L.title || `${r.ref} · ${r.type || "Website order"} · ${r.name || "Customer"}`).slice(0, 200),
+    description: [
+      `Website order ${r.ref}`, r.unit && `Unit: ${r.unit}`, due && `Needed by: ${due}`, r.fulfill && `Pick up / ship: ${r.fulfill}`, "",
+      r.summary,
+      files.length ? "\nPhotos and files from the customer:" : "",
+      ...files.filter(f => f.share_key).map(f => `${f.name}: ${base}/api/files/${f.id}/${f.share_key}`),
+    ].filter(x => x !== null && x !== undefined && x !== false).join("\n").slice(0, 20000),
+    txnDate: todayNY(),
+    ...(due ? { dueDate: due, inHandDate: due } : {}),
+    ...(companyId ? { companyId } : { companyName: r.unit || r.name || "Website customer" }),
+    ...(contactId ? { primaryContactId: contactId } : {}),
+    ...(repId ? { primarySalesRepId: repId } : env.SHOPVOX_SALES_REP ? { salesRepName: env.SHOPVOX_SALES_REP } : {}),
+    specialNotes: `Made from website order ${r.ref} (sales lead ${r.shopvox_id}).`,
+  };
+  const item = { lineItems: [{ name: r.type || "Custom order", description: "Add the items and price", position: "1",
+    quantity: "1.0", uom: "Each", priceInDollars: "0.0", totalPriceInDollars: "0.0" }] };
+  // As documented ({ workOrder }), then with a placeholder item in case one is required
+  const tries = [{ workOrder: wo }, { workOrder: { ...wo, ...item } }];
+  let res = null;
+  for (const body of tries) {
+    res = await shopvoxCall(env, "POST", "/sales_orders", body);
+    if ((res.ok && res.data && res.data.id) || !(res.status >= 400 && res.status < 500 && res.status !== 401 && res.status !== 403)) break;
+  }
+  if (!(res.ok && res.data && res.data.id)) return { error: shopvoxError(res) };
+  const made = { id: String(res.data.id), number: String(res.data.txnNumber || "") };
+  await env.DB.prepare(`UPDATE requests SET shopvox_order = ? WHERE id = ?`).bind(JSON.stringify(made), r.id).run();
+  return { ok: true, ...made };
+}
+
+const htmlEsc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function salesOrderHtml(title, body, status = 200) {
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>${htmlEsc(title)} · The Whimsical Pig</title><style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#141112;color:#f6eef0;font:16px/1.5 Lato,Arial,sans-serif;padding:16px;box-sizing:border-box}
+main{width:min(520px,calc(100vw - 32px));box-sizing:border-box;background:#221b1e;border:1px solid rgba(231,163,184,.35);border-radius:18px;padding:28px}
+h1{font:600 1.9rem/1.15 Georgia,serif;margin:0 0 12px}dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:16px 0}
+dt{color:#bba7ae}dd{margin:0}.btn{display:inline-block;margin-top:8px;padding:14px 26px;border:0;border-radius:999px;background:#e7a3b8;color:#141112;
+font:700 1rem Lato,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}.hint{color:#bba7ae;font-size:.92rem}
+.ok{color:#9fd8a8}.bad{color:#f0a49a}</style></head><body><main>${body}</main></body></html>`, {
+    status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Frame-Options": "DENY",
+      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'", "Referrer-Policy": "no-referrer" },
+  });
+}
+async function salesOrderPage(env, id, key, doIt, origin) {
+  const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
+  if (!r || !r.convert_key || !timingSafeEqual(r.convert_key, key)) return salesOrderHtml("Link not found", "<h1>This link isn't valid</h1><p>Open it from the sales lead in shopVOX.</p>", 404);
+  const facts = `<dl><dt>Order</dt><dd>${htmlEsc(r.ref)}</dd><dt>Customer</dt><dd>${htmlEsc(r.name || "—")}</dd>
+    ${r.unit ? `<dt>Unit</dt><dd>${htmlEsc(r.unit)}</dd>` : ""}<dt>What</dt><dd>${htmlEsc(r.type || "—")}</dd>
+    <dt>Needed by</dt><dd>${htmlEsc(r.needed_by || "—")}</dd></dl>`;
+  if (r.shopvox_order) {
+    const so = JSON.parse(r.shopvox_order);
+    return salesOrderHtml("Already a sales order", `<h1 class="ok">Already a sales order</h1>${facts}<p>It's sales order <b>${htmlEsc(so.number ? "#" + so.number : so.id)}</b> in shopVOX. Nothing else to do here.</p>`);
+  }
+  if (!doIt) {
+    return salesOrderHtml("Make a sales order", `<h1>Make a sales order?</h1>${facts}
+      <p class="hint">This makes a sales order in shopVOX for the customer on this lead, with every answer and photo link and the needed-by date.
+      Use it once the quote is approved. Add or check the items and prices in shopVOX afterward.</p>
+      <form method="post"><button class="btn" type="submit">Create Sales Order</button></form>`);
+  }
+  const res = await makeSalesOrder(env, r, origin);
+  if (!res.ok) return salesOrderHtml("Couldn't make it", `<h1 class="bad">shopVOX didn't make it</h1>${facts}<p>${htmlEsc(res.error)}</p><p class="hint">Go back and try again, or make the sales order in shopVOX by hand.</p>`, 502);
+  return salesOrderHtml("Sales order made", `<h1 class="ok">Sales order made ✓</h1>${facts}<p>Look for sales order <b>${htmlEsc(res.number ? "#" + res.number : res.id)}</b> in shopVOX, then check the items and prices.</p><p class="hint">You can close this tab.</p>`);
 }
 
 // Read-only check that the Account ID and token work

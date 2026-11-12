@@ -181,8 +181,8 @@ async function route(request, env, url, path, ctx) {
   // The "make a sales order" link at the bottom of each shopVOX lead
   const so = path.match(/^\/api\/sales-order\/(\d+)\/([a-f0-9]{32})$/);
   if (so && (m === "GET" || m === "POST")) return salesOrderPage(env, +so[1], so[2], m === "POST", url.origin);
-  const ov = path.match(/^\/api\/order-view\/(\d+)\/([a-f0-9]{32})$/);
-  if (ov && m === "GET") return orderViewPage(env, +ov[1], ov[2], url.origin);
+  const ov = path.match(/^\/api\/order-view\/(\d+)\/([a-f0-9]{32})(\/photos\.zip)?$/);
+  if (ov && m === "GET") return ov[3] ? orderPhotosZip(env, +ov[1], ov[2]) : orderViewPage(env, +ov[1], ov[2], url.origin);
 
   if (path === "/api/admin/login" && m === "POST") return login(request, env);
   if (path === "/api/admin/logout" && m === "POST") return logout();
@@ -1806,6 +1806,52 @@ main.wide{width:min(960px,calc(100vw - 32px))}</style></head><body><main${wide ?
       "Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'", "Referrer-Policy": "no-referrer" },
   });
 }
+// Every photo and file from one order in a single .zip, to drop into a shopVOX
+// sales order's Assets in one go. Stored, not compressed (photos are already compressed).
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(bytes) { let c = 0xffffffff; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function makeZip(entries) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  const d = new Date(), time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let offset = 0;
+  for (const e of entries) {
+    const name = enc.encode(e.name), crc = crc32(e.data), size = e.data.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+    h.setUint16(10, time, true); h.setUint16(12, date, true); h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true);
+    h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+    parts.push(new Uint8Array(h.buffer), name, e.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+    c.setUint16(12, time, true); c.setUint16(14, date, true); c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true);
+    c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+    central.push(new Uint8Array(c.buffer), name);
+    offset += 30 + name.length + size;
+  }
+  const cdSize = central.reduce((n, p) => n + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+async function orderPhotosZip(env, id, key) {
+  const r = await env.DB.prepare(`SELECT ref, convert_key FROM requests WHERE id = ?`).bind(id).first();
+  if (!r || !r.convert_key || !timingSafeEqual(r.convert_key, key)) return new Response("Not found", { status: 404 });
+  const { results } = await env.DB.prepare(`SELECT id, name, data FROM request_files WHERE request_id = ? ORDER BY id`).bind(id).all();
+  const used = new Set();
+  const entries = [];
+  for (const f of results) {
+    let name = String(f.name || "photo").replace(/[\\/:*?"<>|\x00-\x1f]/g, "_").slice(-100) || "photo";
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = name.replace(/(\.[^.]*)?$/, m => `-${n}${m}`);
+    used.add(name.toLowerCase());
+    entries.push({ name, data: await fileBytes(env, f.id, f.data) });
+  }
+  const ref = String(r.ref || "order").replace(/[^\w-]/g, "");
+  return new Response(makeZip(entries), { headers: { "Content-Type": "application/zip",
+    "Content-Disposition": `attachment; filename="${ref}-photos.zip"`, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
+}
+
 async function orderViewPage(env, id, key, origin) {
   const r = await env.DB.prepare(`SELECT * FROM requests WHERE id = ?`).bind(id).first();
   if (!r || !r.convert_key || !timingSafeEqual(r.convert_key, key)) return salesOrderHtml("Link not found", "<h1>This link isn't valid</h1>", 404);
@@ -1823,7 +1869,9 @@ async function orderViewPage(env, id, key, origin) {
     <dl><dt>Order</dt><dd>${htmlEsc(r.ref)}</dd>${r.unit ? `<dt>Unit</dt><dd>${htmlEsc(r.unit)}</dd>` : ""}
     <dt>Needed by</dt><dd>${htmlEsc(r.needed_by || "—")}</dd><dt>Pick up / ship</dt><dd>${htmlEsc(r.fulfill || "—")}</dd>
     ${r.phone ? `<dt>Phone</dt><dd>${htmlEsc(r.phone)}</dd>` : ""}${r.email ? `<dt>Email</dt><dd>${htmlEsc(r.email)}</dd>` : ""}</dl>
-    ${files.length ? `<h2>Photos &amp; files (${files.length})</h2><div class="pics">${pics}</div><p class="hint">Click a photo to open it full size.</p>` : ""}
+    ${files.length ? `<h2>Photos &amp; files (${files.length})</h2><div class="pics">${pics}</div>
+      <p><a class="btn" href="/api/order-view/${r.id}/${r.convert_key}/photos.zip">Download all photos</a></p>
+      <p class="hint">Click a photo to open it full size. To put them on the shopVOX sales order: download them, unzip, then drag them into the order's Assets.</p>` : ""}
     <h2>What they asked for</h2><pre>${htmlEsc(r.summary)}</pre>`, 200, true);
 }
 
